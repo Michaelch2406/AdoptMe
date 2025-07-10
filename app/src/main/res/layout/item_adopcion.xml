@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardAdopcion"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/white"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Indicador de estado -->
+        <View
+            android:id="@+id/viewStatusIndicator"
+            android:layout_width="4dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorAccent2" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Icono de pata -->
+            <ImageView
+                android:id="@+id/ivPaw"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_paw"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:padding="8dp"
+                android:background="@drawable/circle_background"
+                android:tint="@color/colorAccent1"
+                tools:ignore="UseAppTint" />
+
+            <!-- Información de la mascota -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@+id/ivPaw"
+                android:layout_toStartOf="@+id/btnCancelar"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="8dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvNombreMascota"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Max"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/tvRaza"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Golden Retriever"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:layout_marginTop="2dp" />
+
+                <TextView
+                    android:id="@+id/tvEstado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="En revisión de documentos"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorAccent2"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvFecha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2024-03-15"
+                    android:textSize="12sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.5"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <!-- Botón cancelar (solo visible en adopciones en proceso) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCancelar"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:text="Cancelar"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@color/colorAccent3"
+                android:visibility="gone" />
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,63 @@
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace 'com.mjc.adoptme'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.mjc.adoptme"
+        minSdk 33
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+            // Si cualquier dependencia pide la librería 'listenablefuture'...
+            if (details.requested.group == 'com.google.guava' && details.requested.name == 'listenablefuture') {
+                // ...le decimos a Gradle que la reemplace por la versión de 'guava' para Android.
+                details.useTarget("com.google.guava:guava:32.1.1-android")
+                details.because('Se fuerza el uso de la librería Guava completa para resolver el conflicto con listenablefuture de AndroidX.')
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation libs.appcompat
+    implementation libs.material // Keep this one!
+    implementation libs.activity
+    implementation libs.constraintlayout
+    testImplementation libs.junit
+    implementation project(':SecureX')
+    // --- AÑADE ESTAS LÍNEAS PARA LA COMUNICACIÓN DE RED --
+    // Retrofit: Cliente HTTP para Android y Java
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    // Gson Converter: Para serializar/deserializar objetos Java a JSON
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    // Logging Interceptor (Opcional pero muy recomendado): Para ver las peticiones y respuestas en Logcat
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
+    implementation(platform("org.jetbrains.kotlin:kotlin-bom:1.8.0")) // Asegúrate que esta línea o una similar ya existe.
+    implementation 'com.google.guava:guava:32.1.1-jre'
+    // --- FIN DE LÍNEAS A AÑADIR ---
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+}

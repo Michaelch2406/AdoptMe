@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <!-- Encabezado con icono -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_foundation"
+                android:padding="14dp"
+                android:background="@drawable/circle_background"
+                android:tint="@color/colorPrimary"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/tvNombre"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:text="Fundación Patitas Felices"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- Descripción -->
+        <TextView
+            android:id="@+id/tvDescripcion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descripción de la fundación"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:alpha="0.8"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Línea divisora -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/black"
+            android:alpha="0.1"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Información de contacto -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Información de contacto"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Ubicación -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_location"
+                android:tint="@color/colorPrimary"
+                android:layout_marginEnd="12dp"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/tvUbicacion"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Av. Simón Bolívar, Quito"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:alpha="0.8" />
+
+        </LinearLayout>
+
+        <!-- Teléfono -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_phone"
+                android:tint="@color/colorPrimary"
+                android:layout_marginEnd="12dp"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/tvTelefono"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+593 2 234 5678"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:alpha="0.8" />
+
+        </LinearLayout>
+
+        <!-- Email -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_email"
+                android:tint="@color/colorPrimary"
+                android:layout_marginEnd="12dp"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/tvEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="info@fundacion.org"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:alpha="0.8" />
+
+        </LinearLayout>
+
+        <!-- Horario -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_clock"
+                android:tint="@color/colorPrimary"
+                android:layout_marginEnd="12dp"
+                tools:ignore="UseAppTint" />
+
+            <TextView
+                android:id="@+id/tvHorario"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lunes a Viernes: 9:00 - 18:00"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:alpha="0.8" />
+
+        </LinearLayout>
+
+        <!-- Línea divisora -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/black"
+            android:alpha="0.1"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Estadísticas de animales -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Animales en cuidado"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <LinearLayout
+            android:id="@+id/layoutEstadisticas"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvTotalAnimales"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total de animales: 120"
+                android:textSize="14sp"
+                android:textColor="@color/colorAccent2"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_dog"
+                    android:tint="@color/colorAccent1"
+                    android:layout_marginEnd="8dp"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/tvPerros"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Perros: 45"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="4dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_cat"
+                    android:tint="@color/colorAccent2"
+                    android:layout_marginEnd="8dp"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/tvGatos"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Gatos: 20"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_pets"
+                    android:tint="@color/colorAccent3"
+                    android:layout_marginEnd="8dp"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/tvOtros"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Otros: 55"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

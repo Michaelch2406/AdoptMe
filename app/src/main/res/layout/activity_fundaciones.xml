@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".FundacionesActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Logo Container -->
+            <LinearLayout
+                android:id="@+id/logoContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center_horizontal"
+                android:paddingTop="32dp"
+                android:paddingBottom="16dp">
+
+                <FrameLayout
+                    android:layout_width="100dp"
+                    android:layout_height="100dp">
+
+                    <ImageView
+                        android:id="@+id/ivLogo"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@mipmap/ic_launcher"
+                        android:layout_gravity="center" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutPaws"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:id="@+id/paw1"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_paw"
+                            android:tint="@color/colorAccent1"
+                            android:alpha="0"
+                            android:layout_marginEnd="30dp"
+                            android:layout_marginBottom="40dp"
+                            tools:ignore="UseAppTint" />
+
+                        <ImageView
+                            android:id="@+id/paw2"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_paw"
+                            android:tint="@color/colorAccent2"
+                            android:alpha="0"
+                            android:layout_marginTop="50dp"
+                            tools:ignore="UseAppTint" />
+
+                        <ImageView
+                            android:id="@+id/paw3"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_paw"
+                            android:tint="@color/colorAccent3"
+                            android:alpha="0"
+                            android:layout_marginStart="30dp"
+                            android:layout_marginBottom="40dp"
+                            tools:ignore="UseAppTint" />
+
+                    </LinearLayout>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvAppName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="AdoptMe"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/colorPrimary"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/tvSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fundaciones"
+                    android:textSize="18sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7"
+                    android:layout_marginTop="4dp" />
+
+            </LinearLayout>
+
+            <!-- Content Container -->
+            <LinearLayout
+                android:id="@+id/contentContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Campo de búsqueda -->
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/tilBuscar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Buscar fundación..."
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:endIconMode="clear_text"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    app:boxStrokeColor="@color/colorPrimary"
+                    app:hintTextColor="@color/colorPrimary"
+                    android:layout_marginBottom="16dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etBuscar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text"
+                        android:maxLines="1" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Chips para filtrar -->
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:scrollbars="none"
+                    android:layout_marginBottom="8dp">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipTodas"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Todas"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            app:chipBackgroundColor="@color/chip_state_list"
+                            app:chipStrokeColor="@color/colorPrimary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipPerros"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Con Perros"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            app:chipBackgroundColor="@color/chip_state_list"
+                            app:chipStrokeColor="@color/colorPrimary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipGatos"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Con Gatos"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            app:chipBackgroundColor="@color/chip_state_list"
+                            app:chipStrokeColor="@color/colorPrimary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chipOtros"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Otros Animales"
+                            style="@style/Widget.MaterialComponents.Chip.Choice"
+                            app:chipBackgroundColor="@color/chip_state_list"
+                            app:chipStrokeColor="@color/colorPrimary"
+                            app:chipStrokeWidth="1dp"
+                            app:checkedIconVisible="false" />
+
+                    </com.google.android.material.chip.ChipGroup>
+                </HorizontalScrollView>
+
+                <!-- Contador de resultados -->
+                <TextView
+                    android:id="@+id/tvResultCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 fundaciones encontradas"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.6"
+                    android:layout_marginBottom="12dp" />
+
+                <!-- RecyclerView para las fundaciones -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvFundaciones"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:paddingBottom="80dp" />
+
+                <!-- Empty State -->
+                <LinearLayout
+                    android:id="@+id/emptyStateContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="32dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:src="@drawable/ic_foundation"
+                        android:tint="@color/colorPrimary"
+                        android:alpha="0.3"
+                        tools:ignore="UseAppTint" />
+
+                    <TextView
+                        android:id="@+id/tvEmptyMessage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No se encontraron fundaciones"
+                        android:textSize="16sp"
+                        android:textColor="@color/black"
+                        android:alpha="0.6"
+                        android:layout_marginTop="16dp"
+                        android:textAlignment="center" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <!-- Botón Regresar -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnRegresar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="16dp"
+        android:text="Regresar"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        app:cornerRadius="25dp"
+        android:paddingVertical="12dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        app:strokeColor="@color/colorPrimary"
+        app:strokeWidth="2dp"
+        android:textColor="@color/colorPrimary" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- Filtro de distancia -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Distancia máxima"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.slider.RangeSlider
+            android:id="@+id/sliderDistancia"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:valueFrom="1"
+            android:valueTo="100"
+            android:stepSize="1"
+            app:labelBehavior="gone"
+            app:thumbColor="@color/colorPrimary"
+            app:trackColorActive="@color/colorPrimary"
+            app:trackColorInactive="#E0E0E0" />
+
+        <TextView
+            android:id="@+id/tvDistanciaValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="50 km"
+            android:textSize="14sp"
+            android:textColor="@color/colorPrimary"
+            android:textStyle="bold"
+            android:layout_marginStart="8dp"
+            android:minWidth="50dp"
+            android:gravity="end" />
+
+    </LinearLayout>
+
+    <!-- Línea divisora -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/black"
+        android:alpha="0.1"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Filtro de tamaño -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Tamaño"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/spinnerTamaño"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:background="@drawable/spinner_background" />
+
+    <!-- Filtro de sexo -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sexo"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
+    <Spinner
+        android:id="@+id/spinnerSexo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp"
+        android:background="@drawable/spinner_background" />
+
+    <!-- Nota informativa -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:background="@drawable/info_background">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_info"
+            android:tint="@color/colorPrimary"
+            android:layout_marginEnd="8dp"
+            tools:ignore="UseAppTint" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Los filtros se aplicarán automáticamente"
+            android:textSize="12sp"
+            android:textColor="@color/colorPrimary"
+            android:alpha="0.8" />
+
+    </LinearLayout>
+
+</LinearLayout>

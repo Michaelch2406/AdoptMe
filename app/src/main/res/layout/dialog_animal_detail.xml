@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Imagen del animal -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="200dp">
+
+            <ImageView
+                android:id="@+id/ivAnimal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                android:background="#F5F5F5" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_gravity="bottom"
+                android:background="@drawable/gradient_overlay" />
+
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Nombre y edad -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tvNombre"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Max"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black" />
+
+                <TextView
+                    android:id="@+id/tvEdad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2 años"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7" />
+
+            </LinearLayout>
+
+            <!-- Raza y sexo -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/tvRaza"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Golden Retriever"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.8" />
+
+                <TextView
+                    android:id="@+id/tvSexo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Macho"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" • "
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7" />
+
+                <TextView
+                    android:id="@+id/tvTamaño"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tamaño grande"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.7" />
+
+            </LinearLayout>
+
+            <!-- Descripción -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Descripción"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvDescripcion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Descripción del animal"
+                android:textSize="14sp"
+                android:textColor="@color/black"
+                android:alpha="0.8"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Características -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Características"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/layoutCaracteristicas"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipVacunado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✓ Vacunado"
+                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    app:chipBackgroundColor="#E8F5E9"
+                    app:chipStrokeColor="#4CAF50"
+                    app:chipStrokeWidth="1dp"
+                    android:textColor="#2E7D32"
+                    android:clickable="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipDesparasitado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✓ Desparasitado"
+                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    app:chipBackgroundColor="#E8F5E9"
+                    app:chipStrokeColor="#4CAF50"
+                    app:chipStrokeWidth="1dp"
+                    android:textColor="#2E7D32"
+                    android:clickable="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipEsterilizado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✓ Esterilizado"
+                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    app:chipBackgroundColor="#E8F5E9"
+                    app:chipStrokeColor="#4CAF50"
+                    app:chipStrokeWidth="1dp"
+                    android:textColor="#2E7D32"
+                    android:clickable="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipBuenoConNiños"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="👶 Bueno con niños"
+                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    app:chipBackgroundColor="#E3F2FD"
+                    app:chipStrokeColor="#2196F3"
+                    app:chipStrokeWidth="1dp"
+                    android:textColor="#1565C0"
+                    android:clickable="false" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipBuenoConAnimales"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🐾 Sociable con animales"
+                    style="@style/Widget.MaterialComponents.Chip.Entry"
+                    app:chipBackgroundColor="#E3F2FD"
+                    app:chipStrokeColor="#2196F3"
+                    app:chipStrokeWidth="1dp"
+                    android:textColor="#1565C0"
+                    android:clickable="false" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <!-- Línea divisora -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/black"
+                android:alpha="0.1"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Información de la fundación -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fundación"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_foundation"
+                    android:tint="@color/colorPrimary"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/tvFundacion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fundación Patitas Felices"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="4dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_location"
+                    android:tint="@color/colorPrimary"
+                    android:layout_marginEnd="8dp"
+                    tools:ignore="UseAppTint" />
+
+                <TextView
+                    android:id="@+id/tvUbicacion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quito, Ecuador"
+                    android:textSize="14sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.8" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvDistancia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="A 2.5 km de ti"
+                android:textSize="14sp"
+                android:textColor="@color/colorAccent2"
+                android:textStyle="bold"
+                android:layout_marginStart="28dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

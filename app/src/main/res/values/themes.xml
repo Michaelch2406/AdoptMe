@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.AdoptMe" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/colorAccent2</item>
+        <item name="colorSecondaryVariant">@color/colorAccent3</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Accent color -->
+        <item name="colorAccent">@color/colorAccent1</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+        <!-- Navigation bar color -->
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o">true</item>
+        <!-- Window background -->
+        <item name="android:windowBackground">@drawable/gradient_background</item>
+        <!-- Material Design Components -->
+        <item name="textInputStyle">@style/LoginTextInputStyle</item>
+        <item name="materialButtonStyle">@style/LoginButtonStyle</item>
+    </style>
+
+    <!-- Tema para splash screen -->
+    <style name="Theme.AdoptMe.Splash" parent="Theme.AdoptMe">
+        <item name="android:windowBackground">@drawable/gradient_background</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+    </style>
+
+</resources>

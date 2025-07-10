@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardFundacion"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/white"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Encabezado con icono y nombre -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:id="@+id/ivFoundation"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_foundation"
+                android:padding="12dp"
+                android:background="@drawable/circle_background"
+                android:tint="@color/colorPrimary"
+                tools:ignore="UseAppTint" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvNombre"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Fundación Patitas Felices"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:maxLines="2"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/tvUbicacion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Quito, Ecuador"
+                    android:textSize="13sp"
+                    android:textColor="@color/black"
+                    android:alpha="0.6"
+                    android:layout_marginTop="2dp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Total de animales -->
+        <TextView
+            android:id="@+id/tvTotalAnimales"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="120 animales en total"
+            android:textSize="14sp"
+            android:textColor="@color/colorAccent2"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Chips de tipos de animales -->
+        <LinearLayout
+            android:id="@+id/layoutChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPerros"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Perros: 45"
+                android:textSize="12sp"
+                style="@style/Widget.MaterialComponents.Chip.Entry"
+                app:chipBackgroundColor="@color/colorAccent1"
+                app:chipIcon="@drawable/ic_dog"
+                app:chipIconSize="16dp"
+                app:chipIconTint="@color/white"
+                android:textColor="@color/white"
+                android:clickable="false"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipGatos"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Gatos: 20"
+                android:textSize="12sp"
+                style="@style/Widget.MaterialComponents.Chip.Entry"
+                app:chipBackgroundColor="@color/colorAccent2"
+                app:chipIcon="@drawable/ic_cat"
+                app:chipIconSize="16dp"
+                app:chipIconTint="@color/white"
+                android:textColor="@color/white"
+                android:clickable="false"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipOtros"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Otros: 55"
+                android:textSize="12sp"
+                style="@style/Widget.MaterialComponents.Chip.Entry"
+                app:chipBackgroundColor="@color/colorAccent3"
+                app:chipIcon="@drawable/ic_pets"
+                app:chipIconSize="16dp"
+                app:chipIconTint="@color/white"
+                android:textColor="@color/white"
+                android:clickable="false" />
+
+        </LinearLayout>
+
+        <!-- Botones de acción -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUbicacion"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Ver ubicación"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:textColor="@color/colorPrimary"
+                app:icon="@drawable/ic_location"
+                app:iconSize="16dp"
+                app:iconTint="@color/colorPrimary"
+                android:layout_marginEnd="8dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnContactar"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Contactar"
+                android:textSize="12sp"
+                android:textAllCaps="false"
+                style="@style/Widget.MaterialComponents.Button"
+                app:backgroundTint="@color/colorPrimary"
+                app:cornerRadius="18dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

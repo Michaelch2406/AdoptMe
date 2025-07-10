@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AdoptMe">
+        <activity
+            android:name=".AdoptMePortafolioActivity"
+            android:exported="false" />
+        <activity
+            android:name=".FundacionesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MisAdopcionesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PerfilActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PanelActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RecuperarContraseniaActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AnimalesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RelacionAnimalesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DomicilioActivity"
+            android:exported="false" />
+        <activity
+            android:name=".EntornoFamiliarActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ReferenciasPersonalesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DatosPersonalesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".RegistroActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

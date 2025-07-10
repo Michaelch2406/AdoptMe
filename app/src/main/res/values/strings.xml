@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">AdoptMe</string>
+
+    <!-- Array para el dropdown de Nivel de Instrucción -->
+    <string-array name="niveles_instruccion">
+        <item>Primaria</item>
+        <item>Secundaria</item>
+        <item>Bachillerato</item>
+        <item>Tercer Nivel (Universidad)</item>
+        <item>Cuarto Nivel (Posgrado)</item>
+        <item>Otro</item>
+    </string-array>
+</resources>
