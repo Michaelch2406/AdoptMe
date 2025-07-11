@@ -1,1 +1,0 @@
-typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"SecureX","l":"Library.Hash"},{"p":"SecureX","l":"Library"},{"p":"SecureX","l":"Library.Hash.OutputMode"},{"p":"SecureX","l":"Library.Utils"}];updateSearchResults();

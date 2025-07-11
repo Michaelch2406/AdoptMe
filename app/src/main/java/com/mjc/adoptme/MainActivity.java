@@ -4,9 +4,11 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -18,6 +20,17 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mjc.adoptme.data.SessionManager;
+import com.mjc.adoptme.models.LoginRequest;
+import com.mjc.adoptme.models.LoginResponse;
+import com.mjc.adoptme.network.ApiService;
+import com.mjc.adoptme.network.RetrofitClient;
+import SecureX.Library;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
@@ -25,6 +38,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
 
     // Vistas (del primer archivo para mantener el diseño)
     private ImageView ivLogo;
@@ -152,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(v -> {
             if (!isAnimating) {
                 animateButtonPress(v);
-                iniciarSesion(); // Llama al nuevo método de inicio de sesión
+                performLogin();
             }
         });
 
@@ -175,59 +189,128 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void iniciarSesion() {
+    private void performLogin() {
+        if (!validateForm()) {
+            return; // Detiene el proceso si la validación falla
+        }
+
+        startLoadingAnimation();
+
         String email = etEmailLogin.getText().toString().trim();
         String password = etPasswordLogin.getText().toString().trim();
 
-        // Validaciones detalladas (del primer archivo)
+        // 1. Hashea la contraseña usando tu librería SecureX
+        String hashedPassword = Library.Hash.hashBase64(password);
+        Log.d(TAG, "Email: " + email);
+        Log.d(TAG, "Hashed Password: " + hashedPassword);
+
+        // 2. Crea el objeto de la petición
+        LoginRequest loginRequest = new LoginRequest(email, hashedPassword);
+
+        // 3. Usa nuestro cliente Retrofit estandarizado para obtener el servicio
+        ApiService apiService = RetrofitClient.getApiService();
+
+        // 4. Realiza la llamada a la API
+        Call<LoginResponse> call = apiService.iniciarSesion(loginRequest);
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                stopLoadingAnimation();
+
+                if (response.isSuccessful() && response.body() != null) {
+                    LoginResponse loginResponse = response.body();
+
+                    // --- ESTA ES LA LÓGICA CORRECTA Y DEFINITIVA ---
+                    // 1. Instanciamos nuestro gestor de sesión.
+                    SessionManager sessionManager = new SessionManager(getApplicationContext());
+
+                    // 2. Extraemos el nombre del usuario de la respuesta de la API.
+                    String userName = "Usuario"; // Valor por defecto si algo falla.
+                    if (loginResponse.getData() != null && loginResponse.getData().getNameUser() != null) {
+                        userName = loginResponse.getData().getNameUser();
+                    }
+
+                    // 3. ¡EL PASO MÁS IMPORTANTE! Creamos la sesión GUARDANDO EL NOMBRE.
+                    // El segundo parámetro es para el token, que tu API aún no provee, por eso va vacío.
+                    sessionManager.createLoginSession(userName, "");
+
+                    // 4. Mostramos el mensaje de bienvenida.
+                    Toast.makeText(MainActivity.this, "¡Bienvenido, " + userName + "!", Toast.LENGTH_LONG).show();
+
+                    // 5. Navegamos al Panel. Ya no necesitamos pasar el nombre con .putExtra().
+                    Intent intent = new Intent(MainActivity.this, PanelActivity.class);
+                    startActivity(intent);
+                    finish(); // Es crucial cerrar MainActivity para que el usuario no pueda volver.
+                    // --- FIN DE LA LÓGICA CORRECTA ---
+
+                } else {
+                    // El manejo de errores se mantiene igual.
+                    String errorMessage = "Email o contraseña incorrectos.";
+                    try {
+                        if (response.errorBody() != null) {
+                            Log.e(TAG, "Error en login. Código: " + response.code() + " | Cuerpo: " + response.errorBody().string());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error al parsear el cuerpo del error de login.", e);
+                    }
+                    Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                // Tu código de onFailure se mantiene igual.
+                stopLoadingAnimation();
+                Log.e(TAG, "Fallo en la llamada de login", t);
+                Toast.makeText(MainActivity.this, "Fallo de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private boolean validateForm() {
+        tilEmail.setError(null);
+        tilPassword.setError(null);
+
+        String email = etEmailLogin.getText().toString().trim();
+        String password = etPasswordLogin.getText().toString().trim();
+
         if (email.isEmpty()) {
             tilEmail.setError("El email es requerido");
             animateFieldError(tilEmail);
-            etEmailLogin.requestFocus();
-            return;
+            return false;
         }
 
         if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             tilEmail.setError("Formato de email inválido");
             animateFieldError(tilEmail);
-            etEmailLogin.requestFocus();
-            return;
+            return false;
         }
 
         if (password.isEmpty()) {
             tilPassword.setError("La contraseña es requerida");
             animateFieldError(tilPassword);
-            etPasswordLogin.requestFocus();
-            return;
+            return false;
         }
 
-        if (password.length() < 6) {
-            tilPassword.setError("La contraseña debe tener al menos 6 caracteres");
-            animateFieldError(tilPassword);
-            etPasswordLogin.requestFocus();
-            return;
-        }
-
-        // Si las validaciones pasan, se inicia la animación de carga
-        startLoadingAnimation();
-
-        // Simular proceso de login con la lógica del segundo archivo
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            stopLoadingAnimation();
-
-            // Lógica de simulación de API del segundo archivo
-            Toast.makeText(this, "Llamada a la API de login (simulada)", Toast.LENGTH_LONG).show();
-            Log.d("MainActivity", "Login con Email: " + email + ", Password: " + password);
-
-            // Aquí iría la lógica de Retrofit/Volley para llamar al SP 'login_usuario_adoptante'.
-            // Si el login es exitoso, se navega a la siguiente actividad.
-            // Ejemplo:
-             Intent intent = new Intent(MainActivity.this, PanelActivity.class);
-             startActivity(intent);
-             finish();
-
-        }, 2000); // 2 segundos de retraso para simular la llamada de red
+        return true;
     }
+
+    // En MainActivity.java
+
+    private void saveAuthToken(String token) {
+        // La forma moderna y recomendada de obtener SharedPreferences.
+        // Le damos un nombre único a nuestro archivo de preferencias para evitar conflictos.
+        SharedPreferences preferences = getSharedPreferences("com.mjc.adoptme.PREFERENCES", MODE_PRIVATE);
+
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString("AUTH_TOKEN", token);
+
+        // apply() es asíncrono y preferido sobre commit() para no bloquear el hilo principal.
+        editor.apply();
+
+        Log.i(TAG, "Token de autenticación guardado de forma segura.");
+    }
+
 
 
     // --- MÉTODOS DE VALIDACIÓN Y ANIMACIÓN DE FEEDBACK (Sin cambios) ---

@@ -31,6 +31,7 @@ import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.models.Entorno; // <-- AÑADIDO
 import com.mjc.adoptme.models.MiembroFamiliar; // <-- AÑADIDO
+import com.mjc.adoptme.models.RegistroCompleto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +73,7 @@ public class EntornoFamiliarActivity extends AppCompatActivity {
         setContentView(R.layout.activity_entorno_familiar);
 
         initViews();
+        populateDataFromRepository();
         setupListeners();
         setupBackButtonHandler();
         startAnimations();
@@ -142,6 +144,53 @@ public class EntornoFamiliarActivity extends AppCompatActivity {
         tvTituloPersonas.setAlpha(0f);
 
 
+    }
+
+    // En EntornoFamiliarActivity.java
+
+    private void populateDataFromRepository() {
+        Entorno entorno = RegistroRepository.getInstance().getRegistroData().getEntorno();
+        if (entorno == null) return;
+
+        // Rellenar preguntas de Si/No
+        if (entorno.isEsperaBebe()) rbBebeSi.setChecked(true); else rbBebeNo.setChecked(true);
+        if (entorno.isTieneDiscapacidadFobia()) {
+            rbDiscapacidadSi.setChecked(true);
+            tilEspecifique.setVisibility(View.VISIBLE);
+            etEspecifique.setText(entorno.getEspecificacionDiscapacidad());
+        } else {
+            rbDiscapacidadNo.setChecked(true);
+        }
+
+        // Rellenar decisión familiar
+        String decision = entorno.getDecisionFamiliar();
+        if (decision != null) {
+            if (decision.equals("Están todos de acuerdo")) rbTodosDeAcuerdo.setChecked(true);
+            else if (decision.equals("Lo aceptan por darme gusto")) rbAceptanPorDarmeGusto.setChecked(true);
+            else if (decision.equals("Les da igual")) rbLesDaIgual.setChecked(true);
+            else if (decision.equals("No están de acuerdo")) rbNoEstanDeAcuerdo.setChecked(true);
+        }
+
+        // Rellenar miembros de la familia (incluyendo los dinámicos)
+        List<MiembroFamiliar> miembros = entorno.getMiembros();
+        if (miembros != null && !miembros.isEmpty()) {
+            // Rellenar el primer miembro (estático)
+            MiembroFamiliar primerMiembro = miembros.get(0);
+            String textoPrimerMiembro = String.format("%s %s / %d / %s",
+                    primerMiembro.getNombres(), primerMiembro.getApellidos(), primerMiembro.getEdad(), primerMiembro.getParentesco()).trim();
+            etPersona1.setText(textoPrimerMiembro);
+
+            // Crear y rellenar los miembros adicionales (dinámicos)
+            for (int i = 1; i < miembros.size(); i++) {
+                MiembroFamiliar miembroAdicional = miembros.get(i);
+                agregarPersona(); // Llama a tu método para crear un nuevo campo
+                // Obtiene el último EditText que se acaba de crear
+                TextInputEditText etNuevo = personasEditTexts.get(personasEditTexts.size() - 1);
+                String textoMiembroAdicional = String.format("%s %s / %d / %s",
+                        miembroAdicional.getNombres(), miembroAdicional.getApellidos(), miembroAdicional.getEdad(), miembroAdicional.getParentesco()).trim();
+                etNuevo.setText(textoMiembroAdicional);
+            }
+        }
     }
 
     private void setupBackButtonHandler() {
@@ -618,55 +667,62 @@ public class EntornoFamiliarActivity extends AppCompatActivity {
         }, 1500);
     }
 
+    // En EntornoFamiliarActivity.java
+
     private void saveDataToRepository() {
+        RegistroRepository repository = RegistroRepository.getInstance();
+        RegistroCompleto data = repository.getRegistroData();
         Entorno entorno = new Entorno();
 
         // Preguntas de Si/No
-        entorno.setEspera_bebe(rbBebeSi.isChecked());
-        entorno.setTiene_discapacidad_fobia(rbDiscapacidadSi.isChecked());
+        entorno.setEsperaBebe(rbBebeSi.isChecked());
+        entorno.setTieneDiscapacidadFobia(rbDiscapacidadSi.isChecked());
+
+        // --- LÓGICA DE NULL APLICADA ---
         if (rbDiscapacidadSi.isChecked()) {
-            entorno.setEspecificacion_discapacidad(etEspecifique.getText().toString().trim());
+            String especificacion = etEspecifique.getText().toString().trim();
+            // Si el usuario marcó "Sí" pero no escribió nada, enviamos null.
+            entorno.setEspecificacionDiscapacidad(especificacion.isEmpty() ? null : especificacion);
         } else {
-            entorno.setEspecificacion_discapacidad(null);
+            // Si marcó "No", nos aseguramos de que el campo sea null.
+            entorno.setEspecificacionDiscapacidad(null);
         }
 
-        // Decisión familiar
+        // Decisión familiar (ya era seguro, pero lo mantenemos consistente)
         int decisionId = rgDecisionFamiliar.getCheckedRadioButtonId();
-        if (decisionId == R.id.rbTodosDeAcuerdo) {
-            entorno.setDecision_familiar("Están todos de acuerdo");
-        } else if (decisionId == R.id.rbAceptanPorDarmeGusto) {
-            entorno.setDecision_familiar("Lo aceptan por darme gusto");
-        } else if (decisionId == R.id.rbLesDaIgual) {
-            entorno.setDecision_familiar("Les da igual");
-        } else if (decisionId == R.id.rbNoEstanDeAcuerdo) {
-            entorno.setDecision_familiar("No están de acuerdo");
+        if (decisionId != -1) {
+            RadioButton selectedDecision = findViewById(decisionId);
+            entorno.setDecisionFamiliar(selectedDecision.getText().toString());
+        } else {
+            entorno.setDecisionFamiliar(null); // Si no se selecciona nada
         }
 
-        // Miembros de la familia
+        // Miembros de la familia (ya era seguro)
         List<MiembroFamiliar> miembros = new ArrayList<>();
         for (TextInputEditText etPersona : personasEditTexts) {
             String textoCompleto = etPersona.getText().toString().trim();
-            if (!textoCompleto.isEmpty()) {
-                String[] partes = textoCompleto.split("/");
-                if (partes.length >= 3) {
+            if (textoCompleto.isEmpty()) continue;
+
+            String[] partes = textoCompleto.split("/");
+            if (partes.length >= 3) {
+                try {
                     MiembroFamiliar miembro = new MiembroFamiliar();
-                    String[] nombresApellidos = partes[0].trim().split(" ", 2);
-                    miembro.setNombres(nombresApellidos.length > 0 ? nombresApellidos[0] : "");
+                    String nombreCompleto = partes[0].trim();
+                    String[] nombresApellidos = nombreCompleto.split(" ", 2);
+                    miembro.setNombres(nombresApellidos.length > 0 ? nombresApellidos[0] : nombreCompleto);
                     miembro.setApellidos(nombresApellidos.length > 1 ? nombresApellidos[1] : "");
-                    try {
-                        miembro.setEdad(Integer.parseInt(partes[1].trim()));
-                    } catch (NumberFormatException e) {
-                        miembro.setEdad(0); // Valor por defecto
-                    }
+                    miembro.setEdad(Integer.parseInt(partes[1].trim()));
                     miembro.setParentesco(partes[2].trim());
                     miembros.add(miembro);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error parseando miembro familiar: " + textoCompleto, e);
                 }
             }
         }
         entorno.setMiembros(miembros);
 
-        RegistroRepository.getInstance().getRegistroData().setEntorno(entorno);
-        Log.i(TAG, "Datos del entorno familiar guardados en el repositorio.");
+        data.setEntorno(entorno);
+        Log.i(TAG, "Datos de entorno familiar guardados (con manejo de nulos).");
     }
 
     private void animateSuccessTransition() {

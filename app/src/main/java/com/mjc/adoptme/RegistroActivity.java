@@ -27,6 +27,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.mjc.adoptme.data.RegistroRepository;
+import com.mjc.adoptme.models.RegistroCompleto;
 // IMPORTA LA CLASE DE TU LIBRERÍA SECUREX
 import SecureX.Library;
 
@@ -223,19 +224,21 @@ public class RegistroActivity extends AppCompatActivity {
         }, 2000);
     }
 
+    // En RegistroActivity.java
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
-        repository.getRegistroData().setNombres(etNombres.getText().toString().trim());
-        repository.getRegistroData().setApellidos(etApellidos.getText().toString().trim());
-        repository.getRegistroData().setEmail(etEmail.getText().toString().trim());
+        // Obtenemos el objeto principal
+        RegistroCompleto data = repository.getRegistroData();
 
-        // USA TU LIBRERÍA SECUREX PARA EL HASHING
+        data.setNombres(etNombres.getText().toString().trim());
+        data.setApellidos(etApellidos.getText().toString().trim());
+        data.setEmail(etEmail.getText().toString().trim());
+
         String password = etPassword.getText().toString();
-        // ESTA ES LA LÍNEA CORRECTA
-        //String hashedPassword = Library.Hash.hashHex(password);
+        // Tu JSON de ejemplo usa Base64. ¡Esta es la forma correcta!
         String hashedPassword = Library.Hash.hashBase64(password);
+        data.setPasswordHash(hashedPassword);
 
-        repository.getRegistroData().setPassword_hash(hashedPassword);
         Log.i(TAG, "Datos iniciales guardados en el repositorio con contraseña hasheada.");
     }
 

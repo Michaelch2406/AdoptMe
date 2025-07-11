@@ -10,4 +10,5 @@
         <item>Cuarto Nivel (Posgrado)</item>
         <item>Otro</item>
     </string-array>
+    <string name="title_activity_launcher">LauncherActivity</string>
 </resources>

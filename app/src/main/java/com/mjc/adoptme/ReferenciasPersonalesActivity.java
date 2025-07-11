@@ -24,6 +24,9 @@ import com.google.android.material.textfield.TextInputLayout;
 import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.models.Referencia;
+import com.mjc.adoptme.models.ReferenciaPersonal;
+import com.mjc.adoptme.models.RegistroCompleto;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +55,7 @@ public class ReferenciasPersonalesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_referencias_personales);
 
         initViews();
+        populateDataFromRepository();
         setupClickListeners();
         setupBackButtonHandler();
         startAnimations();
@@ -106,6 +110,36 @@ public class ReferenciasPersonalesActivity extends AppCompatActivity {
         tvTituloRef2.setAlpha(0f);
     }
 
+    // En ReferenciasPersonalesActivity.java
+
+    private void populateDataFromRepository() {
+        RegistroCompleto data = RegistroRepository.getInstance().getRegistroData();
+        if (data == null || data.getReferencias() == null || data.getReferencias().isEmpty()) {
+            return;
+        }
+
+        List<ReferenciaPersonal> referencias = data.getReferencias();
+
+        // Rellenar primera referencia (si existe)
+        if (referencias.size() > 0) {
+            ReferenciaPersonal ref1 = referencias.get(0);
+            etNombresRef1.setText(String.format("%s %s", ref1.getNombres(), ref1.getApellidos()).trim());
+            etParentescoRef1.setText(ref1.getParentesco());
+            etTelefonoConvRef1.setText(ref1.getTelefonoConvencional());
+            etTelefonoMovilRef1.setText(ref1.getTelefonoMovil());
+            etEmailRef1.setText(ref1.getEmail());
+        }
+
+        // Rellenar segunda referencia (si existe)
+        if (referencias.size() > 1) {
+            ReferenciaPersonal ref2 = referencias.get(1);
+            etNombresRef2.setText(String.format("%s %s", ref2.getNombres(), ref2.getApellidos()).trim());
+            etParentescoRef2.setText(ref2.getParentesco());
+            etTelefonoConvRef2.setText(ref2.getTelefonoConvencional());
+            etTelefonoMovilRef2.setText(ref2.getTelefonoMovil());
+            etEmailRef2.setText(ref2.getEmail());
+        }
+    }
     private void setupBackButtonHandler() {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -226,30 +260,33 @@ public class ReferenciasPersonalesActivity extends AppCompatActivity {
     }
 
     private void saveDataToRepository() {
-        List<Referencia> referencias = new ArrayList<>();
+        List<ReferenciaPersonal> referencias = new ArrayList<>();
 
         // Referencia 1
-        Referencia ref1 = new Referencia();
+        ReferenciaPersonal ref1 = new ReferenciaPersonal();
         String[] nombresApellidos1 = etNombresRef1.getText().toString().trim().split(" ", 2);
         ref1.setNombres(nombresApellidos1.length > 0 ? nombresApellidos1[0] : "");
         ref1.setApellidos(nombresApellidos1.length > 1 ? nombresApellidos1[1] : "");
         ref1.setParentesco(etParentescoRef1.getText().toString().trim());
-        ref1.setTelefono_convencional(etTelefonoConvRef1.getText().toString().trim());
-        ref1.setTelefono_movil(etTelefonoMovilRef1.getText().toString().trim());
+        String telConv1 = etTelefonoConvRef1.getText().toString().trim();
+        ref1.setTelefonoConvencional(telConv1.isEmpty() ? null : telConv1);
+        ref1.setTelefonoMovil(etTelefonoMovilRef1.getText().toString().trim());
         ref1.setEmail(etEmailRef1.getText().toString().trim());
         referencias.add(ref1);
 
         // Referencia 2
-        Referencia ref2 = new Referencia();
+        ReferenciaPersonal ref2 = new ReferenciaPersonal();
         String[] nombresApellidos2 = etNombresRef2.getText().toString().trim().split(" ", 2);
         ref2.setNombres(nombresApellidos2.length > 0 ? nombresApellidos2[0] : "");
         ref2.setApellidos(nombresApellidos2.length > 1 ? nombresApellidos2[1] : "");
         ref2.setParentesco(etParentescoRef2.getText().toString().trim());
-        ref2.setTelefono_convencional(etTelefonoConvRef2.getText().toString().trim());
-        ref2.setTelefono_movil(etTelefonoMovilRef2.getText().toString().trim());
+        String telConv2 = etTelefonoConvRef2.getText().toString().trim();
+        ref2.setTelefonoConvencional(telConv2.isEmpty() ? null : telConv2);
+        ref2.setTelefonoMovil(etTelefonoMovilRef2.getText().toString().trim());
         ref2.setEmail(etEmailRef2.getText().toString().trim());
         referencias.add(ref2);
 
+        // Guardamos la lista completa en el repositorio
         RegistroRepository.getInstance().getRegistroData().setReferencias(referencias);
         Log.i(TAG, "Referencias personales guardadas en el repositorio.");
     }

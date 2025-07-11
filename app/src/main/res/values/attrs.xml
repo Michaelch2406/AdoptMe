@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+    Aquí declaramos los nombres de los atributos personalizados que usaremos en nuestro tema.
+    Esto permite que el sistema los reconozca y que podamos referenciarlos con ?attr/...
+    -->
+    <attr name="backgroundColor" format="color|reference" />
+    <attr name="cardBackgroundColor" format="color|reference" />
+    <attr name="textColorPrimary" format="color|reference" />
+    <attr name="textColorSecondary" format="color|reference" />
+    <attr name="iconColor" format="color|reference" />
+    <attr name="strokeColor" format="color|reference" />
+    <attr name="dividerColor" format="color|reference" />
+
+    <!-- Atributos para los textos de las estadísticas -->
+    <attr name="colorPrimaryText" format="color|reference" />
+    <attr name="colorAccent1Text" format="color|reference" />
+    <attr name="colorAccent2Text" format="color|reference" />
+    <attr name="colorAccent3Text" format="color|reference" />
+</resources>

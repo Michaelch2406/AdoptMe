@@ -34,7 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
-import com.mjc.adoptme.models.AnimalActual; // <-- AÑADIDO
+import com.mjc.adoptme.models.InfoAnimales;
+import com.mjc.adoptme.models.AnimalActual;
+import com.mjc.adoptme.models.AnimalHistorial; // Aunque no se use aquí, es bueno tenerlo
 import com.mjc.adoptme.models.Animales;
 
 public class RelacionAnimalesActivity extends AppCompatActivity {
@@ -56,6 +58,10 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
     private RadioButton rbTieneAnimalesSi, rbTieneAnimalesNo;
     private RadioButton rbTipoCanino, rbTipoFelino;
     private RadioButton rbSexoMacho, rbSexoHembra;
+
+    private RadioButton rbCanino, rbFelino;
+    private RadioButton rbMacho, rbHembra;
+
     private RadioButton rbEsterilizadoSi, rbEsterilizadoNo;
 
     private List<View> animalesAdicionalesViews = new ArrayList<>();
@@ -68,6 +74,7 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_relacion_animales);
 
         initViews();
+        populateDataFromRepository();
         setupListeners();
         setupBackButtonHandler(); // <-- Se llama al gestor moderno
         startAnimations();
@@ -101,6 +108,10 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
         rgTipoAnimal = findViewById(R.id.rgTipoAnimal);
         rgSexoAnimal = findViewById(R.id.rgSexoAnimal);
         rgEsterilizado = findViewById(R.id.rgEsterilizado);
+        rbCanino = findViewById(R.id.rbCanino);
+        rbFelino = findViewById(R.id.rbFelino);
+        rbMacho = findViewById(R.id.rbMacho);
+        rbHembra = findViewById(R.id.rbHembra);
 
         // *** CORREGIDO: Inicializar los RadioButtons individuales ***
         rbTieneAnimalesSi = findViewById(R.id.rbTieneAnimalesSi);
@@ -305,6 +316,48 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
         ObjectAnimator.ofFloat(view, "translationX", 0f, 25f, -25f, 25f, -25f, 15f, -15f, 6f, -6f, 0f).setDuration(500).start();
     }
 
+    // En RelacionAnimalesActivity.java
+
+    private void populateDataFromRepository() {
+        InfoAnimales infoAnimales = RegistroRepository.getInstance().getRegistroData().getAnimales();
+        if (infoAnimales == null) return;
+
+        // Rellenar mala experiencia
+        if (infoAnimales.getMalaExperiencia() != null) {
+            for (int i = 0; i < rgMalaExperiencia.getChildCount(); i++) {
+                RadioButton rb = (RadioButton) rgMalaExperiencia.getChildAt(i);
+                if (rb.getText().toString().equalsIgnoreCase(infoAnimales.getMalaExperiencia())) {
+                    rb.setChecked(true);
+                    break;
+                }
+            }
+        }
+
+        // Rellenar si tiene animales y la sección condicional
+        if (infoAnimales.isTieneAnimalesActuales()) {
+            rbTieneAnimalesSi.setChecked(true);
+            layoutDetallesAnimales.setVisibility(View.VISIBLE);
+            etEspecifiqueAnimales.setText(infoAnimales.getEspecificacion());
+
+            // Rellenar los detalles del primer animal (si existe)
+            if (infoAnimales.getActuales() != null && !infoAnimales.getActuales().isEmpty()) {
+                AnimalActual primerAnimal = infoAnimales.getActuales().get(0);
+
+                // Tipo: 1=Canino, 2=Felino
+                if (primerAnimal.getTipoAnimalId() == 1) rbCanino.setChecked(true); else rbFelino.setChecked(true);
+
+                // Género: 1=Macho, 2=Hembra
+                if (primerAnimal.getGeneroId() == 1) rbMacho.setChecked(true); else rbHembra.setChecked(true);
+
+                etEdadAnimal.setText(String.valueOf(primerAnimal.getEdad()));
+                if (primerAnimal.isEsterilizado()) rbEsterilizadoSi.setChecked(true); else rbEsterilizadoNo.setChecked(true);
+            }
+        } else {
+            rbTieneAnimalesNo.setChecked(true);
+            layoutDetallesAnimales.setVisibility(View.GONE);
+        }
+    }
+
     private void saveDataAndContinue() {
         progressBar.setVisibility(View.VISIBLE);
         btnSiguiente.setEnabled(false);
@@ -315,69 +368,54 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
         handler.postDelayed(this::animateSuccessTransition, 1000);
     }
 
+    // En RelacionAnimalesActivity.java
+
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
-        Animales animales = new Animales();
+        InfoAnimales infoAnimales = new InfoAnimales();
 
+        // Mala experiencia
         int malaExpId = rgMalaExperiencia.getCheckedRadioButtonId();
-        if (malaExpId != -1) {
-            animales.setMalaExperiencia(((RadioButton) findViewById(malaExpId)).getText().toString());
-        }
+        infoAnimales.setMalaExperiencia(malaExpId != -1 ? ((RadioButton) findViewById(malaExpId)).getText().toString() : null);
 
+        // --- LÓGICA DE NULL APLICADA (TIENE ANIMALES) ---
         boolean tieneAnimales = rbTieneAnimalesSi.isChecked();
-        animales.setTieneAnimalesActuales(tieneAnimales);
+        infoAnimales.setTieneAnimalesActuales(tieneAnimales);
 
         if (tieneAnimales) {
-            animales.setEspecificacion(etEspecifiqueAnimales.getText().toString().trim());
-            List<AnimalActual> actuales = new ArrayList<>();
-            AnimalActual animalPrincipal = new AnimalActual();
+            String especificacion = etEspecifiqueAnimales.getText().toString().trim();
+            infoAnimales.setEspecificacion(especificacion.isEmpty() ? null : especificacion);
 
-            // *** LÓGICA REFACTORIZADA Y SEGURA ***
-            // Obtener el ID del RadioButton seleccionado en el grupo de TIPO
-            int tipoAnimalId = rgTipoAnimal.getCheckedRadioButtonId();
-            if (tipoAnimalId != -1) {
-                RadioButton selectedTipoButton = findViewById(tipoAnimalId);
-                String tipoTexto = selectedTipoButton.getText().toString();
-                // Asumiendo que el texto es "Canino" o "Felino"
-                animalPrincipal.setTipoAnimalId("Canino".equalsIgnoreCase(tipoTexto) ? 1 : 2);
-            }
-
-            // Obtener el ID del RadioButton seleccionado en el grupo de SEXO
-            int sexoAnimalId = rgSexoAnimal.getCheckedRadioButtonId();
-            if (sexoAnimalId != -1) {
-                RadioButton selectedSexoButton = findViewById(sexoAnimalId);
-                String sexoTexto = selectedSexoButton.getText().toString();
-                // Asumiendo que el texto es "Macho" o "Hembra"
-                animalPrincipal.setGeneroId("Macho".equalsIgnoreCase(sexoTexto) ? 1 : 2);
-            }
-
+            List<AnimalActual> animalesActuales = new ArrayList<>();
+            // Procesa el primer animal
+            AnimalActual primerAnimal = new AnimalActual();
+            int tipoId = rgTipoAnimal.getCheckedRadioButtonId();
+            primerAnimal.setTipoAnimalId(tipoId == R.id.rbCanino ? 1 : (tipoId == R.id.rbFelino ? 2 : 0));
+            int sexoId = rgSexoAnimal.getCheckedRadioButtonId();
+            primerAnimal.setGeneroId(sexoId == R.id.rbMacho ? 1 : (sexoId == R.id.rbHembra ? 2 : 0));
             try {
-                animalPrincipal.setEdad(Integer.parseInt(etEdadAnimal.getText().toString()));
-            } catch (NumberFormatException e) {
-                animalPrincipal.setEdad(0);
-            }
+                primerAnimal.setEdad(Integer.parseInt(etEdadAnimal.getText().toString().trim()));
+            } catch (NumberFormatException e) { primerAnimal.setEdad(0); }
+            primerAnimal.setEsterilizado(rgEsterilizado.getCheckedRadioButtonId() == R.id.rbEsterilizadoSi);
+            primerAnimal.setViveConUsuario(true);
+            primerAnimal.setEstaEnVeterinario(false);
+            animalesActuales.add(primerAnimal);
 
-            // Obtener el ID del RadioButton seleccionado en el grupo de ESTERILIZADO
-            int esterilizadoId = rgEsterilizado.getCheckedRadioButtonId();
-            if (esterilizadoId != -1) {
-                RadioButton selectedEsterilizadoButton = findViewById(esterilizadoId);
-                String esterilizadoTexto = selectedEsterilizadoButton.getText().toString();
-                animalPrincipal.setEsterilizado("Sí".equalsIgnoreCase(esterilizadoTexto));
-            }
+            // (Aquí iría la lógica para los animales adicionales si la hubiera)
 
-            animalPrincipal.setViveConUsuario(true);
-            animalPrincipal.setEstaEnVeterinario(false);
+            infoAnimales.setActuales(animalesActuales);
 
-            actuales.add(animalPrincipal);
-            animales.setActuales(actuales);
         } else {
-            animales.setEspecificacion(null);
-            animales.setActuales(new ArrayList<>());
+            // Si no tiene animales, todos los campos relacionados son null o listas vacías
+            infoAnimales.setEspecificacion(null);
+            infoAnimales.setActuales(new ArrayList<>());
         }
 
-        animales.setHistorial(new ArrayList<>());
-        repository.getRegistroData().setAnimales(animales);
-        Log.i(TAG, "Datos de relación con animales guardados correctamente.");
+        // Inicializa el historial para la siguiente pantalla
+        infoAnimales.setHistorial(new ArrayList<>());
+
+        repository.getRegistroData().setAnimales(infoAnimales);
+        Log.i(TAG, "Datos de relación con animales guardados (con manejo de nulos).");
     }
 
     private void animateSuccessTransition() {

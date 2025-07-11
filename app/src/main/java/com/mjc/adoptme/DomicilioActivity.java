@@ -23,6 +23,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.models.Domicilio;
+import com.mjc.adoptme.models.RegistroCompleto;
 
 
 public class DomicilioActivity extends AppCompatActivity {
@@ -39,6 +40,10 @@ public class DomicilioActivity extends AppCompatActivity {
     private TextInputLayout tilMetrosVivienda, tilMetrosAreaVerde, tilAreaComunal, tilAlturaCerramiento, tilNombresDueno, tilTelefonoDueno, tilEspecifiqueFrecuencia;
     private TextInputEditText etMetrosVivienda, etMetrosAreaVerde, etAreaComunal, etAlturaCerramiento, etNombresDueno, etTelefonoDueno, etEspecifiqueFrecuencia;
 
+    private RadioButton rbPropia, rbArrendada, rbPrestada;
+    private RadioButton rbPermiteAnimalesSi, rbPermiteAnimalesNo;
+    private RadioButton rbCerramientoSi, rbCerramientoNo;
+    private RadioButton rbEscapeSi, rbEscapeNo;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -47,6 +52,7 @@ public class DomicilioActivity extends AppCompatActivity {
         setContentView(R.layout.activity_domicilio);
 
         initViews();
+        populateDataFromRepository();
         setupListeners();
         setupBackButtonHandler(); // <-- Se llama al gestor moderno del botón atrás
         startAnimations();
@@ -95,6 +101,19 @@ public class DomicilioActivity extends AppCompatActivity {
         etNombresDueno = findViewById(R.id.etNombresDueno); // <-- CORREGIDO: el ID del XML es etNombresDueno
         etTelefonoDueno = findViewById(R.id.etTelefonoDueno);
         etEspecifiqueFrecuencia = findViewById(R.id.etEspecifiqueFrecuencia);
+
+        rbPropia = findViewById(R.id.rbPropia);
+        rbArrendada = findViewById(R.id.rbArrendada);
+        rbPrestada = findViewById(R.id.rbPrestada);
+
+        rbPermiteAnimalesSi = findViewById(R.id.rbPermiteAnimalesSi);
+        rbPermiteAnimalesNo = findViewById(R.id.rbPermiteAnimalesNo);
+
+        rbCerramientoSi = findViewById(R.id.rbCerramientoSi);
+        rbCerramientoNo = findViewById(R.id.rbCerramientoNo);
+
+        rbEscapeSi = findViewById(R.id.rbEscapeSi);
+        rbEscapeNo = findViewById(R.id.rbEscapeNo);
 
         // Ocultar secciones dinámicas al iniciar
         layoutArrendadaPrestada.setVisibility(View.GONE);
@@ -163,6 +182,89 @@ public class DomicilioActivity extends AppCompatActivity {
         btnRegresar.setOnClickListener(v -> runBackPressedAnimation());
     }
 
+    // En DomicilioActivity.java
+
+    private void populateDataFromRepository() {
+        Domicilio domicilio = RegistroRepository.getInstance().getRegistroData().getDomicilio();
+        if (domicilio == null) return;
+
+        // Rellenar tipo de vivienda
+        if (domicilio.getTipoVivienda() != null) {
+            for (int i = 0; i < rgTipoVivienda.getChildCount(); i++) {
+                RadioButton rb = (RadioButton) rgTipoVivienda.getChildAt(i);
+                if (rb.getText().toString().equalsIgnoreCase(domicilio.getTipoVivienda())) {
+                    rb.setChecked(true);
+                    break;
+                }
+            }
+        }
+
+        // Rellenar campos de texto de metros
+        etMetrosVivienda.setText(String.valueOf(domicilio.getMetrosCuadradosVivienda()));
+        etMetrosAreaVerde.setText(String.valueOf(domicilio.getMetrosCuadradosAreaVerde()));
+        if (domicilio.getDimensionAreaComunal() != null) {
+            etAreaComunal.setText(String.valueOf(domicilio.getDimensionAreaComunal()));
+        }
+
+        // Rellenar tipo de tenencia y la sección condicional
+        if (domicilio.getTipoTenencia() != null) {
+            if (domicilio.getTipoTenencia().equalsIgnoreCase("Propia")) {
+                rbPropia.setChecked(true);
+                layoutArrendadaPrestada.setVisibility(View.GONE);
+            } else if (domicilio.getTipoTenencia().equalsIgnoreCase("Arrendada")) {
+                rbArrendada.setChecked(true);
+                layoutArrendadaPrestada.setVisibility(View.VISIBLE);
+            } else if (domicilio.getTipoTenencia().equalsIgnoreCase("Prestada")) {
+                rbPrestada.setChecked(true);
+                layoutArrendadaPrestada.setVisibility(View.VISIBLE);
+            }
+
+            // Rellenar los sub-campos si la sección es visible
+            if (layoutArrendadaPrestada.getVisibility() == View.VISIBLE) {
+                if (domicilio.isPropietarioPermiteAnimales()) rbPermiteAnimalesSi.setChecked(true); else rbPermiteAnimalesNo.setChecked(true);
+                etNombresDueno.setText(domicilio.getNombrePropietario());
+                etTelefonoDueno.setText(domicilio.getTelefonoPropietario());
+            }
+        }
+
+        // Rellenar cerramiento y la sección condicional
+        if (domicilio.isTieneCerramiento()) {
+            rbCerramientoSi.setChecked(true);
+            layoutCerramiento.setVisibility(View.VISIBLE);
+            etAlturaCerramiento.setText(String.valueOf(domicilio.getAlturaCerramiento()));
+            if (domicilio.getTipoCerramiento() != null) {
+                for (int i = 0; i < rgTipoCerramiento.getChildCount(); i++) {
+                    RadioButton rb = (RadioButton) rgTipoCerramiento.getChildAt(i);
+                    if (rb.getText().toString().equalsIgnoreCase(domicilio.getTipoCerramiento())) {
+                        rb.setChecked(true);
+                        break;
+                    }
+                }
+            }
+        } else {
+            rbCerramientoNo.setChecked(true);
+            layoutCerramiento.setVisibility(View.GONE);
+        }
+
+        // Rellenar posibilidad de escape
+        if(domicilio.isPuedeEscaparAnimal()) rbEscapeSi.setChecked(true); else rbEscapeNo.setChecked(true);
+
+        // Rellenar tipo de residencia y la especificación condicional
+        if (domicilio.getTipoResidencia() != null) {
+            for (int i = 0; i < rgFrecuenciaUso.getChildCount(); i++) {
+                RadioButton rb = (RadioButton) rgFrecuenciaUso.getChildAt(i);
+                if (rb.getText().toString().equalsIgnoreCase(domicilio.getTipoResidencia())) {
+                    rb.setChecked(true);
+                    if (rb.getId() == R.id.rbVaDeVezEnCuando || rb.getId() == R.id.rbVaFinesSemana) {
+                        tilEspecifiqueFrecuencia.setVisibility(View.VISIBLE);
+                        etEspecifiqueFrecuencia.setText(domicilio.getEspecificacionResidencia());
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     private boolean validateForm() {
         boolean isValid = true;
         // ... (Se adapta la validación a los cambios)
@@ -215,43 +317,78 @@ public class DomicilioActivity extends AppCompatActivity {
         handler.postDelayed(this::animateSuccessTransition, 1000);
     }
 
+    // En DomicilioActivity.java
+
     private void saveDataToRepository() {
+        RegistroRepository repository = RegistroRepository.getInstance();
+        RegistroCompleto data = repository.getRegistroData();
         Domicilio domicilio = new Domicilio();
 
-        // Mapear RadioGroups a Strings
-        domicilio.setTipo_vivienda(((RadioButton) findViewById(rgTipoVivienda.getCheckedRadioButtonId())).getText().toString());
-        domicilio.setTipo_vivienda(((RadioButton) findViewById(rgPropiedadVivienda.getCheckedRadioButtonId())).getText().toString());
-        domicilio.setTipo_cerramiento(((RadioButton) findViewById(rgTipoCerramiento.getCheckedRadioButtonId())).getText().toString());
-        domicilio.setTipo_residencia(((RadioButton) findViewById(rgFrecuenciaUso.getCheckedRadioButtonId())).getText().toString());
+        // IDs y campos fijos (ajusta los valores de prueba según tu DB)
+        domicilio.setParroquiaId(1);
+        domicilio.setDireccion("Dirección de ejemplo");
+        domicilio.setNumeroCasa("S/N");
+        domicilio.setEsUrbanizacion(false);
+        domicilio.setNombreUrbanizacion(null);
+        domicilio.setNumeroBloque(null);
 
-        // Campos numéricos
+        // Mapeo seguro de RadioGroups
+        int tipoViviendaId = rgTipoVivienda.getCheckedRadioButtonId();
+        domicilio.setTipoVivienda(tipoViviendaId != -1 ? ((RadioButton) findViewById(tipoViviendaId)).getText().toString() : null);
+
+        int tipoTenenciaId = rgPropiedadVivienda.getCheckedRadioButtonId();
+        domicilio.setTipoTenencia(tipoTenenciaId != -1 ? ((RadioButton) findViewById(tipoTenenciaId)).getText().toString() : null);
+
+        int tipoResidenciaId = rgFrecuenciaUso.getCheckedRadioButtonId();
+        domicilio.setTipoResidencia(tipoResidenciaId != -1 ? ((RadioButton) findViewById(tipoResidenciaId)).getText().toString() : null);
+
+        // Campos numéricos y de texto (con conversión a null si están vacíos)
         try {
-            domicilio.setMetros_cuadrados_vivienda(Integer.parseInt(etMetrosVivienda.getText().toString()));
-            domicilio.setMetros_cuadrados_area_verde(Integer.parseInt(etMetrosAreaVerde.getText().toString()));
-            domicilio.setAltura_cerramiento(Double.parseDouble(etAlturaCerramiento.getText().toString()));
-        } catch (NumberFormatException e) {
-            Log.e(TAG, "Error al parsear números", e);
+            domicilio.setMetrosCuadradosVivienda(Integer.parseInt(etMetrosVivienda.getText().toString().trim()));
+        } catch (NumberFormatException e) { domicilio.setMetrosCuadradosVivienda(0); }
+        try {
+            domicilio.setMetrosCuadradosAreaVerde(Integer.parseInt(etMetrosAreaVerde.getText().toString().trim()));
+        } catch (NumberFormatException e) { domicilio.setMetrosCuadradosAreaVerde(0); }
+
+        String areaComunalStr = etAreaComunal.getText().toString().trim();
+        domicilio.setDimensionAreaComunal(areaComunalStr.isEmpty() ? null : Integer.parseInt(areaComunalStr));
+
+        // --- LÓGICA DE NULL APLICADA (VIVIENDA ARRENDADA) ---
+        if (tipoTenenciaId == R.id.rbArrendada || tipoTenenciaId == R.id.rbPrestada) {
+            domicilio.setPropietarioPermiteAnimales(rgPermiteAnimales.getCheckedRadioButtonId() == R.id.rbPermiteAnimalesSi);
+            String nombreProp = etNombresDueno.getText().toString().trim();
+            domicilio.setNombrePropietario(nombreProp.isEmpty() ? null : nombreProp);
+            String telProp = etTelefonoDueno.getText().toString().trim();
+            domicilio.setTelefonoPropietario(telProp.isEmpty() ? null : telProp);
+        } else {
+            domicilio.setPropietarioPermiteAnimales(true);
+            domicilio.setNombrePropietario(null);
+            domicilio.setTelefonoPropietario(null);
         }
 
-        // Campos de texto y booleanos
-        domicilio.setDimension_area_comunal(etAreaComunal.getText().toString().trim());
-        domicilio.setPropietario_permite_animales(((RadioButton)findViewById(R.id.rbPermiteAnimalesSi)).isChecked());
-        domicilio.setNombre_propietario(etNombresDueno.getText().toString().trim());
-        domicilio.setTelefono_propietario(etTelefonoDueno.getText().toString().trim());
-        domicilio.setTiene_cerramiento(((RadioButton)findViewById(R.id.rbCerramientoSi)).isChecked());
-        domicilio.setPuede_escapar_animal(((RadioButton)findViewById(R.id.rbEscapeSi)).isChecked());
-        domicilio.setEspecificacion_residencia(etEspecifiqueFrecuencia.getText().toString().trim());
+        // --- LÓGICA DE NULL APLICADA (CERRAMIENTO) ---
+        boolean tieneCerramiento = rgCerramiento.getCheckedRadioButtonId() == R.id.rbCerramientoSi;
+        domicilio.setTieneCerramiento(tieneCerramiento);
+        if (tieneCerramiento) {
+            try {
+                domicilio.setAlturaCerramiento(Double.parseDouble(etAlturaCerramiento.getText().toString().trim()));
+            } catch (NumberFormatException e) {
+                domicilio.setAlturaCerramiento(0.0);
+            }
+            int tipoCerramientoId = rgTipoCerramiento.getCheckedRadioButtonId();
+            domicilio.setTipoCerramiento(tipoCerramientoId != -1 ? ((RadioButton) findViewById(tipoCerramientoId)).getText().toString() : null);
+        } else {
+            domicilio.setAlturaCerramiento(0.0);
+            domicilio.setTipoCerramiento(null);
+        }
 
-        // Campos que no están en la UI pero sí en el JSON - se establecen valores por defecto o null
-        domicilio.setDireccion("Dirección a completar"); // Necesitarás un campo para esto
-        domicilio.setParroquia_id(12); // Valor de ejemplo, necesitas una forma de obtenerlo
-        domicilio.setEs_urbanizacion(false); // Valor de ejemplo
-        domicilio.setNombre_urbanizacion(null);
-        domicilio.setNumero_bloque(null);
-        domicilio.setNumero_casa("C15"); // Necesitarás un campo para esto
+        domicilio.setPuedeEscaparAnimal(rgPosibilidadEscape.getCheckedRadioButtonId() == R.id.rbEscapeSi);
 
-        RegistroRepository.getInstance().getRegistroData().setDomicilio(domicilio);
-        Log.i(TAG, "Datos de domicilio guardados en el repositorio.");
+        String especificacionResidencia = etEspecifiqueFrecuencia.getText().toString().trim();
+        domicilio.setEspecificacionResidencia(especificacionResidencia.isEmpty() ? null : especificacionResidencia);
+
+        data.setDomicilio(domicilio);
+        Log.i(TAG, "Datos de domicilio guardados (con manejo de nulos).");
     }
 
     private void animateSuccessTransition() {

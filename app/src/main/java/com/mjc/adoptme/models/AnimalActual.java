@@ -1,29 +1,19 @@
 package com.mjc.adoptme.models;
-
 import com.google.gson.annotations.SerializedName;
 
 public class AnimalActual {
+    @SerializedName("tipo_animal_id") private int tipoAnimalId;
+    @SerializedName("genero_id") private int generoId;
+    @SerializedName("edad") private int edad;
+    @SerializedName("esterilizado") private boolean esterilizado;
+    @SerializedName("vive_con_usuario") private boolean viveConUsuario;
+    @SerializedName("esta_en_veterinario") private boolean estaEnVeterinario;
+    // Getters y Setters...
 
-    @SerializedName("tipo_animal_id")
-    private int tipoAnimalId;
-
-    @SerializedName("genero_id")
-    private int generoId;
-
-    private int edad;
-    private boolean esterilizado;
-
-    @SerializedName("vive_con_usuario")
-    private boolean viveConUsuario;
-
-    @SerializedName("esta_en_veterinario")
-    private boolean estaEnVeterinario;
-
+    // Constructor por defecto
     public AnimalActual() {
     }
-
-    public AnimalActual(int tipoAnimalId, int generoId, int edad, boolean esterilizado,
-                        boolean viveConUsuario, boolean estaEnVeterinario) {
+    public AnimalActual(int tipoAnimalId, int generoId, int edad, boolean esterilizado, boolean viveConUsuario, boolean estaEnVeterinario) {
         this.tipoAnimalId = tipoAnimalId;
         this.generoId = generoId;
         this.edad = edad;
@@ -31,7 +21,6 @@ public class AnimalActual {
         this.viveConUsuario = viveConUsuario;
         this.estaEnVeterinario = estaEnVeterinario;
     }
-
     public int getTipoAnimalId() {
         return tipoAnimalId;
     }

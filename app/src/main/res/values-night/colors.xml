@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta de Marca Principal (Tema Oscuro) -->
+    <color name="colorPrimary">#5C6BC0</color> <!-- Un poco más brillante para el modo oscuro -->
+    <color name="colorPrimaryDark">#3A436B</color> <!-- Para la barra de estado -->
+    <color name="colorOnPrimary">#FFFFFF</color>
+
+    <color name="colorAccent1">#C69F6A</color>
+    <color name="colorAccent2">#C98B46</color>
+    <color name="colorAccent3">#CC7034</color>
+
+    <!-- =============================================================== -->
+    <!-- Nombres Semánticos para la UI (Estos son los que usará el tema) -->
+    <!-- =============================================================== -->
+
+    <!-- Colores de la Interfaz -->
+    <color name="ui_background">#121212</color>
+    <color name="ui_card_background">#1E1E1E</color>
+    <color name="ui_text_primary">#FFFFFF</color>
+    <color name="ui_text_secondary">#B0B0B0</color>
+    <color name="ui_icon">#FFFFFF</color>
+    <color name="ui_stroke">#333333</color>
+    <color name="ui_divider">#40FFFFFF</color> <!-- Blanco con transparencia -->
+
+    <!-- Colores para Textos de Estadísticas (Tema Oscuro) -->
+    <color name="statistic_color_primary">@color/colorPrimary</color>
+    <color name="statistic_color_accent1">@color/colorAccent1</color>
+    <color name="statistic_color_accent2">@color/colorAccent2</color>
+    <color name="statistic_color_accent3">@color/colorAccent3</color>
+</resources>

@@ -31,6 +31,7 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.mjc.adoptme.data.RegistroRepository; // <-- AÑADIDO
+import com.mjc.adoptme.models.RegistroCompleto;
 import com.mjc.adoptme.models.RegistroGeneral;
 
 import java.text.ParseException;
@@ -51,10 +52,10 @@ public class DatosPersonalesActivity extends AppCompatActivity {
 
     // Campos del Formulario (sin email)
     private TextInputLayout tilCedula, tilFechaNacimiento, tilLugarNacimiento, tilNacionalidad;
-    private TextInputLayout tilTelefonoConvencional, tilTelefonoMovil, tilOcupacion, tilNivelInstruccion, tilLugarTrabajo, tilTelefonoTrabajo;
+    private TextInputLayout tilTelefonoConvencional, tilTelefonoMovil, tilOcupacion, tilNivelInstruccion, tilLugarTrabajo, tilTelefonoTrabajo, tilDireccionTrabajo;
     private TextInputLayout tilNivelInstruccionOtro; // Campo para especificar otro nivel
     private TextInputEditText etCedula, etFechaNacimiento, etLugarNacimiento, etNacionalidad;
-    private TextInputEditText etTelefonoConvencional, etTelefonoMovil, etOcupacion, etLugarTrabajo, etTelefonoTrabajo;
+    private TextInputEditText etTelefonoConvencional, etTelefonoMovil, etOcupacion, etLugarTrabajo, etTelefonoTrabajo, etDireccionTrabajo;
     private TextInputEditText etNivelInstruccionOtro; // EditText para especificar otro nivel
     private AutoCompleteTextView actvNivelInstruccion;
     private RadioGroup rgTrabaja;
@@ -75,6 +76,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_datos_personales);
 
         initViews();
+        populateDataFromRepository();
         setupDropdowns();
         setupDatePicker();
         setupClickListeners();
@@ -105,6 +107,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         tilNivelInstruccion = findViewById(R.id.tilNivelInstruccion);
         tilNivelInstruccionOtro = findViewById(R.id.tilNivelInstruccionOtro);
         tilLugarTrabajo = findViewById(R.id.tilLugarTrabajo);
+        tilDireccionTrabajo = findViewById(R.id.tilDireccionTrabajo);
         tilTelefonoTrabajo = findViewById(R.id.tilTelefonoTrabajo);
         rgTrabaja = findViewById(R.id.rgTrabaja);
         rbTrabajaSi = findViewById(R.id.rbTrabajaSi);
@@ -118,6 +121,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         etTelefonoMovil = findViewById(R.id.etTelefonoMovil);
         etOcupacion = findViewById(R.id.etOcupacion);
         etLugarTrabajo = findViewById(R.id.etLugarTrabajo);
+        etDireccionTrabajo = findViewById(R.id.etDireccionTrabajo);
         etTelefonoTrabajo = findViewById(R.id.etTelefonoTrabajo);
         etNivelInstruccionOtro = findViewById(R.id.etNivelInstruccionOtro);
         actvNivelInstruccion = findViewById(R.id.actvNivelInstruccion);
@@ -139,6 +143,51 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         });
     }
 
+    // En DatosPersonalesActivity.java
+
+    private void populateDataFromRepository() {
+        RegistroCompleto data = RegistroRepository.getInstance().getRegistroData();
+
+        // Si no hay datos, no hay nada que rellenar
+        if (data == null) return;
+
+        // Rellenar campos de texto simples, verificando que no sean nulos
+        if (data.getCedula() != null) etCedula.setText(data.getCedula());
+        if (data.getLugarNacimiento() != null) etLugarNacimiento.setText(data.getLugarNacimiento());
+        if (data.getNacionalidad() != null) etNacionalidad.setText(data.getNacionalidad());
+        if (data.getTelefonoConvencional() != null) etTelefonoConvencional.setText(data.getTelefonoConvencional());
+        if (data.getTelefonoMovil() != null) etTelefonoMovil.setText(data.getTelefonoMovil());
+        if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
+
+        // Rellenar fecha de nacimiento (requiere conversión de formato)
+        if (data.getFechaNacimiento() != null) {
+            try {
+                Date date = apiDateFormat.parse(data.getFechaNacimiento());
+                etFechaNacimiento.setText(displayDateFormat.format(date));
+            } catch (ParseException e) {
+                Log.e(TAG, "No se pudo parsear la fecha guardada para mostrarla", e);
+            }
+        }
+
+        // Rellenar el selector de nivel de instrucción
+        if (data.getNivelInstruccion() != null) {
+            actvNivelInstruccion.setText(data.getNivelInstruccion(), false); // false para no filtrar
+        }
+
+        // Rellenar la pregunta "¿Trabaja actualmente?" y mostrar/ocultar campos
+        if (data.getLugarTrabajo() != null) {
+            rbTrabajaSi.setChecked(true);
+            layoutCamposTrabajo.setVisibility(View.VISIBLE);
+            etLugarTrabajo.setText(data.getLugarTrabajo());
+            if(data.getDireccionTrabajo() != null) etDireccionTrabajo.setText(data.getDireccionTrabajo());
+            if (data.getTelefonoTrabajo() != null) etTelefonoTrabajo.setText(data.getTelefonoTrabajo());
+        } else {
+            // Si no hay lugar de trabajo, asumimos que se seleccionó "No"
+            rbTrabajaNo.setChecked(true);
+            layoutCamposTrabajo.setVisibility(View.GONE);
+        }
+    }
+
     private void setupClickListeners() {
         btnSiguiente.setOnClickListener(v -> {
             if (validateForm()) {
@@ -153,6 +202,27 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         String[] niveles = getResources().getStringArray(R.array.niveles_instruccion);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, niveles);
         actvNivelInstruccion.setAdapter(adapter);
+
+        // Listener para mostrar/ocultar campos de trabajo (VERSIÓN MEJORADA)
+        rgTrabaja.setOnCheckedChangeListener((group, checkedId) -> {
+                    if (checkedId == R.id.rbTrabajaSi) {
+                        animateViewVisibility(layoutCamposTrabajo, true);
+                    } else if (checkedId == R.id.rbTrabajaNo) {
+                        animateViewVisibility(layoutCamposTrabajo, false);
+
+                        // --- ESTA ES LA CLAVE PARA ELIMINAR DATOS FANTASMA ---
+                        // Limpiamos los campos inmediatamente cuando el usuario selecciona "No".
+                        etLugarTrabajo.setText("");
+                        etDireccionTrabajo.setText(""); // <-- Limpiamos el nuevo campo también
+                        etTelefonoTrabajo.setText("");
+
+                        // También limpiamos cualquier mensaje de error que pudieran tener
+                        tilLugarTrabajo.setError(null);
+                        tilDireccionTrabajo.setError(null);
+                        tilTelefonoTrabajo.setError(null);
+                    }
+                });
+
 
         // Listener para mostrar/ocultar campo "Especifique" cuando se seleccione "Otro"
         actvNivelInstruccion.setOnItemClickListener((parent, view, position, id) -> {
@@ -374,13 +444,22 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             // Mostrar error visual en el RadioGroup
             isValid = false;
         } else if (rgTrabaja.getCheckedRadioButtonId() == R.id.rbTrabajaSi) {
-            // Solo validar lugar de trabajo si indicó que trabaja
+            // Validar lugar de trabajo
             if (etLugarTrabajo.getText().toString().trim().isEmpty()) {
                 tilLugarTrabajo.setError("El lugar de trabajo es obligatorio");
                 shakeView(tilLugarTrabajo);
                 isValid = false;
             } else {
                 tilLugarTrabajo.setError(null);
+            }
+
+            // *** AÑADIR ESTA VALIDACIÓN ***
+            if (etDireccionTrabajo.getText().toString().trim().isEmpty()) {
+                tilDireccionTrabajo.setError("La dirección de trabajo es obligatoria");
+                shakeView(tilDireccionTrabajo);
+                isValid = false;
+            } else {
+                tilDireccionTrabajo.setError(null);
             }
         }
 
@@ -423,46 +502,60 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         handler.postDelayed(this::animateSuccessTransition, 1500);
     }
 
+    // En DatosPersonalesActivity.java
+
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
-        RegistroGeneral data = repository.getRegistroData();
+        RegistroCompleto data = repository.getRegistroData();
 
+        // -- Datos personales (se mantienen igual) --
         data.setCedula(etCedula.getText().toString().trim());
-
-        // Convertir fecha al formato YYYY-MM-DD
         try {
             Date date = displayDateFormat.parse(etFechaNacimiento.getText().toString());
-            data.setFecha_nacimiento(apiDateFormat.format(date));
+            data.setFechaNacimiento(apiDateFormat.format(date));
         } catch (ParseException e) {
-            Log.e(TAG, "Error al parsear la fecha", e);
-            data.setFecha_nacimiento(null); // o manejar el error
+            Log.e(TAG, "Error al parsear la fecha, se enviará nulo.", e);
+            data.setFechaNacimiento(null);
         }
-
-        data.setLugar_nacimiento(etLugarNacimiento.getText().toString().trim());
+        data.setLugarNacimiento(etLugarNacimiento.getText().toString().trim());
         data.setNacionalidad(etNacionalidad.getText().toString().trim());
-        data.setTelefono_convencional(etTelefonoConvencional.getText().toString().trim());
-        data.setTelefono_movil(etTelefonoMovil.getText().toString().trim());
+
+        String telConvencional = etTelefonoConvencional.getText().toString().trim();
+        data.setTelefonoConvencional(telConvencional.isEmpty() ? null : telConvencional);
+
+        data.setTelefonoMovil(etTelefonoMovil.getText().toString().trim());
         data.setOcupacion(etOcupacion.getText().toString().trim());
 
         String nivelInstruccion = actvNivelInstruccion.getText().toString().trim();
         if ("Otro".equals(nivelInstruccion)) {
-            data.setNivel_instruccion(etNivelInstruccionOtro.getText().toString().trim());
+            String otroNivel = etNivelInstruccionOtro.getText().toString().trim();
+            data.setNivelInstruccion(otroNivel.isEmpty() ? null : otroNivel);
         } else {
-            data.setNivel_instruccion(nivelInstruccion);
+            data.setNivelInstruccion(nivelInstruccion);
         }
+
+        // --- LÓGICA DEFINITIVA PARA LOS DATOS DE TRABAJO ---
+        // Esta es la sección que soluciona tu error 400.
 
         if (rbTrabajaSi.isChecked()) {
-            data.setLugar_trabajo(etLugarTrabajo.getText().toString().trim());
-            data.setTelefono_trabajo(etTelefonoTrabajo.getText().toString().trim());
-            // Asumo que no tienes un campo de dirección de trabajo en esta UI, si lo tienes, añádelo
-            data.setDireccion_trabajo(null);
+            // Si el usuario SÍ trabaja, leemos los valores de los campos.
+            String lugarTrabajo = etLugarTrabajo.getText().toString().trim();
+            String direccionTrabajo = etDireccionTrabajo.getText().toString().trim();
+            String telefonoTrabajo = etTelefonoTrabajo.getText().toString().trim();
+
+            data.setLugarTrabajo(lugarTrabajo);
+            data.setDireccionTrabajo(direccionTrabajo);
+            data.setTelefonoTrabajo(telefonoTrabajo.isEmpty() ? null : telefonoTrabajo);
+
         } else {
-            data.setLugar_trabajo(null);
-            data.setTelefono_trabajo(null);
-            data.setDireccion_trabajo(null);
+            // Si el usuario NO trabaja, forzamos que todos los campos relacionados sean NULL.
+            // Esto le dice a la API "estos campos no aplican para este usuario".
+            data.setLugarTrabajo(null);
+            data.setDireccionTrabajo(null);
+            data.setTelefonoTrabajo(null);
         }
 
-        Log.i(TAG, "Datos personales guardados en el repositorio.");
+        Log.i(TAG, "Datos personales guardados en el repositorio (Lógica de trabajo corregida).");
     }
 
     private void animateSuccessTransition() {

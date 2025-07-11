@@ -3,15 +3,11 @@ package com.mjc.adoptme.models;
 import com.google.gson.annotations.SerializedName;
 
 public class MiembroFamiliar {
-
-    @SerializedName("nombres")
-    private String nombres;
-    @SerializedName("apellidos")
-    private String apellidos;
-    @SerializedName("edad")
-    private int edad;
-    @SerializedName("parentesco")
-    private String parentesco;
+    @SerializedName("nombres") private String nombres;
+    @SerializedName("apellidos") private String apellidos;
+    @SerializedName("edad") private int edad;
+    @SerializedName("parentesco") private String parentesco;
+    // Getters y Setters...
 
     // Constructor por defecto
     public MiembroFamiliar() {

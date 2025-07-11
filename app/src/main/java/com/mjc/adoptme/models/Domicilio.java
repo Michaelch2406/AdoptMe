@@ -1,98 +1,55 @@
 package com.mjc.adoptme.models;
-
 import com.google.gson.annotations.SerializedName;
 
 public class Domicilio {
-
-    @SerializedName("direccion")
-    private String direccion;
-    @SerializedName("parroquia_id")
-    private int parroquia_id;
-    @SerializedName("es_urbanizacion")
-    private boolean es_urbanizacion;
-    @SerializedName("nombre_urbanizacion")
-    private String nombre_urbanizacion;
-    @SerializedName("numero_bloque")
-    private String numero_bloque;
-    @SerializedName("numero_casa")
-    private String numero_casa;
-    @SerializedName("tipo_vivienda")
-    private String tipo_vivienda;
-    @SerializedName("metros_cuadrados_vivienda")
-    private int metros_cuadrados_vivienda;
-    @SerializedName("metros_cuadrados_area_verde")
-    private int metros_cuadrados_area_verde;
-    @SerializedName("dimension_area_comunal")
-    private String dimension_area_comunal;
-    @SerializedName("tipo_tenencia")
-    private String tipo_tenencia;
-    @SerializedName("propietario_permite_animales")
-    private boolean propietario_permite_animales;
-    @SerializedName("nombre_propietario")
-    private String nombre_propietario;
-    @SerializedName("telefono_propietario")
-    private String telefono_propietario;
-    @SerializedName("tiene_cerramiento")
-    private boolean tiene_cerramiento;
-    @SerializedName("altura_cerramiento")
-    private double altura_cerramiento;
-    @SerializedName("tipo_cerramiento")
-    private String tipo_cerramiento;
-    @SerializedName("puede_escapar_animal")
-    private boolean puede_escapar_animal;
-    @SerializedName("tipo_residencia")
-    private String tipo_residencia;
-    @SerializedName("especificacion_residencia")
-    private String especificacion_residencia;
+    @SerializedName("direccion") private String direccion;
+    @SerializedName("parroquia_id") private int parroquiaId;
+    @SerializedName("es_urbanizacion") private boolean esUrbanizacion;
+    @SerializedName("nombre_urbanizacion") private String nombreUrbanizacion;
+    @SerializedName("numero_bloque") private String numeroBloque;
+    @SerializedName("numero_casa") private String numeroCasa;
+    @SerializedName("tipo_vivienda") private String tipoVivienda;
+    @SerializedName("metros_cuadrados_vivienda") private int metrosCuadradosVivienda;
+    @SerializedName("metros_cuadrados_area_verde") private int metrosCuadradosAreaVerde;
+    @SerializedName("dimension_area_comunal") private Integer dimensionAreaComunal; // Integer para permitir null
+    @SerializedName("tipo_tenencia") private String tipoTenencia;
+    @SerializedName("propietario_permite_animales") private boolean propietarioPermiteAnimales;
+    @SerializedName("nombre_propietario") private String nombrePropietario;
+    @SerializedName("telefono_propietario") private String telefonoPropietario;
+    @SerializedName("tiene_cerramiento") private boolean tieneCerramiento;
+    @SerializedName("altura_cerramiento") private double alturaCerramiento;
+    @SerializedName("tipo_cerramiento") private String tipoCerramiento;
+    @SerializedName("puede_escapar_animal") private boolean puedeEscaparAnimal;
+    @SerializedName("tipo_residencia") private String tipoResidencia;
+    @SerializedName("especificacion_residencia") private String especificacionResidencia;
+    // Getters y Setters...
 
     // Constructor por defecto
     public Domicilio() {
     }
 
-    // Constructor completo
-    public Domicilio(String direccion,
-                     int parroquia_id,
-                     boolean es_urbanizacion,
-                     String nombre_urbanizacion,
-                     String numero_bloque,
-                     String numero_casa,
-                     String tipo_vivienda,
-                     int metros_cuadrados_vivienda,
-                     int metros_cuadrados_area_verde,
-                     String dimension_area_comunal,
-                     String tipo_tenencia,
-                     boolean propietario_permite_animales,
-                     String nombre_propietario,
-                     String telefono_propietario,
-                     boolean tiene_cerramiento,
-                     double altura_cerramiento,
-                     String tipo_cerramiento,
-                     boolean puede_escapar_animal,
-                     String tipo_residencia,
-                     String especificacion_residencia) {
+    public Domicilio(String direccion, int parroquiaId, boolean esUrbanizacion, String nombreUrbanizacion, String numeroBloque, String numeroCasa, String tipoVivienda, int metrosCuadradosVivienda, int metrosCuadradosAreaVerde, Integer dimensionAreaComunal, String tipoTenencia, boolean propietarioPermiteAnimales, String nombrePropietario, String telefonoPropietario, boolean tieneCerramiento, double alturaCerramiento, String tipoCerramiento, boolean puedeEscaparAnimal, String tipoResidencia, String especificacionResidencia) {
         this.direccion = direccion;
-        this.parroquia_id = parroquia_id;
-        this.es_urbanizacion = es_urbanizacion;
-        this.nombre_urbanizacion = nombre_urbanizacion;
-        this.numero_bloque = numero_bloque;
-        this.numero_casa = numero_casa;
-        this.tipo_vivienda = tipo_vivienda;
-        this.metros_cuadrados_vivienda = metros_cuadrados_vivienda;
-        this.metros_cuadrados_area_verde = metros_cuadrados_area_verde;
-        this.dimension_area_comunal = dimension_area_comunal;
-        this.tipo_tenencia = tipo_tenencia;
-        this.propietario_permite_animales = propietario_permite_animales;
-        this.nombre_propietario = nombre_propietario;
-        this.telefono_propietario = telefono_propietario;
-        this.tiene_cerramiento = tiene_cerramiento;
-        this.altura_cerramiento = altura_cerramiento;
-        this.tipo_cerramiento = tipo_cerramiento;
-        this.puede_escapar_animal = puede_escapar_animal;
-        this.tipo_residencia = tipo_residencia;
-        this.especificacion_residencia = especificacion_residencia;
+        this.parroquiaId = parroquiaId;
+        this.esUrbanizacion = esUrbanizacion;
+        this.nombreUrbanizacion = nombreUrbanizacion;
+        this.numeroBloque = numeroBloque;
+        this.numeroCasa = numeroCasa;
+        this.tipoVivienda = tipoVivienda;
+        this.metrosCuadradosVivienda = metrosCuadradosVivienda;
+        this.metrosCuadradosAreaVerde = metrosCuadradosAreaVerde;
+        this.dimensionAreaComunal = dimensionAreaComunal;
+        this.tipoTenencia = tipoTenencia;
+        this.propietarioPermiteAnimales = propietarioPermiteAnimales;
+        this.nombrePropietario = nombrePropietario;
+        this.telefonoPropietario = telefonoPropietario;
+        this.tieneCerramiento = tieneCerramiento;
+        this.alturaCerramiento = alturaCerramiento;
+        this.tipoCerramiento = tipoCerramiento;
+        this.puedeEscaparAnimal = puedeEscaparAnimal;
+        this.tipoResidencia = tipoResidencia;
+        this.especificacionResidencia = especificacionResidencia;
     }
-
-    // Getters y Setters
 
     public String getDireccion() {
         return direccion;
@@ -102,155 +59,155 @@ public class Domicilio {
         this.direccion = direccion;
     }
 
-    public int getParroquia_id() {
-        return parroquia_id;
+    public int getParroquiaId() {
+        return parroquiaId;
     }
 
-    public void setParroquia_id(int parroquia_id) {
-        this.parroquia_id = parroquia_id;
+    public void setParroquiaId(int parroquiaId) {
+        this.parroquiaId = parroquiaId;
     }
 
-    public boolean isEs_urbanizacion() {
-        return es_urbanizacion;
+    public boolean isEsUrbanizacion() {
+        return esUrbanizacion;
     }
 
-    public void setEs_urbanizacion(boolean es_urbanizacion) {
-        this.es_urbanizacion = es_urbanizacion;
+    public void setEsUrbanizacion(boolean esUrbanizacion) {
+        this.esUrbanizacion = esUrbanizacion;
     }
 
-    public String getNombre_urbanizacion() {
-        return nombre_urbanizacion;
+    public String getNombreUrbanizacion() {
+        return nombreUrbanizacion;
     }
 
-    public void setNombre_urbanizacion(String nombre_urbanizacion) {
-        this.nombre_urbanizacion = nombre_urbanizacion;
+    public void setNombreUrbanizacion(String nombreUrbanizacion) {
+        this.nombreUrbanizacion = nombreUrbanizacion;
     }
 
-    public String getNumero_bloque() {
-        return numero_bloque;
+    public String getNumeroBloque() {
+        return numeroBloque;
     }
 
-    public void setNumero_bloque(String numero_bloque) {
-        this.numero_bloque = numero_bloque;
+    public void setNumeroBloque(String numeroBloque) {
+        this.numeroBloque = numeroBloque;
     }
 
-    public String getNumero_casa() {
-        return numero_casa;
+    public String getNumeroCasa() {
+        return numeroCasa;
     }
 
-    public void setNumero_casa(String numero_casa) {
-        this.numero_casa = numero_casa;
+    public void setNumeroCasa(String numeroCasa) {
+        this.numeroCasa = numeroCasa;
     }
 
-    public String getTipo_vivienda() {
-        return tipo_vivienda;
+    public String getTipoVivienda() {
+        return tipoVivienda;
     }
 
-    public void setTipo_vivienda(String tipo_vivienda) {
-        this.tipo_vivienda = tipo_vivienda;
+    public void setTipoVivienda(String tipoVivienda) {
+        this.tipoVivienda = tipoVivienda;
     }
 
-    public int getMetros_cuadrados_vivienda() {
-        return metros_cuadrados_vivienda;
+    public int getMetrosCuadradosVivienda() {
+        return metrosCuadradosVivienda;
     }
 
-    public void setMetros_cuadrados_vivienda(int metros_cuadrados_vivienda) {
-        this.metros_cuadrados_vivienda = metros_cuadrados_vivienda;
+    public void setMetrosCuadradosVivienda(int metrosCuadradosVivienda) {
+        this.metrosCuadradosVivienda = metrosCuadradosVivienda;
     }
 
-    public int getMetros_cuadrados_area_verde() {
-        return metros_cuadrados_area_verde;
+    public int getMetrosCuadradosAreaVerde() {
+        return metrosCuadradosAreaVerde;
     }
 
-    public void setMetros_cuadrados_area_verde(int metros_cuadrados_area_verde) {
-        this.metros_cuadrados_area_verde = metros_cuadrados_area_verde;
+    public void setMetrosCuadradosAreaVerde(int metrosCuadradosAreaVerde) {
+        this.metrosCuadradosAreaVerde = metrosCuadradosAreaVerde;
     }
 
-    public String getDimension_area_comunal() {
-        return dimension_area_comunal;
+    public Integer getDimensionAreaComunal() {
+        return dimensionAreaComunal;
     }
 
-    public void setDimension_area_comunal(String dimension_area_comunal) {
-        this.dimension_area_comunal = dimension_area_comunal;
+    public void setDimensionAreaComunal(Integer dimensionAreaComunal) {
+        this.dimensionAreaComunal = dimensionAreaComunal;
     }
 
-    public String getTipo_tenencia() {
-        return tipo_tenencia;
+    public String getTipoTenencia() {
+        return tipoTenencia;
     }
 
-    public void setTipo_tenencia(String tipo_tenencia) {
-        this.tipo_tenencia = tipo_tenencia;
+    public void setTipoTenencia(String tipoTenencia) {
+        this.tipoTenencia = tipoTenencia;
     }
 
-    public boolean isPropietario_permite_animales() {
-        return propietario_permite_animales;
+    public boolean isPropietarioPermiteAnimales() {
+        return propietarioPermiteAnimales;
     }
 
-    public void setPropietario_permite_animales(boolean propietario_permite_animales) {
-        this.propietario_permite_animales = propietario_permite_animales;
+    public void setPropietarioPermiteAnimales(boolean propietarioPermiteAnimales) {
+        this.propietarioPermiteAnimales = propietarioPermiteAnimales;
     }
 
-    public String getNombre_propietario() {
-        return nombre_propietario;
+    public String getNombrePropietario() {
+        return nombrePropietario;
     }
 
-    public void setNombre_propietario(String nombre_propietario) {
-        this.nombre_propietario = nombre_propietario;
+    public void setNombrePropietario(String nombrePropietario) {
+        this.nombrePropietario = nombrePropietario;
     }
 
-    public String getTelefono_propietario() {
-        return telefono_propietario;
+    public String getTelefonoPropietario() {
+        return telefonoPropietario;
     }
 
-    public void setTelefono_propietario(String telefono_propietario) {
-        this.telefono_propietario = telefono_propietario;
+    public void setTelefonoPropietario(String telefonoPropietario) {
+        this.telefonoPropietario = telefonoPropietario;
     }
 
-    public boolean isTiene_cerramiento() {
-        return tiene_cerramiento;
+    public boolean isTieneCerramiento() {
+        return tieneCerramiento;
     }
 
-    public void setTiene_cerramiento(boolean tiene_cerramiento) {
-        this.tiene_cerramiento = tiene_cerramiento;
+    public void setTieneCerramiento(boolean tieneCerramiento) {
+        this.tieneCerramiento = tieneCerramiento;
     }
 
-    public double getAltura_cerramiento() {
-        return altura_cerramiento;
+    public double getAlturaCerramiento() {
+        return alturaCerramiento;
     }
 
-    public void setAltura_cerramiento(double altura_cerramiento) {
-        this.altura_cerramiento = altura_cerramiento;
+    public void setAlturaCerramiento(double alturaCerramiento) {
+        this.alturaCerramiento = alturaCerramiento;
     }
 
-    public String getTipo_cerramiento() {
-        return tipo_cerramiento;
+    public String getTipoCerramiento() {
+        return tipoCerramiento;
     }
 
-    public void setTipo_cerramiento(String tipo_cerramiento) {
-        this.tipo_cerramiento = tipo_cerramiento;
+    public void setTipoCerramiento(String tipoCerramiento) {
+        this.tipoCerramiento = tipoCerramiento;
     }
 
-    public boolean isPuede_escapar_animal() {
-        return puede_escapar_animal;
+    public boolean isPuedeEscaparAnimal() {
+        return puedeEscaparAnimal;
     }
 
-    public void setPuede_escapar_animal(boolean puede_escapar_animal) {
-        this.puede_escapar_animal = puede_escapar_animal;
+    public void setPuedeEscaparAnimal(boolean puedeEscaparAnimal) {
+        this.puedeEscaparAnimal = puedeEscaparAnimal;
     }
 
-    public String getTipo_residencia() {
-        return tipo_residencia;
+    public String getTipoResidencia() {
+        return tipoResidencia;
     }
 
-    public void setTipo_residencia(String tipo_residencia) {
-        this.tipo_residencia = tipo_residencia;
+    public void setTipoResidencia(String tipoResidencia) {
+        this.tipoResidencia = tipoResidencia;
     }
 
-    public String getEspecificacion_residencia() {
-        return especificacion_residencia;
+    public String getEspecificacionResidencia() {
+        return especificacionResidencia;
     }
 
-    public void setEspecificacion_residencia(String especificacion_residencia) {
-        this.especificacion_residencia = especificacion_residencia;
+    public void setEspecificacionResidencia(String especificacionResidencia) {
+        this.especificacionResidencia = especificacionResidencia;
     }
 }
