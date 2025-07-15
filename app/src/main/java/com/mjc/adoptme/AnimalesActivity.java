@@ -27,8 +27,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.models.AnimalHistorial;
+import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.InfoAnimales;
 import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.UserData;
 import com.mjc.adoptme.network.ApiService;
 import com.mjc.adoptme.network.RetrofitClient; // <-- USA NUESTRO CLIENTE
 
@@ -246,61 +248,69 @@ public class AnimalesActivity extends AppCompatActivity {
     }
 
     private void sendRegistrationData() {
-        progressBar.setVisibility(View.VISIBLE);
-        btnFinalizar.setEnabled(false);
-        btnRegresar.setEnabled(false);
+        // Este método se llamaría desde el OnClickListener del botón "Finalizar".
+        // Primero, guarda los últimos datos del formulario actual.
+        // saveCurrentScreenDataToRepository();
 
-        // 1. Obtén el objeto de datos COMPLETO desde el repositorio.
+        progressBar.setVisibility(View.VISIBLE);
+        btnFinalizar.setEnabled(false); // Suponiendo que el botón se llama btnFinalizar
+
+        // Obtenemos el objeto de registro completo del repositorio
         RegistroCompleto datosParaEnviar = RegistroRepository.getInstance().getRegistroData();
 
-        Log.d(TAG, "JSON A ENVIAR: " + new Gson().toJson(datosParaEnviar));
-
-        // ** (Opcional) Para depuración: Imprime el JSON que se va a enviar
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonPayload = gson.toJson(datosParaEnviar);
-        Log.d(TAG, "JSON Final a Enviar:\n" + jsonPayload);
-
-        Log.d(TAG, "JSON A ENVIAR: " + new Gson().toJson(datosParaEnviar));
-        // 2. Usa nuestro RetrofitClient para obtener el servicio
+        // Usamos el cliente Retrofit y el ApiService actualizado
         ApiService apiService = RetrofitClient.getApiService();
-        Call<Void> call = apiService.registrarUsuario(datosParaEnviar);
+        Call<ApiResponse<UserData>> call = apiService.registrarUsuario(datosParaEnviar);
 
-        // 4. Ejecuta la llamada de forma asíncrona
-        call.enqueue(new Callback<Void>() {
+        // Ejecutamos la llamada
+        call.enqueue(new Callback<ApiResponse<UserData>>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
+            public void onResponse(Call<ApiResponse<UserData>> call, Response<ApiResponse<UserData>> response) {
                 progressBar.setVisibility(View.GONE);
 
-                if (response.isSuccessful()) {
-                    // ÉXITO: 200-299
-                    Toast.makeText(AnimalesActivity.this, "¡Registro completado exitosamente!", Toast.LENGTH_LONG).show();
-                    RegistroRepository.getInstance().limpiarDatos(); // Limpia el repo para un futuro registro
-                    animateSuccessTransition();
+                if (response.isSuccessful() && response.body() != null) {
+                    // Código 201 Created! Registro exitoso.
+                    ApiResponse<UserData> apiResponse = response.body();
+
+                    String userName = "Usuario"; // Valor por defecto
+                    if (apiResponse.getData() != null && apiResponse.getData().getNameUser() != null) {
+                        userName = apiResponse.getData().getNameUser();
+                    }
+
+                    Toast.makeText(AnimalesActivity.this, "¡Bienvenido " + userName + "! Registro completado.", Toast.LENGTH_LONG).show();
+
+                    // Limpia los datos del formulario de registro para la próxima vez
+                    RegistroRepository.getInstance().limpiarDatos();
+
+                    // Redirige a la pantalla de Login para que el usuario inicie sesión
+                    Intent intent = new Intent(AnimalesActivity.this, MainActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    finish();
+
                 } else {
-                    // ERROR: 4xx, 5xx
+                    // Error del servidor (ej. 409 Conflict - el email ya existe)
                     btnFinalizar.setEnabled(true);
-                    btnRegresar.setEnabled(true);
-                    String errorMsg = "Error en el registro. Código: " + response.code();
+                    String errorMsg = "Error en el registro. ";
                     try {
                         if (response.errorBody() != null) {
-                            errorMsg += "\nMensaje: " + response.errorBody().string();
+                            // Aquí podrías parsear el JSON de error para un mensaje más específico
+                            errorMsg += "Código: " + response.code();
+                            Log.e(TAG, "Cuerpo del error: " + response.errorBody().string());
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Error al parsear el cuerpo del error", e);
+                        // Log del error
                     }
-                    Log.e(TAG, errorMsg);
-                    showError(errorMsg);
+                    Toast.makeText(AnimalesActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                // FALLO DE CONEXIÓN
+            public void onFailure(Call<ApiResponse<UserData>> call, Throwable t) {
                 progressBar.setVisibility(View.GONE);
                 btnFinalizar.setEnabled(true);
-                btnRegresar.setEnabled(true);
-                Log.e(TAG, "Fallo de conexión", t);
-                showError("Fallo de conexión: " + t.getMessage());
+                Log.e(TAG, "Fallo en la conexión de registro", t);
+                Toast.makeText(AnimalesActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

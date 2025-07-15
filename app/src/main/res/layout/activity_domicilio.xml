@@ -741,6 +741,42 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/layoutBotonesActualizar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone"
+                tools:visibility="visible"> <!-- tools:visibility="visible" para verlo en el preview -->
+
+                <!-- Botón regresar al perfil -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRegresarActualizar"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="Regresar"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    app:strokeColor="@color/colorPrimary"
+                    android:textColor="@color/colorPrimary"
+                    app:cornerRadius="28dp"
+                    android:layout_marginEnd="8dp"/>
+
+                <!-- Botón para Actualizar los datos -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnActualizar"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_weight="1"
+                    android:text="Actualizar"
+                    app:backgroundTint="@color/colorAccent3"
+                    app:cornerRadius="28dp"
+                    android:layout_marginStart="8dp"/>
+            </LinearLayout>
+
             <!-- Indicador de carga -->
             <ProgressBar
                 android:id="@+id/progressBar"

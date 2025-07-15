@@ -11,33 +11,42 @@ public class SessionManager {
     private final SharedPreferences.Editor editor;
     private final Context context;
 
-    // Nombre del archivo de preferencias
     private static final String PREF_NAME = "AdoptMeSession";
-    // Clave para saber si está logueado
     private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
-    // Clave para el nombre del usuario
     private static final String KEY_USER_NAME = "userName";
-    // Clave para el token (¡listo para el futuro!)
     private static final String KEY_AUTH_TOKEN = "authToken";
+
+    // --- NUEVA CLAVE PARA LA CÉDULA ---
+    private static final String KEY_USER_CEDULA = "userCedula";
 
 
     public SessionManager(Context context) {
         this.context = context;
-        // MODE_PRIVATE significa que solo esta app puede acceder a estas preferencias
         prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
         editor = prefs.edit();
     }
 
     /**
      * Crea la sesión de login guardando los datos del usuario.
+     * @param name Nombre del usuario a guardar.
+     * @param cedula Cédula del usuario a guardar.
+     * @param token Token de autenticación (listo para el futuro).
      */
-    public void createLoginSession(String name, String token) {
+    public void createLoginSession(String name, String cedula, String token) {
         editor.putBoolean(KEY_IS_LOGGED_IN, true);
         editor.putString(KEY_USER_NAME, name);
-        editor.putString(KEY_AUTH_TOKEN, token); // Aunque tu API actual no lo devuelva, es bueno tenerlo listo.
-
-        // apply() guarda los cambios de forma asíncrona
+        editor.putString(KEY_USER_CEDULA, cedula); // <-- SE GUARDA LA CÉDULA
+        editor.putString(KEY_AUTH_TOKEN, token);
         editor.apply();
+    }
+
+    // --- NUEVO MÉTODO PARA OBTENER LA CÉDULA ---
+    /**
+     * Obtiene la cédula del usuario guardada en la sesión.
+     * @return Cédula del usuario, o null si no se encuentra.
+     */
+    public String getUserCedula() {
+        return prefs.getString(KEY_USER_CEDULA, null);
     }
 
     /**

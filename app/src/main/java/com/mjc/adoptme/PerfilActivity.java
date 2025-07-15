@@ -15,12 +15,11 @@ import android.view.animation.BounceInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.google.android.material.button.MaterialButton;
+import com.mjc.adoptme.data.SessionManager; // <-- ¡IMPORTANTE!
 
 public class PerfilActivity extends AppCompatActivity {
 
@@ -33,7 +32,9 @@ public class PerfilActivity extends AppCompatActivity {
     // Cards de configuración
     private CardView cardDatosPersonales, cardDomicilio, cardReferencias;
 
-    private String nombreUsuario;
+    // Gestor de sesión
+    private SessionManager sessionManager;
+
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
@@ -41,25 +42,36 @@ public class PerfilActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_perfil);
 
-        // Ocultar la barra de acción
+        // --- LÓGICA DE SESIÓN ---
+        sessionManager = new SessionManager(getApplicationContext());
+
+        // Protección: Si no hay sesión, no debería estar aquí. Lo mandamos al login.
+        if (!sessionManager.isLoggedIn()) {
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+            return; // Detenemos la ejecución
+        }
+
+        // Obtener el nombre directamente de la sesión guardada
+        String userName = sessionManager.getUserName();
+        if (userName == null || userName.isEmpty()) {
+            userName = "Usuario"; // Valor por defecto
+        }
+        // --- FIN DE LÓGICA DE SESIÓN ---
+
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();
         }
 
-        // Obtener nombre del usuario del Intent
-        nombreUsuario = getIntent().getStringExtra("NOMBRE_USUARIO");
-        if (nombreUsuario == null || nombreUsuario.isEmpty()) {
-            nombreUsuario = "Usuario"; // Valor por defecto
-        }
-
         initViews();
-        setupUserInfo();
+        setupUserInfo(userName); // Pasamos el nombre obtenido
         setupClickListeners();
         startAnimations();
     }
 
     private void initViews() {
-        // Contenedores y vistas principales
         logoContainer = findViewById(R.id.logoContainer);
         cardsContainer = findViewById(R.id.cardsContainer);
         layoutPaws = findViewById(R.id.layoutPaws);
@@ -69,21 +81,13 @@ public class PerfilActivity extends AppCompatActivity {
         tvInfo = findViewById(R.id.tvInfo);
         tvUserName = findViewById(R.id.tvUserName);
         btnRegresar = findViewById(R.id.btnRegresar);
-
-        // Huellas para animación
         paw1 = findViewById(R.id.paw1);
         paw2 = findViewById(R.id.paw2);
         paw3 = findViewById(R.id.paw3);
-
-        // Cards
         cardDatosPersonales = findViewById(R.id.cardDatosPersonales);
         cardDomicilio = findViewById(R.id.cardDomicilio);
         cardReferencias = findViewById(R.id.cardReferencias);
 
-        // NOTA: Los TextViews dentro de las cards no tienen ID en el XML,
-        // por lo que no se inicializan aquí. La interacción es a nivel de la CardView.
-
-        // Configurar estados iniciales para animaciones
         logoContainer.setAlpha(0f);
         logoContainer.setTranslationY(-50f);
         cardsContainer.setAlpha(0f);
@@ -91,57 +95,76 @@ public class PerfilActivity extends AppCompatActivity {
         tvInfo.setAlpha(0f);
     }
 
-    private void setupUserInfo() {
-        // Establece un texto de bienvenida con el nombre del usuario.
-        tvUserName.setText("Hola, " + nombreUsuario);
+    private void setupUserInfo(String userName) {
+        // Establece el texto de bienvenida con el nombre real del usuario.
+        tvUserName.setText("Hola, " + userName);
     }
 
     private void setupClickListeners() {
-        // Listener para el botón de regresar
         btnRegresar.setOnClickListener(v -> {
             animateCardClick(v);
             handleExitAnimation();
         });
 
-        // Listener para la tarjeta de datos personales
+        // --- NAVEGACIÓN EN MODO ACTUALIZACIÓN ---
         cardDatosPersonales.setOnClickListener(v -> {
             animateCardClick(v);
-            Toast.makeText(this, "Abriendo datos personales...", Toast.LENGTH_SHORT).show();
-            // Aquí iría la lógica para navegar a la actividad de Datos Personales
-            // Intent intent = new Intent(PerfilActivity.this, DatosPersonalesActivity.class);
-            // intent.putExtra("NOMBRE_USUARIO", nombreUsuario);
-            // startActivity(intent);
-            // overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            Intent intent = new Intent(PerfilActivity.this, DatosPersonalesActivity.class);
+            // ¡La clave! Le decimos a la activity que se abra en modo de actualización.
+            intent.putExtra("IS_UPDATE_MODE", true);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
 
-        // Listener para la tarjeta de domicilio
         cardDomicilio.setOnClickListener(v -> {
             animateCardClick(v);
-            Toast.makeText(this, "Abriendo datos de domicilio...", Toast.LENGTH_SHORT).show();
-            // Aquí iría la lógica para navegar a la actividad de Domicilio
-            // Intent intent = new Intent(PerfilActivity.this, DomicilioActivity.class);
-            // intent.putExtra("NOMBRE_USUARIO", nombreUsuario);
-            // startActivity(intent);
-            // overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            Intent intent = new Intent(PerfilActivity.this, DomicilioActivity.class);
+            intent.putExtra("IS_UPDATE_MODE", true);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
 
-        // Listener para la tarjeta de referencias
         cardReferencias.setOnClickListener(v -> {
             animateCardClick(v);
-            Toast.makeText(this, "Abriendo referencias personales...", Toast.LENGTH_SHORT).show();
-            // Aquí iría la lógica para navegar a la actividad de Referencias
-            // Intent intent = new Intent(PerfilActivity.this, ReferenciasActivity.class);
-            // intent.putExtra("NOMBRE_USUARIO", nombreUsuario);
-            // startActivity(intent);
-            // overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+            Intent intent = new Intent(PerfilActivity.this, ReferenciasPersonalesActivity.class);
+            intent.putExtra("IS_UPDATE_MODE", true);
+            startActivity(intent);
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
         });
     }
 
+    private void handleExitAnimation() {
+        btnRegresar.setEnabled(false);
+        AnimatorSet exitSet = new AnimatorSet();
+        // ... (el resto de tu animación de salida es correcta)
+        ObjectAnimator logoAlpha = ObjectAnimator.ofFloat(logoContainer, "alpha", 0f);
+        ObjectAnimator logoTranslation = ObjectAnimator.ofFloat(logoContainer, "translationY", -50f);
+        ObjectAnimator cardsAlpha = ObjectAnimator.ofFloat(cardsContainer, "alpha", 0f);
+        ObjectAnimator cardsTranslation = ObjectAnimator.ofFloat(cardsContainer, "translationY", 50f);
+        ObjectAnimator buttonAlpha = ObjectAnimator.ofFloat(btnRegresar, "alpha", 0f);
+
+        exitSet.playTogether(logoAlpha, logoTranslation, cardsAlpha, cardsTranslation, buttonAlpha);
+        exitSet.setDuration(400);
+        exitSet.setInterpolator(new AccelerateDecelerateInterpolator());
+        exitSet.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                // finish() es más apropiado aquí que crear un nuevo Intent,
+                // ya que PanelActivity ya está en la pila de actividades.
+                finish();
+                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+            }
+        });
+        exitSet.start();
+    }
+
+    // ===================================================================
+    // MÉTODOS DE ANIMACIÓN (SIN CAMBIOS)
+    // ===================================================================
+
     private void animateCardClick(View view) {
-        // Animación de pulsación para cualquier vista clickeable
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(view, "scaleX", 1f, 0.95f, 1f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(view, "scaleY", 1f, 0.95f, 1f);
-
         AnimatorSet clickAnimator = new AnimatorSet();
         clickAnimator.playTogether(scaleX, scaleY);
         clickAnimator.setDuration(300);
@@ -150,72 +173,28 @@ public class PerfilActivity extends AppCompatActivity {
     }
 
     private void startAnimations() {
-        // Animación de entrada del logo y título
-        logoContainer.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(600)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .start();
-
-        // Animación de rotación del logo
-        ivLogo.animate()
-                .rotation(360f)
-                .setDuration(800)
-                .setStartDelay(200)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .start();
-
-        // Animación de entrada del contenedor de tarjetas
-        cardsContainer.animate()
-                .alpha(1f)
-                .translationY(0f)
-                .setDuration(700)
-                .setStartDelay(300)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .start();
-
-        // Animación de aparición del texto informativo
-        tvInfo.animate()
-                .alpha(1f) // Cambiado a 1f para total visibilidad
-                .setDuration(600)
-                .setStartDelay(500)
-                .start();
-
-        // Animar tarjetas individuales con efecto de cascada
+        logoContainer.animate().alpha(1f).translationY(0f).setDuration(600).setInterpolator(new AccelerateDecelerateInterpolator()).start();
+        ivLogo.animate().rotation(360f).setDuration(800).setStartDelay(200).setInterpolator(new AccelerateDecelerateInterpolator()).start();
+        cardsContainer.animate().alpha(1f).translationY(0f).setDuration(700).setStartDelay(300).setInterpolator(new AccelerateDecelerateInterpolator()).start();
+        tvInfo.animate().alpha(1f).setDuration(600).setStartDelay(500).start();
         animateCards();
-
-        // Animar las huellas de mascota después de las animaciones principales
         handler.postDelayed(this::animatePaws, 700);
     }
 
     private void animateCards() {
         CardView[] cards = {cardDatosPersonales, cardDomicilio, cardReferencias};
-
         for (int i = 0; i < cards.length; i++) {
             CardView card = cards[i];
             card.setAlpha(0f);
             card.setTranslationY(100f);
             card.setScaleX(0.9f);
             card.setScaleY(0.9f);
-
-            card.animate()
-                    .alpha(1f)
-                    .translationY(0f)
-                    .scaleX(1f)
-                    .scaleY(1f)
-                    .setDuration(500)
-                    .setStartDelay(400 + (long)(i * 150))
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .start();
+            card.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f).setDuration(500).setStartDelay(400 + (long)(i * 150)).setInterpolator(new AccelerateDecelerateInterpolator()).start();
         }
     }
 
     private void animatePaws() {
-        // Anima las huellas en secuencia
-        animatePaw(paw1, 0, () ->
-                animatePaw(paw2, 100, () ->
-                        animatePaw(paw3, 100, this::startPawGlowAnimation)));
+        animatePaw(paw1, 0, () -> animatePaw(paw2, 100, () -> animatePaw(paw3, 100, this::startPawGlowAnimation)));
     }
 
     private void animatePaw(final ImageView paw, long delay, final Runnable onComplete) {
@@ -225,16 +204,13 @@ public class PerfilActivity extends AppCompatActivity {
             ObjectAnimator scaleX = ObjectAnimator.ofFloat(paw, "scaleX", 0f, 1.2f, 1f);
             ObjectAnimator scaleY = ObjectAnimator.ofFloat(paw, "scaleY", 0f, 1.2f, 1f);
             ObjectAnimator alpha = ObjectAnimator.ofFloat(paw, "alpha", 0f, 0.6f);
-
             set.playTogether(scaleX, scaleY, alpha);
             set.setDuration(400);
             set.setInterpolator(new BounceInterpolator());
             set.addListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    if (onComplete != null) {
-                        onComplete.run();
-                    }
+                    if (onComplete != null) onComplete.run();
                 }
             });
             set.start();
@@ -242,7 +218,6 @@ public class PerfilActivity extends AppCompatActivity {
     }
 
     private void startPawGlowAnimation() {
-        // Animación de brillo intermitente para las huellas
         ValueAnimator glowAnimator = ValueAnimator.ofFloat(0.3f, 0.7f, 0.3f);
         glowAnimator.setDuration(2000);
         glowAnimator.setRepeatCount(ValueAnimator.INFINITE);
@@ -256,43 +231,13 @@ public class PerfilActivity extends AppCompatActivity {
         glowAnimator.start();
     }
 
-    private void handleExitAnimation() {
-        btnRegresar.setEnabled(false); // Deshabilitar botón para evitar doble click
-
-        AnimatorSet exitSet = new AnimatorSet();
-        ObjectAnimator logoAlpha = ObjectAnimator.ofFloat(logoContainer, "alpha", 0f);
-        ObjectAnimator logoTranslation = ObjectAnimator.ofFloat(logoContainer, "translationY", -50f);
-        ObjectAnimator cardsAlpha = ObjectAnimator.ofFloat(cardsContainer, "alpha", 0f);
-        ObjectAnimator cardsTranslation = ObjectAnimator.ofFloat(cardsContainer, "translationY", 50f);
-        ObjectAnimator buttonAlpha = ObjectAnimator.ofFloat(btnRegresar, "alpha", 0f);
-
-        exitSet.playTogether(logoAlpha, logoTranslation, cardsAlpha, cardsTranslation, buttonAlpha);
-        exitSet.setDuration(400);
-        exitSet.setInterpolator(new AccelerateDecelerateInterpolator());
-        exitSet.addListener(new AnimatorListenerAdapter() {
-            @Override
-            public void onAnimationEnd(Animator animation) {
-                // Navegar de regreso a PanelActivity
-                Intent intent = new Intent(PerfilActivity.this, PanelActivity.class);
-                intent.putExtra("NOMBRE_USUARIO", nombreUsuario);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish(); // Finaliza esta actividad
-                // Transición de salida personalizada
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
-            }
-        });
-        exitSet.start();
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        // Limpiar animaciones para evitar fugas de memoria si la actividad se pausa
-        handler.removeCallbacksAndMessages(null); // Limpia cualquier tarea pendiente en el handler
-        ivLogo.clearAnimation();
-        logoContainer.clearAnimation();
-        cardsContainer.clearAnimation();
-        layoutPaws.clearAnimation();
+        handler.removeCallbacksAndMessages(null);
+        if (ivLogo != null) ivLogo.clearAnimation();
+        if (logoContainer != null) logoContainer.clearAnimation();
+        if (cardsContainer != null) cardsContainer.clearAnimation();
+        if (layoutPaws != null) layoutPaws.clearAnimation();
     }
 }

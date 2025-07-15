@@ -25,7 +25,7 @@
                 android:background="@drawable/header_gradient_background"
                 android:orientation="vertical"
                 android:paddingTop="32dp"
-                android:paddingBottom="24dp"
+                android:paddingBottom="60dp"
                 android:paddingHorizontal="20dp">
 
                 <!-- Fila superior con avatar y nombre -->
@@ -109,7 +109,8 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:layout_marginTop="24dp">
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="20dp">
 
                     <ImageView
                         android:id="@+id/ivLogoPet"
@@ -138,7 +139,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingHorizontal="20dp"
-                android:layout_marginTop="-40dp"
+                android:layout_marginTop="-30dp"
                 android:layout_marginBottom="20dp">
 
                 <com.google.android.material.card.MaterialCardView

@@ -21,8 +21,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mjc.adoptme.data.SessionManager;
+import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.LoginRequest;
 import com.mjc.adoptme.models.LoginResponse;
+import com.mjc.adoptme.models.UserData;
 import com.mjc.adoptme.network.ApiService;
 import com.mjc.adoptme.network.RetrofitClient;
 import SecureX.Library;
@@ -191,60 +193,51 @@ public class MainActivity extends AppCompatActivity {
 
     private void performLogin() {
         if (!validateForm()) {
-            return; // Detiene el proceso si la validación falla
+            return;
         }
 
         startLoadingAnimation();
 
         String email = etEmailLogin.getText().toString().trim();
         String password = etPasswordLogin.getText().toString().trim();
-
-        // 1. Hashea la contraseña usando tu librería SecureX
         String hashedPassword = Library.Hash.hashBase64(password);
-        Log.d(TAG, "Email: " + email);
-        Log.d(TAG, "Hashed Password: " + hashedPassword);
 
-        // 2. Crea el objeto de la petición
         LoginRequest loginRequest = new LoginRequest(email, hashedPassword);
-
-        // 3. Usa nuestro cliente Retrofit estandarizado para obtener el servicio
         ApiService apiService = RetrofitClient.getApiService();
 
-        // 4. Realiza la llamada a la API
-        Call<LoginResponse> call = apiService.iniciarSesion(loginRequest);
-        call.enqueue(new Callback<LoginResponse>() {
+        // La llamada ahora espera un objeto ApiResponse que contiene UserData
+        Call<ApiResponse<UserData>> call = apiService.iniciarSesion(loginRequest);
+        call.enqueue(new Callback<ApiResponse<UserData>>() {
             @Override
-            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+            public void onResponse(Call<ApiResponse<UserData>> call, Response<ApiResponse<UserData>> response) {
                 stopLoadingAnimation();
 
+                // Verificamos que la respuesta fue exitosa (código 200-299)
                 if (response.isSuccessful() && response.body() != null) {
-                    LoginResponse loginResponse = response.body();
+                    ApiResponse<UserData> apiResponse = response.body();
 
-                    // --- ESTA ES LA LÓGICA CORRECTA Y DEFINITIVA ---
-                    // 1. Instanciamos nuestro gestor de sesión.
-                    SessionManager sessionManager = new SessionManager(getApplicationContext());
+                    if (apiResponse.getData() != null) {
+                        String userName = apiResponse.getData().getNameUser();
+                        String cedula = apiResponse.getData().getCedula(); // <-- Obtenemos la cédula
 
-                    // 2. Extraemos el nombre del usuario de la respuesta de la API.
-                    String userName = "Usuario"; // Valor por defecto si algo falla.
-                    if (loginResponse.getData() != null && loginResponse.getData().getNameUser() != null) {
-                        userName = loginResponse.getData().getNameUser();
+                        SessionManager sessionManager = new SessionManager(getApplicationContext());
+                        // --- SE PASA LA CÉDULA AL CREAR LA SESIÓN ---
+                        sessionManager.createLoginSession(userName, cedula, "");
+
+                        Toast.makeText(MainActivity.this, "¡Bienvenido, " + userName + "!", Toast.LENGTH_LONG).show();
+
+                        Intent intent = new Intent(MainActivity.this, PanelActivity.class);
+                        startActivity(intent);
+                        finish();
+
+                    } else {
+                        // La respuesta fue 200, pero el campo 'data' vino vacío. Es un error del backend.
+                        Toast.makeText(MainActivity.this, "Respuesta inesperada del servidor.", Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Login exitoso (código " + response.code() + ") pero el campo 'data' es nulo.");
                     }
 
-                    // 3. ¡EL PASO MÁS IMPORTANTE! Creamos la sesión GUARDANDO EL NOMBRE.
-                    // El segundo parámetro es para el token, que tu API aún no provee, por eso va vacío.
-                    sessionManager.createLoginSession(userName, "");
-
-                    // 4. Mostramos el mensaje de bienvenida.
-                    Toast.makeText(MainActivity.this, "¡Bienvenido, " + userName + "!", Toast.LENGTH_LONG).show();
-
-                    // 5. Navegamos al Panel. Ya no necesitamos pasar el nombre con .putExtra().
-                    Intent intent = new Intent(MainActivity.this, PanelActivity.class);
-                    startActivity(intent);
-                    finish(); // Es crucial cerrar MainActivity para que el usuario no pueda volver.
-                    // --- FIN DE LA LÓGICA CORRECTA ---
-
                 } else {
-                    // El manejo de errores se mantiene igual.
+                    // La respuesta no fue exitosa (ej: 401 Unauthorized, 404 Not Found)
                     String errorMessage = "Email o contraseña incorrectos.";
                     try {
                         if (response.errorBody() != null) {
@@ -258,11 +251,10 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<LoginResponse> call, Throwable t) {
-                // Tu código de onFailure se mantiene igual.
+            public void onFailure(Call<ApiResponse<UserData>> call, Throwable t) {
                 stopLoadingAnimation();
-                Log.e(TAG, "Fallo en la llamada de login", t);
-                Toast.makeText(MainActivity.this, "Fallo de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Log.e(TAG, "Fallo en la conexión de login", t);
+                Toast.makeText(MainActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
