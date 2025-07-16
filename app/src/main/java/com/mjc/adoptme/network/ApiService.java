@@ -1,11 +1,15 @@
 package com.mjc.adoptme.network;
 
 import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.Ciudad;
 import com.mjc.adoptme.models.DatosPersonalesData;
 import com.mjc.adoptme.models.Domicilio;
 import com.mjc.adoptme.models.LoginRequest;
+import com.mjc.adoptme.models.Pais;
+import com.mjc.adoptme.models.Parroquia;
 import com.mjc.adoptme.models.ReferenciaPersonal;
 import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.TipoAnimal;
 import com.mjc.adoptme.models.UpdateDataRequest;
 import com.mjc.adoptme.models.UserData;
 
@@ -15,6 +19,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 import retrofit2.http.Query;
 
 public interface ApiService {
@@ -50,4 +55,18 @@ public interface ApiService {
 
     @POST("v1/updateUserData")
     Call<ApiResponse<String>> updateUserReferenciasData(@Body UpdateDataRequest<List<ReferenciaPersonal>> request);
+
+
+    // --- ENDPOINTS PARA DROPDOWNS ---
+    @GET("v1/paises")
+    Call<ApiResponse<List<Pais>>> getPaises();
+
+    @GET("v1/ciudades/{pais_id}")
+    Call<ApiResponse<List<Ciudad>>> getCiudades(@Path("pais_id") int paisId);
+
+    @GET("v1/parroquias/{ciudad_id}")
+    Call<ApiResponse<List<Parroquia>>> getParroquias(@Path("ciudad_id") int ciudadId);
+
+    @GET("v1/tipos-animales")
+    Call<ApiResponse<List<TipoAnimal>>> getTiposAnimales();
 }

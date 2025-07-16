@@ -10,6 +10,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -25,11 +27,18 @@ import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.data.SessionManager;
 import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.Ciudad;
 import com.mjc.adoptme.models.Domicilio;
+import com.mjc.adoptme.models.Pais;
+import com.mjc.adoptme.models.Parroquia;
 import com.mjc.adoptme.models.RegistroCompleto;
 import com.mjc.adoptme.models.UpdateDataRequest;
 import com.mjc.adoptme.network.ApiClient;
+import com.mjc.adoptme.network.ApiService;
 import com.mjc.adoptme.network.UpdateRepository;
+import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -47,7 +56,9 @@ public class DomicilioActivity extends AppCompatActivity {
     // Campos de Formulario
     private RadioGroup rgTipoVivienda, rgPropiedadVivienda, rgPermiteAnimales, rgCerramiento, rgPosibilidadEscape, rgFrecuenciaUso, rgTipoCerramiento;
     private TextInputLayout tilMetrosVivienda, tilMetrosAreaVerde, tilAreaComunal, tilAlturaCerramiento, tilNombresDueno, tilTelefonoDueno, tilEspecifiqueFrecuencia;
+    private TextInputLayout tilParroquia;
     private TextInputEditText etMetrosVivienda, etMetrosAreaVerde, etAreaComunal, etAlturaCerramiento, etNombresDueno, etTelefonoDueno, etEspecifiqueFrecuencia;
+    private AutoCompleteTextView actvParroquia;
 
     private RadioButton rbPropia, rbArrendada, rbPrestada;
     private RadioButton rbPermiteAnimalesSi, rbPermiteAnimalesNo;
@@ -58,6 +69,15 @@ public class DomicilioActivity extends AppCompatActivity {
     private boolean isUpdateMode = false;
     private SessionManager sessionManager;
     private UpdateRepository updateRepository;
+    private ApiService apiService;
+    
+    // Datos para dropdowns
+    private List<Pais> paises = new ArrayList<>();
+    private List<Ciudad> ciudades = new ArrayList<>();
+    private List<Parroquia> parroquias = new ArrayList<>();
+    private Pais paisSeleccionado;
+    private Ciudad ciudadSeleccionada;
+    private Parroquia parroquiaSeleccionada;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +86,7 @@ public class DomicilioActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
         updateRepository = new UpdateRepository();
+        apiService = ApiClient.getApiService();
 
         initViews();
 
@@ -79,6 +100,8 @@ public class DomicilioActivity extends AppCompatActivity {
             populateDataFromRepository();
         }
 
+        setupDropdowns();
+        loadDropdownData();
         setupListeners();
         setupBackButtonHandler();
         startAnimations();
@@ -118,6 +141,7 @@ public class DomicilioActivity extends AppCompatActivity {
         tilNombresDueno = findViewById(R.id.tilNombresDueno);
         tilTelefonoDueno = findViewById(R.id.tilTelefonoDueno);
         tilEspecifiqueFrecuencia = findViewById(R.id.tilEspecifiqueFrecuencia);
+        tilParroquia = findViewById(R.id.tilParroquia);
 
         // TextInputEditTexts
         etMetrosVivienda = findViewById(R.id.etMetrosVivienda);
@@ -127,6 +151,7 @@ public class DomicilioActivity extends AppCompatActivity {
         etNombresDueno = findViewById(R.id.etNombresDueno);
         etTelefonoDueno = findViewById(R.id.etTelefonoDueno);
         etEspecifiqueFrecuencia = findViewById(R.id.etEspecifiqueFrecuencia);
+        actvParroquia = findViewById(R.id.actvParroquia);
 
         rbPropia = findViewById(R.id.rbPropia);
         rbArrendada = findViewById(R.id.rbArrendada);
@@ -145,6 +170,108 @@ public class DomicilioActivity extends AppCompatActivity {
         layoutArrendadaPrestada.setVisibility(View.GONE);
         layoutCerramiento.setVisibility(View.GONE);
         tilEspecifiqueFrecuencia.setVisibility(View.GONE);
+    }
+
+    private void setupDropdowns() {
+        // Configurar listener para AutoCompleteTextView de parroquia
+        actvParroquia.setOnClickListener(v -> {
+            if (parroquias.isEmpty()) {
+                Toast.makeText(this, "Cargando parroquias...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            actvParroquia.showDropDown();
+        });
+        
+        Log.d(TAG, "Configurando dropdowns para domicilio");
+    }
+
+    private void loadDropdownData() {
+        loadPaises();
+    }
+
+    private void loadPaises() {
+        apiService.getPaises().enqueue(new Callback<ApiResponse<List<Pais>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Pais>>> call, Response<ApiResponse<List<Pais>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    paises = response.body().getData();
+                    Log.d(TAG, "Países cargados: " + paises.size());
+                    // Cargar ciudades del primer país (Ecuador por defecto)
+                    if (!paises.isEmpty()) {
+                        paisSeleccionado = paises.get(0); // Asumir Ecuador como primer país
+                        loadCiudades(paisSeleccionado.getId());
+                    }
+                } else {
+                    Log.e(TAG, "Error al cargar países: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Pais>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar países", t);
+            }
+        });
+    }
+
+    private void loadCiudades(int paisId) {
+        apiService.getCiudades(paisId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    ciudades = response.body().getData();
+                    Log.d(TAG, "Ciudades cargadas: " + ciudades.size());
+                    // Cargar parroquias de la primera ciudad
+                    if (!ciudades.isEmpty()) {
+                        ciudadSeleccionada = ciudades.get(0);
+                        loadParroquias(ciudadSeleccionada.getId());
+                    }
+                } else {
+                    Log.e(TAG, "Error al cargar ciudades: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar ciudades", t);
+            }
+        });
+    }
+
+    private void loadParroquias(int ciudadId) {
+        apiService.getParroquias(ciudadId).enqueue(new Callback<ApiResponse<List<Parroquia>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Parroquia>>> call, Response<ApiResponse<List<Parroquia>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    parroquias = response.body().getData();
+                    Log.d(TAG, "Parroquias cargadas: " + parroquias.size());
+                    
+                    // Configurar adapter para AutoCompleteTextView de parroquias
+                    ArrayAdapter<Parroquia> adapterParroquias = new ArrayAdapter<>(DomicilioActivity.this, 
+                            android.R.layout.simple_dropdown_item_1line, parroquias);
+                    actvParroquia.setAdapter(adapterParroquias);
+                    
+                    // Configurar listener para selección de parroquia
+                    actvParroquia.setOnItemClickListener((parent, view, position, id) -> {
+                        parroquiaSeleccionada = parroquias.get(position);
+                        Log.d(TAG, "Parroquia seleccionada: " + parroquiaSeleccionada.getNombre());
+                    });
+                    
+                    // Seleccionar la primera parroquia por defecto
+                    if (!parroquias.isEmpty()) {
+                        parroquiaSeleccionada = parroquias.get(0);
+                        actvParroquia.setText(parroquiaSeleccionada.getNombre(), false);
+                        Log.d(TAG, "Parroquia seleccionada por defecto: " + parroquiaSeleccionada.getNombre());
+                    }
+                } else {
+                    Log.e(TAG, "Error al cargar parroquias: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Parroquia>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar parroquias", t);
+            }
+        });
     }
 
     private void loadUserData() {
@@ -261,8 +388,8 @@ public class DomicilioActivity extends AppCompatActivity {
 
         Domicilio domicilio = new Domicilio();
 
-        // Valores fijos necesarios para la API
-        domicilio.setParroquiaId(1);
+        // Valores necesarios para la API
+        domicilio.setParroquiaId(parroquiaSeleccionada != null ? parroquiaSeleccionada.getId() : 1);
         domicilio.setDireccion("Dirección de ejemplo");
         domicilio.setNumeroCasa("S/N");
         domicilio.setEsUrbanizacion(false);
@@ -639,7 +766,7 @@ public class DomicilioActivity extends AppCompatActivity {
         Domicilio domicilio = new Domicilio();
 
         // IDs y campos fijos
-        domicilio.setParroquiaId(1);
+        domicilio.setParroquiaId(parroquiaSeleccionada != null ? parroquiaSeleccionada.getId() : 1);
         domicilio.setDireccion("Dirección de ejemplo");
         domicilio.setNumeroCasa("S/N");
         domicilio.setEsUrbanizacion(false);

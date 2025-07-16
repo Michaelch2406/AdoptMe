@@ -258,6 +258,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
                 app:boxBackgroundMode="filled"
                 app:boxBackgroundColor="@color/white"
                 app:boxCornerRadiusTopStart="12dp"
@@ -270,12 +271,12 @@
                 app:boxStrokeColor="@color/colorAccent2"
                 app:errorEnabled="true">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etLugarNacimiento"
+                <AutoCompleteTextView
+                    android:id="@+id/actvLugarNacimiento"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Lugar de nacimiento *"
-                    android:inputType="textCapWords"
+                    android:inputType="none"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:paddingVertical="16dp"/>
@@ -288,6 +289,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
                 app:boxBackgroundMode="filled"
                 app:boxBackgroundColor="@color/white"
                 app:boxCornerRadiusTopStart="12dp"
@@ -300,12 +302,12 @@
                 app:boxStrokeColor="@color/colorAccent2"
                 app:errorEnabled="true">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etNacionalidad"
+                <AutoCompleteTextView
+                    android:id="@+id/actvNacionalidad"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="Nacionalidad *"
-                    android:inputType="textCapWords"
+                    android:inputType="none"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:paddingVertical="16dp"/>

@@ -35,16 +35,21 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.data.SessionManager;
 import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.Ciudad;
 import com.mjc.adoptme.models.DatosPersonalesData;
+import com.mjc.adoptme.models.Pais;
 import com.mjc.adoptme.models.RegistroCompleto;
 import com.mjc.adoptme.models.UpdateDataRequest;
 import com.mjc.adoptme.network.ApiClient;
+import com.mjc.adoptme.network.ApiService;
 import com.mjc.adoptme.network.UpdateRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import retrofit2.Call;
@@ -65,10 +70,10 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     private TextInputLayout tilNombres, tilApellidos, tilEmail, tilCedula, tilFechaNacimiento, tilLugarNacimiento, tilNacionalidad;
     private TextInputLayout tilTelefonoConvencional, tilTelefonoMovil, tilOcupacion, tilNivelInstruccion, tilLugarTrabajo, tilTelefonoTrabajo, tilDireccionTrabajo;
     private TextInputLayout tilNivelInstruccionOtro;
-    private TextInputEditText etNombres, etApellidos, etEmail, etCedula, etFechaNacimiento, etLugarNacimiento, etNacionalidad;
+    private TextInputEditText etNombres, etApellidos, etEmail, etCedula, etFechaNacimiento;
     private TextInputEditText etTelefonoConvencional, etTelefonoMovil, etOcupacion, etLugarTrabajo, etTelefonoTrabajo, etDireccionTrabajo;
     private TextInputEditText etNivelInstruccionOtro;
-    private AutoCompleteTextView actvNivelInstruccion;
+    private AutoCompleteTextView actvNivelInstruccion, actvLugarNacimiento, actvNacionalidad;
     private RadioGroup rgTrabaja;
     private RadioButton rbTrabajaSi, rbTrabajaNo;
     private LinearLayout layoutCamposTrabajo;
@@ -83,6 +88,13 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     private boolean isRegistrationMode = false;
     private SessionManager sessionManager;
     private UpdateRepository updateRepository;
+    private ApiService apiService;
+    
+    // Datos para dropdowns
+    private List<Pais> paises = new ArrayList<>();
+    private List<Ciudad> ciudades = new ArrayList<>();
+    private Pais paisSeleccionado;
+    private Ciudad ciudadSeleccionada;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +103,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
         updateRepository = new UpdateRepository();
+        apiService = ApiClient.getApiService();
 
         initViews();
 
@@ -108,6 +121,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         }
 
         setupDropdowns();
+        loadDropdownData();
         setupDatePicker();
         setupClickListeners();
         setupBackButtonHandler();
@@ -160,6 +174,9 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         Log.d(TAG, "Visibilidad tilNombres: " + (tilNombres.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE"));
         Log.d(TAG, "Visibilidad tilApellidos: " + (tilApellidos.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE"));
         Log.d(TAG, "Visibilidad tilEmail: " + (tilEmail.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE"));
+        if (isUpdateMode) {
+            Log.d(TAG, "SessionManager - Cédula: " + sessionManager.getCedula());
+        }
         Log.d(TAG, "==============================");
     }
 
@@ -200,8 +217,8 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etCedula = findViewById(R.id.etCedula);
         etFechaNacimiento = findViewById(R.id.etFechaNacimiento);
-        etLugarNacimiento = findViewById(R.id.etLugarNacimiento);
-        etNacionalidad = findViewById(R.id.etNacionalidad);
+        actvLugarNacimiento = findViewById(R.id.actvLugarNacimiento);
+        actvNacionalidad = findViewById(R.id.actvNacionalidad);
         etTelefonoConvencional = findViewById(R.id.etTelefonoConvencional);
         etTelefonoMovil = findViewById(R.id.etTelefonoMovil);
         etOcupacion = findViewById(R.id.etOcupacion);
@@ -258,8 +275,28 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             }
         }
 
-        if (data.getLugar_nacimiento() != null) etLugarNacimiento.setText(data.getLugar_nacimiento());
-        if (data.getNacionalidad() != null) etNacionalidad.setText(data.getNacionalidad());
+        if (data.getLugar_nacimiento() != null) {
+            actvLugarNacimiento.setText(data.getLugar_nacimiento(), false);
+            // Buscar ciudad por nombre y establecerla
+            for (Ciudad ciudad : ciudades) {
+                if (ciudad.getNombre().equalsIgnoreCase(data.getLugar_nacimiento())) {
+                    ciudadSeleccionada = ciudad;
+                    break;
+                }
+            }
+        }
+        if (data.getNacionalidad() != null) {
+            actvNacionalidad.setText(data.getNacionalidad(), false);
+            // Buscar país por nombre y establecerlo
+            for (Pais pais : paises) {
+                if (pais.getNombre().equalsIgnoreCase(data.getNacionalidad())) {
+                    paisSeleccionado = pais;
+                    // Cargar ciudades del país seleccionado
+                    loadCiudades(pais.getId());
+                    break;
+                }
+            }
+        }
         if (data.getTelefono_convencional() != null) etTelefonoConvencional.setText(data.getTelefono_convencional());
         if (data.getTelefono_movil() != null) etTelefonoMovil.setText(data.getTelefono_movil());
         if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
@@ -287,6 +324,13 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         DatosPersonalesData data = new DatosPersonalesData();
         data.setCedula(etCedula.getText().toString().trim());
         
+        // Log para debugging
+        Log.d(TAG, "=== DATOS PARA ACTUALIZAR ===");
+        Log.d(TAG, "Cédula: " + data.getCedula());
+        Log.d(TAG, "País seleccionado: " + (paisSeleccionado != null ? paisSeleccionado.getNombre() : "null"));
+        Log.d(TAG, "Ciudad seleccionada: " + (ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : "null"));
+        Log.d(TAG, "===============================");
+        
         // Solo incluir campos si están visibles
         if (tilNombres.getVisibility() == View.VISIBLE) {
             data.setNombres(etNombres.getText().toString().trim());
@@ -306,8 +350,8 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             data.setFecha_nacimiento(null);
         }
 
-        data.setLugar_nacimiento(etLugarNacimiento.getText().toString().trim());
-        data.setNacionalidad(etNacionalidad.getText().toString().trim());
+        data.setLugar_nacimiento(ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : actvLugarNacimiento.getText().toString().trim());
+        data.setNacionalidad(paisSeleccionado != null ? paisSeleccionado.getNombre() : actvNacionalidad.getText().toString().trim());
 
         String telConv = etTelefonoConvencional.getText().toString().trim();
         data.setTelefono_convencional(telConv.isEmpty() ? null : telConv);
@@ -395,8 +439,27 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         if (data.getCedula() != null) etCedula.setText(data.getCedula());
         
         // Campos adicionales
-        if (data.getLugarNacimiento() != null) etLugarNacimiento.setText(data.getLugarNacimiento());
-        if (data.getNacionalidad() != null) etNacionalidad.setText(data.getNacionalidad());
+        if (data.getLugarNacimiento() != null) {
+            actvLugarNacimiento.setText(data.getLugarNacimiento(), false);
+            // Buscar ciudad por nombre
+            for (Ciudad ciudad : ciudades) {
+                if (ciudad.getNombre().equalsIgnoreCase(data.getLugarNacimiento())) {
+                    ciudadSeleccionada = ciudad;
+                    break;
+                }
+            }
+        }
+        if (data.getNacionalidad() != null) {
+            actvNacionalidad.setText(data.getNacionalidad(), false);
+            // Buscar país por nombre
+            for (Pais pais : paises) {
+                if (pais.getNombre().equalsIgnoreCase(data.getNacionalidad())) {
+                    paisSeleccionado = pais;
+                    loadCiudades(pais.getId());
+                    break;
+                }
+            }
+        }
         if (data.getTelefonoConvencional() != null) etTelefonoConvencional.setText(data.getTelefonoConvencional());
         if (data.getTelefonoMovil() != null) etTelefonoMovil.setText(data.getTelefonoMovil());
         if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
@@ -441,9 +504,27 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     }
 
     private void setupDropdowns() {
+        // Configurar nivel de instrucción
         String[] niveles = getResources().getStringArray(R.array.niveles_instruccion);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, niveles);
-        actvNivelInstruccion.setAdapter(adapter);
+        ArrayAdapter<String> adapterNiveles = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, niveles);
+        actvNivelInstruccion.setAdapter(adapterNiveles);
+        
+        // Configurar listeners para AutoCompleteTextView de países y ciudades
+        actvNacionalidad.setOnClickListener(v -> {
+            if (paises.isEmpty()) {
+                Toast.makeText(this, "Cargando países...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            actvNacionalidad.showDropDown();
+        });
+        
+        actvLugarNacimiento.setOnClickListener(v -> {
+            if (ciudades.isEmpty()) {
+                Toast.makeText(this, "Primero selecciona tu nacionalidad", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            actvLugarNacimiento.showDropDown();
+        });
 
         rgTrabaja.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.rbTrabajaSi) {
@@ -470,6 +551,73 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void loadDropdownData() {
+        loadPaises();
+    }
+
+    private void loadPaises() {
+        apiService.getPaises().enqueue(new Callback<ApiResponse<List<Pais>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Pais>>> call, Response<ApiResponse<List<Pais>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    paises = response.body().getData();
+                    Log.d(TAG, "Países cargados: " + paises.size());
+                    
+                    // Configurar adapter para AutoCompleteTextView de países
+                    ArrayAdapter<Pais> adapterPaises = new ArrayAdapter<>(DatosPersonalesActivity.this, 
+                            android.R.layout.simple_dropdown_item_1line, paises);
+                    actvNacionalidad.setAdapter(adapterPaises);
+                    
+                    // Configurar listener para selección de país
+                    actvNacionalidad.setOnItemClickListener((parent, view, position, id) -> {
+                        paisSeleccionado = paises.get(position);
+                        loadCiudades(paisSeleccionado.getId());
+                        // Limpiar ciudad seleccionada
+                        actvLugarNacimiento.setText("");
+                        ciudadSeleccionada = null;
+                    });
+                } else {
+                    Log.e(TAG, "Error al cargar países: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Pais>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar países", t);
+            }
+        });
+    }
+
+    private void loadCiudades(int paisId) {
+        apiService.getCiudades(paisId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    ciudades = response.body().getData();
+                    Log.d(TAG, "Ciudades cargadas: " + ciudades.size());
+                    
+                    // Configurar adapter para AutoCompleteTextView de ciudades
+                    ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
+                            android.R.layout.simple_dropdown_item_1line, ciudades);
+                    actvLugarNacimiento.setAdapter(adapterCiudades);
+                    
+                    // Configurar listener para selección de ciudad
+                    actvLugarNacimiento.setOnItemClickListener((parent, view, position, id) -> {
+                        ciudadSeleccionada = ciudades.get(position);
+                    });
+                } else {
+                    Log.e(TAG, "Error al cargar ciudades: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar ciudades", t);
+            }
+        });
+    }
+
 
     private void animateViewVisibility(final View view, boolean show) {
         if (show) {
@@ -639,7 +787,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             tilFechaNacimiento.setError(null);
         }
 
-        if (etLugarNacimiento.getText().toString().trim().isEmpty()) {
+        if (actvLugarNacimiento.getText().toString().trim().isEmpty()) {
             tilLugarNacimiento.setError("El lugar de nacimiento es obligatorio");
             shakeView(tilLugarNacimiento);
             isValid = false;
@@ -647,7 +795,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             tilLugarNacimiento.setError(null);
         }
 
-        if (etNacionalidad.getText().toString().trim().isEmpty()) {
+        if (actvNacionalidad.getText().toString().trim().isEmpty()) {
             tilNacionalidad.setError("La nacionalidad es obligatoria");
             shakeView(tilNacionalidad);
             isValid = false;
@@ -786,8 +934,8 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         }
         
         // Guardar otros campos
-        data.setLugarNacimiento(etLugarNacimiento.getText().toString().trim());
-        data.setNacionalidad(etNacionalidad.getText().toString().trim());
+        data.setLugarNacimiento(ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : actvLugarNacimiento.getText().toString().trim());
+        data.setNacionalidad(paisSeleccionado != null ? paisSeleccionado.getNombre() : actvNacionalidad.getText().toString().trim());
 
         String telConvencional = etTelefonoConvencional.getText().toString().trim();
         data.setTelefonoConvencional(telConvencional.isEmpty() ? null : telConvencional);

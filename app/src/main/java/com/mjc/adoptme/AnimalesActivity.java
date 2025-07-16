@@ -30,6 +30,7 @@ import com.mjc.adoptme.models.AnimalHistorial;
 import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.InfoAnimales;
 import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.TipoAnimal;
 import com.mjc.adoptme.models.UserData;
 import com.mjc.adoptme.network.ApiService;
 import com.mjc.adoptme.network.ApiClient;
@@ -55,13 +56,19 @@ public class AnimalesActivity extends AppCompatActivity {
     private CheckBox cbOtro;
     private TextInputLayout tilOtroEspecifique;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    
+    // Datos para dropdowns
+    private List<TipoAnimal> tiposAnimales = new ArrayList<>();
+    private ApiService apiService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_animales);
 
+        apiService = ApiClient.getApiService();
         initViews();
+        loadTiposAnimales();
         populateDataFromRepository();
         setupListeners();
         setupBackButtonHandler();
@@ -95,6 +102,28 @@ public class AnimalesActivity extends AppCompatActivity {
         logoContainer.setTranslationY(-50f);
         formContainer.setAlpha(0f);
         formContainer.setTranslationY(50f);
+    }
+
+    private void loadTiposAnimales() {
+        apiService.getTiposAnimales().enqueue(new Callback<ApiResponse<List<TipoAnimal>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<TipoAnimal>>> call, Response<ApiResponse<List<TipoAnimal>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    tiposAnimales = response.body().getData();
+                    Log.d(TAG, "Tipos de animales cargados: " + tiposAnimales.size());
+                    for (TipoAnimal tipo : tiposAnimales) {
+                        Log.d(TAG, "Tipo: " + tipo.getNombre() + " ID: " + tipo.getId());
+                    }
+                } else {
+                    Log.e(TAG, "Error al cargar tipos de animales: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<TipoAnimal>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar tipos de animales", t);
+            }
+        });
     }
 
     private void setupBackButtonHandler() {
@@ -230,11 +259,18 @@ public class AnimalesActivity extends AppCompatActivity {
     }
 
     private int getTipoAnimalId(String tipo) {
-        // !!! IMPORTANTE: Estos IDs deben coincidir con los de tu tabla `tipos_animales` en PostgreSQL !!!
+        // Buscar el tipo en la lista cargada desde la API
+        for (TipoAnimal tipoAnimal : tiposAnimales) {
+            if (tipoAnimal.getNombre().equalsIgnoreCase(tipo)) {
+                return tipoAnimal.getId();
+            }
+        }
+        
+        // Si no se encuentra, usar mapeo por defecto como fallback
         switch (tipo) {
-            case "Perros": return 1;  // Asumiendo Canino = 1
-            case "Gatos":  return 2;  // Asumiendo Felino = 2
-            case "Pollos": return 3;  // Necesitas crear estos tipos en tu DB
+            case "Perros": return 1;
+            case "Gatos":  return 2;
+            case "Pollos": return 3;
             case "Patos":  return 4;
             case "Cuis":   return 5;
             case "Cerdos": return 6;
