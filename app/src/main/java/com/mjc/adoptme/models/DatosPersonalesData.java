@@ -3,41 +3,59 @@ package com.mjc.adoptme.models;
 import com.google.gson.annotations.SerializedName;
 
 public class DatosPersonalesData {
-    // Los campos que se envían y reciben para Datos Personales
-    @SerializedName("nombres") private String nombres;
-    @SerializedName("apellidos") private String apellidos;
-    @SerializedName("fecha_nacimiento") private String fechaNacimiento;
-    @SerializedName("lugar_nacimiento") private String lugarNacimiento;
-    @SerializedName("nacionalidad") private String nacionalidad;
-    @SerializedName("email") private String email;
-    @SerializedName("telefono_convencional") private String telefonoConvencional;
-    @SerializedName("telefono_movil") private String telefonoMovil;
-    @SerializedName("ocupacion") private String ocupacion;
-    @SerializedName("nivel_instruccion") private String nivelInstruccion;
-    @SerializedName("lugar_trabajo") private String lugarTrabajo;
-    @SerializedName("direccion_trabajo") private String direccionTrabajo;
-    @SerializedName("telefono_trabajo") private String telefonoTrabajo;
+    @SerializedName("cedula")
+    private String cedula;
 
-    // Generar Getters y Setters para todos los campos...
+    @SerializedName("nombres")
+    private String nombres;
 
-    // Constructor
+    @SerializedName("apellidos")
+    private String apellidos;
+
+    @SerializedName("fecha_nacimiento")
+    private String fecha_nacimiento;
+
+    @SerializedName("lugar_nacimiento")
+    private String lugar_nacimiento;
+
+    @SerializedName("nacionalidad")
+    private String nacionalidad;
+
+    @SerializedName("email")
+    private String email;
+
+    @SerializedName("telefono_convencional")
+    private String telefono_convencional;
+
+    @SerializedName("telefono_movil")
+    private String telefono_movil;
+
+    @SerializedName("ocupacion")
+    private String ocupacion;
+
+    @SerializedName("nivel_instruccion")
+    private String nivel_instruccion;
+
+    @SerializedName("lugar_trabajo")
+    private String lugar_trabajo;
+
+    @SerializedName("direccion_trabajo")
+    private String direccion_trabajo;
+
+    @SerializedName("telefono_trabajo")
+    private String telefono_trabajo;
+
+    // Constructor vacío
     public DatosPersonalesData() {
     }
 
-    public DatosPersonalesData(String nombres, String apellidos, String fechaNacimiento, String lugarNacimiento, String nacionalidad, String email, String telefonoConvencional, String telefonoMovil, String ocupacion, String nivelInstruccion, String lugarTrabajo, String direccionTrabajo, String telefonoTrabajo) {
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.fechaNacimiento = fechaNacimiento;
-        this.lugarNacimiento = lugarNacimiento;
-        this.nacionalidad = nacionalidad;
-        this.email = email;
-        this.telefonoConvencional = telefonoConvencional;
-        this.telefonoMovil = telefonoMovil;
-        this.ocupacion = ocupacion;
-        this.nivelInstruccion = nivelInstruccion;
-        this.lugarTrabajo = lugarTrabajo;
-        this.direccionTrabajo = direccionTrabajo;
-        this.telefonoTrabajo = telefonoTrabajo;
+    // Getters y Setters
+    public String getCedula() {
+        return cedula;
+    }
+
+    public void setCedula(String cedula) {
+        this.cedula = cedula;
     }
 
     public String getNombres() {
@@ -56,20 +74,20 @@ public class DatosPersonalesData {
         this.apellidos = apellidos;
     }
 
-    public String getFechaNacimiento() {
-        return fechaNacimiento;
+    public String getFecha_nacimiento() {
+        return fecha_nacimiento;
     }
 
-    public void setFechaNacimiento(String fechaNacimiento) {
-        this.fechaNacimiento = fechaNacimiento;
+    public void setFecha_nacimiento(String fecha_nacimiento) {
+        this.fecha_nacimiento = fecha_nacimiento;
     }
 
-    public String getLugarNacimiento() {
-        return lugarNacimiento;
+    public String getLugar_nacimiento() {
+        return lugar_nacimiento;
     }
 
-    public void setLugarNacimiento(String lugarNacimiento) {
-        this.lugarNacimiento = lugarNacimiento;
+    public void setLugar_nacimiento(String lugar_nacimiento) {
+        this.lugar_nacimiento = lugar_nacimiento;
     }
 
     public String getNacionalidad() {
@@ -88,20 +106,20 @@ public class DatosPersonalesData {
         this.email = email;
     }
 
-    public String getTelefonoConvencional() {
-        return telefonoConvencional;
+    public String getTelefono_convencional() {
+        return telefono_convencional;
     }
 
-    public void setTelefonoConvencional(String telefonoConvencional) {
-        this.telefonoConvencional = telefonoConvencional;
+    public void setTelefono_convencional(String telefono_convencional) {
+        this.telefono_convencional = telefono_convencional;
     }
 
-    public String getTelefonoMovil() {
-        return telefonoMovil;
+    public String getTelefono_movil() {
+        return telefono_movil;
     }
 
-    public void setTelefonoMovil(String telefonoMovil) {
-        this.telefonoMovil = telefonoMovil;
+    public void setTelefono_movil(String telefono_movil) {
+        this.telefono_movil = telefono_movil;
     }
 
     public String getOcupacion() {
@@ -112,36 +130,35 @@ public class DatosPersonalesData {
         this.ocupacion = ocupacion;
     }
 
-    public String getNivelInstruccion() {
-        return nivelInstruccion;
+    public String getNivel_instruccion() {
+        return nivel_instruccion;
     }
 
-    public void setNivelInstruccion(String nivelInstruccion) {
-        this.nivelInstruccion = nivelInstruccion;
+    public void setNivel_instruccion(String nivel_instruccion) {
+        this.nivel_instruccion = nivel_instruccion;
     }
 
-    public String getLugarTrabajo() {
-        return lugarTrabajo;
+    public String getLugar_trabajo() {
+        return lugar_trabajo;
     }
 
-    public void setLugarTrabajo(String lugarTrabajo) {
-        this.lugarTrabajo = lugarTrabajo;
+    public void setLugar_trabajo(String lugar_trabajo) {
+        this.lugar_trabajo = lugar_trabajo;
     }
 
-    public String getDireccionTrabajo() {
-        return direccionTrabajo;
+    public String getDireccion_trabajo() {
+        return direccion_trabajo;
     }
 
-    public void setDireccionTrabajo(String direccionTrabajo) {
-        this.direccionTrabajo = direccionTrabajo;
+    public void setDireccion_trabajo(String direccion_trabajo) {
+        this.direccion_trabajo = direccion_trabajo;
     }
 
-    public String getTelefonoTrabajo() {
-        return telefonoTrabajo;
+    public String getTelefono_trabajo() {
+        return telefono_trabajo;
     }
 
-    public void setTelefonoTrabajo(String telefonoTrabajo) {
-        this.telefonoTrabajo = telefonoTrabajo;
+    public void setTelefono_trabajo(String telefono_trabajo) {
+        this.telefono_trabajo = telefono_trabajo;
     }
-    // (En Android Studio: Clic derecho -> Generate -> Getter and Setter -> Seleccionar todos)
 }

@@ -1,19 +1,23 @@
 package com.mjc.adoptme.models;
 
 import com.google.gson.annotations.SerializedName;
-import com.mjc.adoptme.models.Domicilio;
-import com.mjc.adoptme.models.Entorno;
-
 import java.util.List;
 
 public class RegistroCompleto {
-
+    // Datos básicos del usuario
     @SerializedName("nombres")
     private String nombres;
 
     @SerializedName("apellidos")
     private String apellidos;
 
+    @SerializedName("email")
+    private String email;
+
+    @SerializedName("password_hash")
+    private String passwordHash;
+
+    // Datos personales
     @SerializedName("cedula")
     private String cedula;
 
@@ -25,12 +29,6 @@ public class RegistroCompleto {
 
     @SerializedName("nacionalidad")
     private String nacionalidad;
-
-    @SerializedName("email")
-    private String email;
-
-    @SerializedName("password_hash")
-    private String passwordHash;
 
     @SerializedName("telefono_convencional")
     private String telefonoConvencional;
@@ -53,42 +51,27 @@ public class RegistroCompleto {
     @SerializedName("telefono_trabajo")
     private String telefonoTrabajo;
 
-    @SerializedName("referencias")
-    private List<ReferenciaPersonal> referencias;
-
-    @SerializedName("entorno")
-    private Entorno entorno;
-
+    // Domicilio
     @SerializedName("domicilio")
     private Domicilio domicilio;
 
+    // Referencias
+    @SerializedName("referencias")
+    private List<ReferenciaPersonal> referencias;
+
+    // Entorno familiar
+    @SerializedName("entorno")
+    private EntornoFamiliar entorno;
+
+    // Relación con animales
     @SerializedName("animales")
     private InfoAnimales animales;
 
-    // Genera Getters y Setters para todos los campos...
-    // En Android Studio: Clic derecho -> Generate -> Getter and Setter -> Seleccionar todos
-
+    // Constructor vacío
     public RegistroCompleto() {
     }
 
-    public RegistroCompleto (String nombres, String apellidos, String cedula, String fechaNacimiento, String lugarNacimiento, String nacionalidad, String email, String passwordHash, String telefonoConvencional, String telefonoMovil, String ocupacion, String nivelInstruccion, String lugarTrabajo, String direccionTrabajo, String telefonoTrabajo) {
-        this.nombres = nombres;
-        this.apellidos = apellidos;
-        this.cedula = cedula;
-        this.fechaNacimiento = fechaNacimiento;
-        this.lugarNacimiento = lugarNacimiento;
-        this.nacionalidad = nacionalidad;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.telefonoConvencional = telefonoConvencional;
-        this.telefonoMovil = telefonoMovil;
-        this.ocupacion = ocupacion;
-        this.nivelInstruccion = nivelInstruccion;
-        this.lugarTrabajo = lugarTrabajo;
-        this.direccionTrabajo = direccionTrabajo;
-        this.telefonoTrabajo = telefonoTrabajo;
-    }
-
+    // Getters y Setters
     public String getNombres() {
         return nombres;
     }
@@ -103,6 +86,22 @@ public class RegistroCompleto {
 
     public void setApellidos(String apellidos) {
         this.apellidos = apellidos;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getCedula() {
@@ -137,28 +136,12 @@ public class RegistroCompleto {
         this.nacionalidad = nacionalidad;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getTelefonoConvencional() {
         return telefonoConvencional;
     }
 
     public void setTelefonoConvencional(String telefonoConvencional) {
         this.telefonoConvencional = telefonoConvencional;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
     }
 
     public String getTelefonoMovil() {
@@ -209,6 +192,14 @@ public class RegistroCompleto {
         this.telefonoTrabajo = telefonoTrabajo;
     }
 
+    public Domicilio getDomicilio() {
+        return domicilio;
+    }
+
+    public void setDomicilio(Domicilio domicilio) {
+        this.domicilio = domicilio;
+    }
+
     public List<ReferenciaPersonal> getReferencias() {
         return referencias;
     }
@@ -217,20 +208,12 @@ public class RegistroCompleto {
         this.referencias = referencias;
     }
 
-    public Entorno getEntorno() {
+    public EntornoFamiliar getEntorno() {
         return entorno;
     }
 
-    public void setEntorno(Entorno entorno) {
+    public void setEntorno(EntornoFamiliar entorno) {
         this.entorno = entorno;
-    }
-
-    public Domicilio getDomicilio() {
-        return domicilio;
-    }
-
-    public void setDomicilio(Domicilio domicilio) {
-        this.domicilio = domicilio;
     }
 
     public InfoAnimales getAnimales() {

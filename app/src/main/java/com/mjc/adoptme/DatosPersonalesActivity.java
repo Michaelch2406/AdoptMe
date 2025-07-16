@@ -23,22 +23,33 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.mjc.adoptme.data.RegistroRepository; // <-- AÑADIDO
+import com.mjc.adoptme.data.RegistroRepository;
+import com.mjc.adoptme.data.SessionManager;
+import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.DatosPersonalesData;
 import com.mjc.adoptme.models.RegistroCompleto;
-import com.mjc.adoptme.models.RegistroGeneral;
+import com.mjc.adoptme.models.UpdateDataRequest;
+import com.mjc.adoptme.network.ApiClient;
+import com.mjc.adoptme.network.UpdateRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DatosPersonalesActivity extends AppCompatActivity {
     private static final String TAG = "DatosPersonalesActivity";
@@ -50,38 +61,106 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     private MaterialButton btnSiguiente, btnRegresar;
     private ProgressBar progressBar;
 
-    // Campos del Formulario (sin email)
-    private TextInputLayout tilCedula, tilFechaNacimiento, tilLugarNacimiento, tilNacionalidad;
+    // Campos del Formulario
+    private TextInputLayout tilNombres, tilApellidos, tilEmail, tilCedula, tilFechaNacimiento, tilLugarNacimiento, tilNacionalidad;
     private TextInputLayout tilTelefonoConvencional, tilTelefonoMovil, tilOcupacion, tilNivelInstruccion, tilLugarTrabajo, tilTelefonoTrabajo, tilDireccionTrabajo;
-    private TextInputLayout tilNivelInstruccionOtro; // Campo para especificar otro nivel
-    private TextInputEditText etCedula, etFechaNacimiento, etLugarNacimiento, etNacionalidad;
+    private TextInputLayout tilNivelInstruccionOtro;
+    private TextInputEditText etNombres, etApellidos, etEmail, etCedula, etFechaNacimiento, etLugarNacimiento, etNacionalidad;
     private TextInputEditText etTelefonoConvencional, etTelefonoMovil, etOcupacion, etLugarTrabajo, etTelefonoTrabajo, etDireccionTrabajo;
-    private TextInputEditText etNivelInstruccionOtro; // EditText para especificar otro nivel
+    private TextInputEditText etNivelInstruccionOtro;
     private AutoCompleteTextView actvNivelInstruccion;
     private RadioGroup rgTrabaja;
     private RadioButton rbTrabajaSi, rbTrabajaNo;
     private LinearLayout layoutCamposTrabajo;
 
-    // Formato de fecha para la API (YYYY-MM-DD)
+    // Formato de fecha
     private final SimpleDateFormat apiDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
     private final SimpleDateFormat displayDateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-
     private final Calendar calendar = Calendar.getInstance();
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
     private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private boolean isUpdateMode = false;
+    private boolean isRegistrationMode = false;
+    private SessionManager sessionManager;
+    private UpdateRepository updateRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_datos_personales);
 
+        sessionManager = new SessionManager(this);
+        updateRepository = new UpdateRepository();
+
         initViews();
-        populateDataFromRepository();
+
+        // Determinar el modo de la actividad
+        isUpdateMode = getIntent().getBooleanExtra("IS_UPDATE_MODE", false);
+        isRegistrationMode = !isUpdateMode && !sessionManager.isLoggedIn();
+
+        configureUIForMode();
+        logActivityState();
+
+        if (isUpdateMode) {
+            loadUserData();
+        } else {
+            populateDataFromRepository();
+        }
+
         setupDropdowns();
         setupDatePicker();
         setupClickListeners();
         setupBackButtonHandler();
         startAnimations();
+    }
+
+    private void configureUIForMode() {
+        if (isUpdateMode) {
+            // Modo actualización: mostrar todos los campos
+            btnSiguiente.setText("Actualizar");
+            tvSubtitle.setText("Actualizar Datos Personales");
+            etCedula.setEnabled(false);
+            tilCedula.setHelperText("La cédula no se puede modificar");
+            
+            // Mostrar todos los campos básicos
+            tilNombres.setVisibility(View.VISIBLE);
+            tilApellidos.setVisibility(View.VISIBLE);
+            tilEmail.setVisibility(View.VISIBLE);
+            tilCedula.setVisibility(View.VISIBLE);
+            
+        } else if (isRegistrationMode) {
+            // Modo registro: ocultar nombres, apellidos, email (ya están en RegistroActivity)
+            btnSiguiente.setText("Siguiente");
+            tvSubtitle.setText("Datos Personales");
+            
+            // Ocultar campos que ya se capturaron en RegistroActivity
+            tilNombres.setVisibility(View.GONE);
+            tilApellidos.setVisibility(View.GONE);
+            tilEmail.setVisibility(View.GONE);
+            tilCedula.setVisibility(View.VISIBLE);
+            
+        } else {
+            // Modo normal (usuario logueado navegando en el flujo)
+            btnSiguiente.setText("Siguiente");
+            tvSubtitle.setText("Datos Personales");
+            
+            // Mostrar todos los campos
+            tilNombres.setVisibility(View.VISIBLE);
+            tilApellidos.setVisibility(View.VISIBLE);
+            tilEmail.setVisibility(View.VISIBLE);
+            tilCedula.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void logActivityState() {
+        Log.d(TAG, "=== ESTADO DE LA ACTIVIDAD ===");
+        Log.d(TAG, "isUpdateMode: " + isUpdateMode);
+        Log.d(TAG, "isRegistrationMode: " + isRegistrationMode);
+        Log.d(TAG, "sessionManager.isLoggedIn(): " + sessionManager.isLoggedIn());
+        Log.d(TAG, "Visibilidad tilNombres: " + (tilNombres.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE"));
+        Log.d(TAG, "Visibilidad tilApellidos: " + (tilApellidos.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE"));
+        Log.d(TAG, "Visibilidad tilEmail: " + (tilEmail.getVisibility() == View.VISIBLE ? "VISIBLE" : "GONE"));
+        Log.d(TAG, "==============================");
     }
 
     private void initViews() {
@@ -97,6 +176,9 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         tvSubtitle = findViewById(R.id.tvSubtitle);
         tvInfo = findViewById(R.id.tvInfo);
         progressBar = findViewById(R.id.progressBar);
+        tilNombres = findViewById(R.id.tilNombres);
+        tilApellidos = findViewById(R.id.tilApellidos);
+        tilEmail = findViewById(R.id.tilEmail);
         tilCedula = findViewById(R.id.tilCedula);
         tilFechaNacimiento = findViewById(R.id.tilFechaNacimiento);
         tilLugarNacimiento = findViewById(R.id.tilLugarNacimiento);
@@ -113,6 +195,9 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         rbTrabajaSi = findViewById(R.id.rbTrabajaSi);
         rbTrabajaNo = findViewById(R.id.rbTrabajaNo);
         layoutCamposTrabajo = findViewById(R.id.layoutCamposTrabajo);
+        etNombres = findViewById(R.id.etNombres);
+        etApellidos = findViewById(R.id.etApellidos);
+        etEmail = findViewById(R.id.etEmail);
         etCedula = findViewById(R.id.etCedula);
         etFechaNacimiento = findViewById(R.id.etFechaNacimiento);
         etLugarNacimiento = findViewById(R.id.etLugarNacimiento);
@@ -127,11 +212,161 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         actvNivelInstruccion = findViewById(R.id.actvNivelInstruccion);
         btnSiguiente = findViewById(R.id.btnSiguiente);
         btnRegresar = findViewById(R.id.btnRegresar);
+
         logoContainer.setAlpha(0f);
         logoContainer.setTranslationY(-50f);
         formContainer.setAlpha(0f);
         formContainer.setTranslationY(50f);
         tvInfo.setAlpha(0f);
+    }
+
+    private void loadUserData() {
+        progressBar.setVisibility(View.VISIBLE);
+        String cedula = sessionManager.getCedula();
+
+        updateRepository.getUserPersonalData(cedula, new UpdateRepository.DataCallback<DatosPersonalesData>() {
+            @Override
+            public void onSuccess(DatosPersonalesData data) {
+                progressBar.setVisibility(View.GONE);
+                populateForm(data);
+            }
+
+            @Override
+            public void onError(String message) {
+                progressBar.setVisibility(View.GONE);
+                Log.e(TAG, "Error al cargar datos: " + message);
+                showErrorDialog("Error al cargar los datos. Intente nuevamente.");
+            }
+        });
+    }
+
+    private void populateForm(DatosPersonalesData data) {
+        // Rellenar campos básicos
+        if (data.getCedula() != null) etCedula.setText(data.getCedula());
+        if (data.getNombres() != null) etNombres.setText(data.getNombres());
+        if (data.getApellidos() != null) etApellidos.setText(data.getApellidos());
+        if (data.getEmail() != null) etEmail.setText(data.getEmail());
+
+        // Fecha de nacimiento
+        if (data.getFecha_nacimiento() != null) {
+            try {
+                Date date = apiDateFormat.parse(data.getFecha_nacimiento());
+                etFechaNacimiento.setText(displayDateFormat.format(date));
+                calendar.setTime(date);
+            } catch (ParseException e) {
+                Log.e(TAG, "Error al parsear fecha: " + e.getMessage());
+            }
+        }
+
+        if (data.getLugar_nacimiento() != null) etLugarNacimiento.setText(data.getLugar_nacimiento());
+        if (data.getNacionalidad() != null) etNacionalidad.setText(data.getNacionalidad());
+        if (data.getTelefono_convencional() != null) etTelefonoConvencional.setText(data.getTelefono_convencional());
+        if (data.getTelefono_movil() != null) etTelefonoMovil.setText(data.getTelefono_movil());
+        if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
+        if (data.getNivel_instruccion() != null) actvNivelInstruccion.setText(data.getNivel_instruccion(), false);
+
+        // Datos de trabajo
+        if (data.getLugar_trabajo() != null && !data.getLugar_trabajo().isEmpty()) {
+            rbTrabajaSi.setChecked(true);
+            layoutCamposTrabajo.setVisibility(View.VISIBLE);
+            etLugarTrabajo.setText(data.getLugar_trabajo());
+            if (data.getDireccion_trabajo() != null) etDireccionTrabajo.setText(data.getDireccion_trabajo());
+            if (data.getTelefono_trabajo() != null) etTelefonoTrabajo.setText(data.getTelefono_trabajo());
+        } else {
+            rbTrabajaNo.setChecked(true);
+            layoutCamposTrabajo.setVisibility(View.GONE);
+        }
+    }
+
+    private void updateData() {
+        if (!validateForm()) return;
+
+        progressBar.setVisibility(View.VISIBLE);
+        btnSiguiente.setEnabled(false);
+
+        DatosPersonalesData data = new DatosPersonalesData();
+        data.setCedula(etCedula.getText().toString().trim());
+        
+        // Solo incluir campos si están visibles
+        if (tilNombres.getVisibility() == View.VISIBLE) {
+            data.setNombres(etNombres.getText().toString().trim());
+        }
+        if (tilApellidos.getVisibility() == View.VISIBLE) {
+            data.setApellidos(etApellidos.getText().toString().trim());
+        }
+        if (tilEmail.getVisibility() == View.VISIBLE) {
+            data.setEmail(etEmail.getText().toString().trim());
+        }
+
+        // Convertir fecha al formato de la API
+        try {
+            Date date = displayDateFormat.parse(etFechaNacimiento.getText().toString());
+            data.setFecha_nacimiento(apiDateFormat.format(date));
+        } catch (ParseException e) {
+            data.setFecha_nacimiento(null);
+        }
+
+        data.setLugar_nacimiento(etLugarNacimiento.getText().toString().trim());
+        data.setNacionalidad(etNacionalidad.getText().toString().trim());
+
+        String telConv = etTelefonoConvencional.getText().toString().trim();
+        data.setTelefono_convencional(telConv.isEmpty() ? null : telConv);
+
+        data.setTelefono_movil(etTelefonoMovil.getText().toString().trim());
+        data.setOcupacion(etOcupacion.getText().toString().trim());
+
+        String nivelInstruccion = actvNivelInstruccion.getText().toString().trim();
+        if ("Otro".equals(nivelInstruccion)) {
+            data.setNivel_instruccion(etNivelInstruccionOtro.getText().toString().trim());
+        } else {
+            data.setNivel_instruccion(nivelInstruccion);
+        }
+
+        // Datos de trabajo
+        if (rbTrabajaSi.isChecked()) {
+            data.setLugar_trabajo(etLugarTrabajo.getText().toString().trim());
+            data.setDireccion_trabajo(etDireccionTrabajo.getText().toString().trim());
+            String telTrabajo = etTelefonoTrabajo.getText().toString().trim();
+            data.setTelefono_trabajo(telTrabajo.isEmpty() ? null : telTrabajo);
+        } else {
+            data.setLugar_trabajo(null);
+            data.setDireccion_trabajo(null);
+            data.setTelefono_trabajo(null);
+        }
+
+        updateRepository.updatePersonalData(sessionManager.getCedula(), data, new UpdateRepository.UpdateCallback() {
+            @Override
+            public void onSuccess(ApiResponse<String> response) {
+                progressBar.setVisibility(View.GONE);
+                btnSiguiente.setEnabled(true);
+                showSuccessDialog();
+            }
+
+            @Override
+            public void onError(String message) {
+                progressBar.setVisibility(View.GONE);
+                btnSiguiente.setEnabled(true);
+                Log.e(TAG, "Error al actualizar: " + message);
+                showErrorDialog("Error al actualizar los datos. Intente nuevamente.");
+            }
+        });
+    }
+
+    private void showSuccessDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("¡Éxito!")
+                .setMessage("Datos actualizados correctamente")
+                .setPositiveButton("Aceptar", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showErrorDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("Aceptar", null)
+                .show();
     }
 
     private void setupBackButtonHandler() {
@@ -143,38 +378,42 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         });
     }
 
-    // En DatosPersonalesActivity.java
-
     private void populateDataFromRepository() {
         RegistroCompleto data = RegistroRepository.getInstance().getRegistroData();
-
-        // Si no hay datos, no hay nada que rellenar
         if (data == null) return;
 
-        // Rellenar campos de texto simples, verificando que no sean nulos
+        // Campos básicos - solo llenar si están visibles
+        if (tilNombres.getVisibility() == View.VISIBLE && data.getNombres() != null) {
+            etNombres.setText(data.getNombres());
+        }
+        if (tilApellidos.getVisibility() == View.VISIBLE && data.getApellidos() != null) {
+            etApellidos.setText(data.getApellidos());
+        }
+        if (tilEmail.getVisibility() == View.VISIBLE && data.getEmail() != null) {
+            etEmail.setText(data.getEmail());
+        }
         if (data.getCedula() != null) etCedula.setText(data.getCedula());
+        
+        // Campos adicionales
         if (data.getLugarNacimiento() != null) etLugarNacimiento.setText(data.getLugarNacimiento());
         if (data.getNacionalidad() != null) etNacionalidad.setText(data.getNacionalidad());
         if (data.getTelefonoConvencional() != null) etTelefonoConvencional.setText(data.getTelefonoConvencional());
         if (data.getTelefonoMovil() != null) etTelefonoMovil.setText(data.getTelefonoMovil());
         if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
 
-        // Rellenar fecha de nacimiento (requiere conversión de formato)
         if (data.getFechaNacimiento() != null) {
             try {
                 Date date = apiDateFormat.parse(data.getFechaNacimiento());
                 etFechaNacimiento.setText(displayDateFormat.format(date));
             } catch (ParseException e) {
-                Log.e(TAG, "No se pudo parsear la fecha guardada para mostrarla", e);
+                Log.e(TAG, "No se pudo parsear la fecha guardada", e);
             }
         }
 
-        // Rellenar el selector de nivel de instrucción
         if (data.getNivelInstruccion() != null) {
-            actvNivelInstruccion.setText(data.getNivelInstruccion(), false); // false para no filtrar
+            actvNivelInstruccion.setText(data.getNivelInstruccion(), false);
         }
 
-        // Rellenar la pregunta "¿Trabaja actualmente?" y mostrar/ocultar campos
         if (data.getLugarTrabajo() != null) {
             rbTrabajaSi.setChecked(true);
             layoutCamposTrabajo.setVisibility(View.VISIBLE);
@@ -182,7 +421,6 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             if(data.getDireccionTrabajo() != null) etDireccionTrabajo.setText(data.getDireccionTrabajo());
             if (data.getTelefonoTrabajo() != null) etTelefonoTrabajo.setText(data.getTelefonoTrabajo());
         } else {
-            // Si no hay lugar de trabajo, asumimos que se seleccionó "No"
             rbTrabajaNo.setChecked(true);
             layoutCamposTrabajo.setVisibility(View.GONE);
         }
@@ -191,7 +429,11 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     private void setupClickListeners() {
         btnSiguiente.setOnClickListener(v -> {
             if (validateForm()) {
-                saveDataAndContinue();
+                if (isUpdateMode) {
+                    updateData();
+                } else {
+                    saveDataAndContinue();
+                }
             }
         });
 
@@ -203,28 +445,20 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, niveles);
         actvNivelInstruccion.setAdapter(adapter);
 
-        // Listener para mostrar/ocultar campos de trabajo (VERSIÓN MEJORADA)
         rgTrabaja.setOnCheckedChangeListener((group, checkedId) -> {
-                    if (checkedId == R.id.rbTrabajaSi) {
-                        animateViewVisibility(layoutCamposTrabajo, true);
-                    } else if (checkedId == R.id.rbTrabajaNo) {
-                        animateViewVisibility(layoutCamposTrabajo, false);
+            if (checkedId == R.id.rbTrabajaSi) {
+                animateViewVisibility(layoutCamposTrabajo, true);
+            } else if (checkedId == R.id.rbTrabajaNo) {
+                animateViewVisibility(layoutCamposTrabajo, false);
+                etLugarTrabajo.setText("");
+                etDireccionTrabajo.setText("");
+                etTelefonoTrabajo.setText("");
+                tilLugarTrabajo.setError(null);
+                tilDireccionTrabajo.setError(null);
+                tilTelefonoTrabajo.setError(null);
+            }
+        });
 
-                        // --- ESTA ES LA CLAVE PARA ELIMINAR DATOS FANTASMA ---
-                        // Limpiamos los campos inmediatamente cuando el usuario selecciona "No".
-                        etLugarTrabajo.setText("");
-                        etDireccionTrabajo.setText(""); // <-- Limpiamos el nuevo campo también
-                        etTelefonoTrabajo.setText("");
-
-                        // También limpiamos cualquier mensaje de error que pudieran tener
-                        tilLugarTrabajo.setError(null);
-                        tilDireccionTrabajo.setError(null);
-                        tilTelefonoTrabajo.setError(null);
-                    }
-                });
-
-
-        // Listener para mostrar/ocultar campo "Especifique" cuando se seleccione "Otro"
         actvNivelInstruccion.setOnItemClickListener((parent, view, position, id) -> {
             String selectedItem = actvNivelInstruccion.getText().toString();
             if ("Otro".equals(selectedItem)) {
@@ -233,20 +467,6 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                 animateViewVisibility(tilNivelInstruccionOtro, false);
                 etNivelInstruccionOtro.setText("");
                 tilNivelInstruccionOtro.setError(null);
-            }
-        });
-
-        // Listener para mostrar/ocultar campos de trabajo
-        rgTrabaja.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.rbTrabajaSi) {
-                animateViewVisibility(layoutCamposTrabajo, true);
-            } else if (checkedId == R.id.rbTrabajaNo) {
-                animateViewVisibility(layoutCamposTrabajo, false);
-                // Limpiar campos cuando se ocultan
-                etLugarTrabajo.setText("");
-                etTelefonoTrabajo.setText("");
-                tilLugarTrabajo.setError(null);
-                tilTelefonoTrabajo.setError(null);
             }
         });
     }
@@ -287,9 +507,10 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             calendar.set(Calendar.YEAR, year);
             calendar.set(Calendar.MONTH, month);
             calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-            etFechaNacimiento.setText(dateFormat.format(calendar.getTime()));
+            etFechaNacimiento.setText(displayDateFormat.format(calendar.getTime()));
             tilFechaNacimiento.setError(null);
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+
         Calendar maxDate = Calendar.getInstance();
         maxDate.add(Calendar.YEAR, -18);
         datePickerDialog.getDatePicker().setMaxDate(maxDate.getTimeInMillis());
@@ -353,21 +574,61 @@ public class DatosPersonalesActivity extends AppCompatActivity {
 
     private boolean validateForm() {
         boolean isValid = true;
-        String cedula = etCedula.getText().toString().trim();
-        if (cedula.isEmpty()) {
-            tilCedula.setError("La cédula es obligatoria");
-            shakeView(tilCedula);
-            isValid = false;
-        } else if (cedula.length() != 10) {
-            tilCedula.setError("La cédula debe tener 10 dígitos");
-            shakeView(tilCedula);
-            isValid = false;
-        } else if (!validarCedulaEcuatoriana(cedula)) {
-            tilCedula.setError("Cédula inválida");
-            shakeView(tilCedula);
-            isValid = false;
-        } else {
-            tilCedula.setError(null);
+
+        // Validar campos básicos solo si están visibles
+        if (tilNombres.getVisibility() == View.VISIBLE) {
+            if (etNombres.getText().toString().trim().isEmpty()) {
+                tilNombres.setError("Los nombres son obligatorios");
+                shakeView(tilNombres);
+                isValid = false;
+            } else {
+                tilNombres.setError(null);
+            }
+        }
+
+        if (tilApellidos.getVisibility() == View.VISIBLE) {
+            if (etApellidos.getText().toString().trim().isEmpty()) {
+                tilApellidos.setError("Los apellidos son obligatorios");
+                shakeView(tilApellidos);
+                isValid = false;
+            } else {
+                tilApellidos.setError(null);
+            }
+        }
+
+        if (tilEmail.getVisibility() == View.VISIBLE) {
+            String email = etEmail.getText().toString().trim();
+            if (email.isEmpty()) {
+                tilEmail.setError("El email es obligatorio");
+                shakeView(tilEmail);
+                isValid = false;
+            } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                tilEmail.setError("Email inválido");
+                shakeView(tilEmail);
+                isValid = false;
+            } else {
+                tilEmail.setError(null);
+            }
+        }
+
+        // Validación de cédula solo en modo registro
+        if (!isUpdateMode) {
+            String cedula = etCedula.getText().toString().trim();
+            if (cedula.isEmpty()) {
+                tilCedula.setError("La cédula es obligatoria");
+                shakeView(tilCedula);
+                isValid = false;
+            } else if (cedula.length() != 10) {
+                tilCedula.setError("La cédula debe tener 10 dígitos");
+                shakeView(tilCedula);
+                isValid = false;
+            } else if (!validarCedulaEcuatoriana(cedula)) {
+                tilCedula.setError("Cédula inválida");
+                shakeView(tilCedula);
+                isValid = false;
+            } else {
+                tilCedula.setError(null);
+            }
         }
 
         if (etFechaNacimiento.getText().toString().trim().isEmpty()) {
@@ -426,7 +687,6 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         } else {
             tilNivelInstruccion.setError(null);
 
-            // Si seleccionó "Otro", validar el campo de especificación
             if ("Otro".equals(actvNivelInstruccion.getText().toString().trim())) {
                 if (etNivelInstruccionOtro.getText().toString().trim().isEmpty()) {
                     tilNivelInstruccionOtro.setError("Debe especificar el nivel de instrucción");
@@ -438,13 +698,10 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             }
         }
 
-        // Validar si trabaja
         if (rgTrabaja.getCheckedRadioButtonId() == -1) {
             shakeView(rgTrabaja);
-            // Mostrar error visual en el RadioGroup
             isValid = false;
         } else if (rgTrabaja.getCheckedRadioButtonId() == R.id.rbTrabajaSi) {
-            // Validar lugar de trabajo
             if (etLugarTrabajo.getText().toString().trim().isEmpty()) {
                 tilLugarTrabajo.setError("El lugar de trabajo es obligatorio");
                 shakeView(tilLugarTrabajo);
@@ -453,7 +710,6 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                 tilLugarTrabajo.setError(null);
             }
 
-            // *** AÑADIR ESTA VALIDACIÓN ***
             if (etDireccionTrabajo.getText().toString().trim().isEmpty()) {
                 tilDireccionTrabajo.setError("La dirección de trabajo es obligatoria");
                 shakeView(tilDireccionTrabajo);
@@ -502,21 +758,34 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         handler.postDelayed(this::animateSuccessTransition, 1500);
     }
 
-    // En DatosPersonalesActivity.java
-
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
         RegistroCompleto data = repository.getRegistroData();
 
-        // -- Datos personales (se mantienen igual) --
+        // Guardar campos básicos solo si están visibles (para evitar sobreescribir datos de RegistroActivity)
+        if (tilNombres.getVisibility() == View.VISIBLE) {
+            data.setNombres(etNombres.getText().toString().trim());
+        }
+        if (tilApellidos.getVisibility() == View.VISIBLE) {
+            data.setApellidos(etApellidos.getText().toString().trim());
+        }
+        if (tilEmail.getVisibility() == View.VISIBLE) {
+            data.setEmail(etEmail.getText().toString().trim());
+        }
+        
+        // Siempre guardar cédula
         data.setCedula(etCedula.getText().toString().trim());
+        
+        // Guardar fecha de nacimiento
         try {
             Date date = displayDateFormat.parse(etFechaNacimiento.getText().toString());
             data.setFechaNacimiento(apiDateFormat.format(date));
         } catch (ParseException e) {
-            Log.e(TAG, "Error al parsear la fecha, se enviará nulo.", e);
+            Log.e(TAG, "Error al parsear la fecha", e);
             data.setFechaNacimiento(null);
         }
+        
+        // Guardar otros campos
         data.setLugarNacimiento(etLugarNacimiento.getText().toString().trim());
         data.setNacionalidad(etNacionalidad.getText().toString().trim());
 
@@ -534,11 +803,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             data.setNivelInstruccion(nivelInstruccion);
         }
 
-        // --- LÓGICA DEFINITIVA PARA LOS DATOS DE TRABAJO ---
-        // Esta es la sección que soluciona tu error 400.
-
         if (rbTrabajaSi.isChecked()) {
-            // Si el usuario SÍ trabaja, leemos los valores de los campos.
             String lugarTrabajo = etLugarTrabajo.getText().toString().trim();
             String direccionTrabajo = etDireccionTrabajo.getText().toString().trim();
             String telefonoTrabajo = etTelefonoTrabajo.getText().toString().trim();
@@ -546,16 +811,13 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             data.setLugarTrabajo(lugarTrabajo);
             data.setDireccionTrabajo(direccionTrabajo);
             data.setTelefonoTrabajo(telefonoTrabajo.isEmpty() ? null : telefonoTrabajo);
-
         } else {
-            // Si el usuario NO trabaja, forzamos que todos los campos relacionados sean NULL.
-            // Esto le dice a la API "estos campos no aplican para este usuario".
             data.setLugarTrabajo(null);
             data.setDireccionTrabajo(null);
             data.setTelefonoTrabajo(null);
         }
 
-        Log.i(TAG, "Datos personales guardados en el repositorio (Lógica de trabajo corregida).");
+        Log.i(TAG, "Datos personales guardados en el repositorio");
     }
 
     private void animateSuccessTransition() {
@@ -590,13 +852,27 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         exitSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                Intent intent = new Intent(DatosPersonalesActivity.this, RegistroActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+                if (isUpdateMode) {
+                    finish();
+                } else {
+                    Intent intent = new Intent(DatosPersonalesActivity.this, RegistroActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                    overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
+                }
             }
         });
         exitSet.start();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacksAndMessages(null);
+        ivLogo.clearAnimation();
+        logoContainer.clearAnimation();
+        formContainer.clearAnimation();
+        layoutPaws.clearAnimation();
     }
 }

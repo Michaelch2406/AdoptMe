@@ -1,56 +1,73 @@
 package com.mjc.adoptme.models;
+
 import com.google.gson.annotations.SerializedName;
 
 public class Domicilio {
-    @SerializedName("direccion") private String direccion;
-    @SerializedName("parroquia_id") private int parroquiaId;
-    @SerializedName("es_urbanizacion") private boolean esUrbanizacion;
-    @SerializedName("nombre_urbanizacion") private String nombreUrbanizacion;
-    @SerializedName("numero_bloque") private String numeroBloque;
-    @SerializedName("numero_casa") private String numeroCasa;
-    @SerializedName("tipo_vivienda") private String tipoVivienda;
-    @SerializedName("metros_cuadrados_vivienda") private int metrosCuadradosVivienda;
-    @SerializedName("metros_cuadrados_area_verde") private int metrosCuadradosAreaVerde;
-    @SerializedName("dimension_area_comunal") private Integer dimensionAreaComunal; // Integer para permitir null
-    @SerializedName("tipo_tenencia") private String tipoTenencia;
-    @SerializedName("propietario_permite_animales") private boolean propietarioPermiteAnimales;
-    @SerializedName("nombre_propietario") private String nombrePropietario;
-    @SerializedName("telefono_propietario") private String telefonoPropietario;
-    @SerializedName("tiene_cerramiento") private boolean tieneCerramiento;
-    @SerializedName("altura_cerramiento") private double alturaCerramiento;
-    @SerializedName("tipo_cerramiento") private String tipoCerramiento;
-    @SerializedName("puede_escapar_animal") private boolean puedeEscaparAnimal;
-    @SerializedName("tipo_residencia") private String tipoResidencia;
-    @SerializedName("especificacion_residencia") private String especificacionResidencia;
-    // Getters y Setters...
+    @SerializedName("direccion")
+    private String direccion;
 
-    // Constructor por defecto
+    @SerializedName("parroquia_id")
+    private int parroquiaId;
+
+    @SerializedName("es_urbanizacion")
+    private boolean esUrbanizacion;
+
+    @SerializedName("nombre_urbanizacion")
+    private String nombreUrbanizacion;
+
+    @SerializedName("numero_bloque")
+    private String numeroBloque;
+
+    @SerializedName("numero_casa")
+    private String numeroCasa;
+
+    @SerializedName("tipo_vivienda")
+    private String tipoVivienda;
+
+    @SerializedName("metros_cuadrados_vivienda")
+    private int metrosCuadradosVivienda;
+
+    @SerializedName("metros_cuadrados_area_verde")
+    private int metrosCuadradosAreaVerde;
+
+    @SerializedName("dimension_area_comunal")
+    private Integer dimensionAreaComunal;
+
+    @SerializedName("tipo_tenencia")
+    private String tipoTenencia;
+
+    @SerializedName("propietario_permite_animales")
+    private boolean propietarioPermiteAnimales;
+
+    @SerializedName("nombre_propietario")
+    private String nombrePropietario;
+
+    @SerializedName("telefono_propietario")
+    private String telefonoPropietario;
+
+    @SerializedName("tiene_cerramiento")
+    private boolean tieneCerramiento;
+
+    @SerializedName("altura_cerramiento")
+    private double alturaCerramiento;
+
+    @SerializedName("tipo_cerramiento")
+    private String tipoCerramiento;
+
+    @SerializedName("puede_escapar_animal")
+    private boolean puedeEscaparAnimal;
+
+    @SerializedName("tipo_residencia")
+    private String tipoResidencia;
+
+    @SerializedName("especificacion_residencia")
+    private String especificacionResidencia;
+
+    // Constructor vacío
     public Domicilio() {
     }
 
-    public Domicilio(String direccion, int parroquiaId, boolean esUrbanizacion, String nombreUrbanizacion, String numeroBloque, String numeroCasa, String tipoVivienda, int metrosCuadradosVivienda, int metrosCuadradosAreaVerde, Integer dimensionAreaComunal, String tipoTenencia, boolean propietarioPermiteAnimales, String nombrePropietario, String telefonoPropietario, boolean tieneCerramiento, double alturaCerramiento, String tipoCerramiento, boolean puedeEscaparAnimal, String tipoResidencia, String especificacionResidencia) {
-        this.direccion = direccion;
-        this.parroquiaId = parroquiaId;
-        this.esUrbanizacion = esUrbanizacion;
-        this.nombreUrbanizacion = nombreUrbanizacion;
-        this.numeroBloque = numeroBloque;
-        this.numeroCasa = numeroCasa;
-        this.tipoVivienda = tipoVivienda;
-        this.metrosCuadradosVivienda = metrosCuadradosVivienda;
-        this.metrosCuadradosAreaVerde = metrosCuadradosAreaVerde;
-        this.dimensionAreaComunal = dimensionAreaComunal;
-        this.tipoTenencia = tipoTenencia;
-        this.propietarioPermiteAnimales = propietarioPermiteAnimales;
-        this.nombrePropietario = nombrePropietario;
-        this.telefonoPropietario = telefonoPropietario;
-        this.tieneCerramiento = tieneCerramiento;
-        this.alturaCerramiento = alturaCerramiento;
-        this.tipoCerramiento = tipoCerramiento;
-        this.puedeEscaparAnimal = puedeEscaparAnimal;
-        this.tipoResidencia = tipoResidencia;
-        this.especificacionResidencia = especificacionResidencia;
-    }
-
+    // Getters y Setters
     public String getDireccion() {
         return direccion;
     }

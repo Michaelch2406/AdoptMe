@@ -36,8 +36,9 @@ import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
 import com.mjc.adoptme.models.InfoAnimales;
 import com.mjc.adoptme.models.AnimalActual;
-import com.mjc.adoptme.models.AnimalHistorial; // Aunque no se use aquí, es bueno tenerlo
-import com.mjc.adoptme.models.Animales;
+import com.mjc.adoptme.models.AnimalHistorial;
+import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.RelacionAnimales;
 
 public class RelacionAnimalesActivity extends AppCompatActivity {
 
@@ -372,6 +373,8 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
 
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
+        RegistroCompleto data = RegistroRepository.getInstance().getRegistroData();
+        RelacionAnimales relacion = new RelacionAnimales();
         InfoAnimales infoAnimales = new InfoAnimales();
 
         // Mala experiencia

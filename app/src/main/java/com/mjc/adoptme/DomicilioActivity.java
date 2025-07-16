@@ -15,6 +15,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import androidx.activity.OnBackPressedCallback;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.google.android.material.button.MaterialButton;
@@ -22,9 +23,17 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
+import com.mjc.adoptme.data.SessionManager;
+import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.Domicilio;
 import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.UpdateDataRequest;
+import com.mjc.adoptme.network.ApiClient;
+import com.mjc.adoptme.network.UpdateRepository;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DomicilioActivity extends AppCompatActivity {
     private static final String TAG = "DomicilioActivity";
@@ -46,15 +55,32 @@ public class DomicilioActivity extends AppCompatActivity {
     private RadioButton rbEscapeSi, rbEscapeNo;
     private final Handler handler = new Handler(Looper.getMainLooper());
 
+    private boolean isUpdateMode = false;
+    private SessionManager sessionManager;
+    private UpdateRepository updateRepository;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_domicilio);
 
+        sessionManager = new SessionManager(this);
+        updateRepository = new UpdateRepository();
+
         initViews();
-        populateDataFromRepository();
+
+        isUpdateMode = getIntent().getBooleanExtra("IS_UPDATE_MODE", false);
+
+        if (isUpdateMode) {
+            btnSiguiente.setText("Actualizar");
+            tvSubtitle.setText("Actualizar Datos de Domicilio");
+            loadUserData();
+        } else {
+            populateDataFromRepository();
+        }
+
         setupListeners();
-        setupBackButtonHandler(); // <-- Se llama al gestor moderno del botón atrás
+        setupBackButtonHandler();
         startAnimations();
     }
 
@@ -62,7 +88,7 @@ public class DomicilioActivity extends AppCompatActivity {
         logoContainer = findViewById(R.id.logoContainer);
         formContainer = findViewById(R.id.formContainer);
         layoutArrendadaPrestada = findViewById(R.id.layoutArrendadaPrestada);
-        layoutCerramiento = findViewById(R.id.layoutCerramiento); // <-- Se necesita la referencia a este layout
+        layoutCerramiento = findViewById(R.id.layoutCerramiento);
 
         tvAppName = findViewById(R.id.tvAppName);
         tvSubtitle = findViewById(R.id.tvSubtitle);
@@ -80,7 +106,7 @@ public class DomicilioActivity extends AppCompatActivity {
         rgPropiedadVivienda = findViewById(R.id.rgPropiedadVivienda);
         rgPermiteAnimales = findViewById(R.id.rgPermiteAnimales);
         rgCerramiento = findViewById(R.id.rgCerramiento);
-        rgTipoCerramiento = findViewById(R.id.rgTipoCerramiento); // <-- CORREGIDO: Se referencia el RadioGroup
+        rgTipoCerramiento = findViewById(R.id.rgTipoCerramiento);
         rgPosibilidadEscape = findViewById(R.id.rgPosibilidadEscape);
         rgFrecuenciaUso = findViewById(R.id.rgFrecuenciaUso);
 
@@ -89,7 +115,7 @@ public class DomicilioActivity extends AppCompatActivity {
         tilMetrosAreaVerde = findViewById(R.id.tilMetrosAreaVerde);
         tilAreaComunal = findViewById(R.id.tilAreaComunal);
         tilAlturaCerramiento = findViewById(R.id.tilAlturaCerramiento);
-        tilNombresDueno = findViewById(R.id.tilNombresDueno); // <-- CORREGIDO: el ID del XML es tilNombresDueno
+        tilNombresDueno = findViewById(R.id.tilNombresDueno);
         tilTelefonoDueno = findViewById(R.id.tilTelefonoDueno);
         tilEspecifiqueFrecuencia = findViewById(R.id.tilEspecifiqueFrecuencia);
 
@@ -98,7 +124,7 @@ public class DomicilioActivity extends AppCompatActivity {
         etMetrosAreaVerde = findViewById(R.id.etMetrosAreaVerde);
         etAreaComunal = findViewById(R.id.etAreaComunal);
         etAlturaCerramiento = findViewById(R.id.etAlturaCerramiento);
-        etNombresDueno = findViewById(R.id.etNombresDueno); // <-- CORREGIDO: el ID del XML es etNombresDueno
+        etNombresDueno = findViewById(R.id.etNombresDueno);
         etTelefonoDueno = findViewById(R.id.etTelefonoDueno);
         etEspecifiqueFrecuencia = findViewById(R.id.etEspecifiqueFrecuencia);
 
@@ -121,6 +147,223 @@ public class DomicilioActivity extends AppCompatActivity {
         tilEspecifiqueFrecuencia.setVisibility(View.GONE);
     }
 
+    private void loadUserData() {
+        String cedula = sessionManager.getCedula();
+        updateRepository.getUserDomicilioData(cedula, new UpdateRepository.DataCallback<Domicilio>() {
+            @Override
+            public void onSuccess(Domicilio data) {
+                populateForm(data);
+            }
+
+            @Override
+            public void onError(String message) {
+                Log.e(TAG, "Error al cargar datos: " + message);
+                showErrorDialog("Error al cargar los datos. Intente nuevamente.");
+            }
+        });
+    }
+
+    private void populateForm(Domicilio domicilio) {
+        // Tipo de vivienda
+        if (domicilio.getTipoVivienda() != null) {
+            for (int i = 0; i < rgTipoVivienda.getChildCount(); i++) {
+                RadioButton rb = (RadioButton) rgTipoVivienda.getChildAt(i);
+                if (rb.getText().toString().equalsIgnoreCase(domicilio.getTipoVivienda())) {
+                    rb.setChecked(true);
+                    break;
+                }
+            }
+        }
+
+        // Campos numéricos
+        etMetrosVivienda.setText(String.valueOf(domicilio.getMetrosCuadradosVivienda()));
+        etMetrosAreaVerde.setText(String.valueOf(domicilio.getMetrosCuadradosAreaVerde()));
+        if (domicilio.getDimensionAreaComunal() != null) {
+            etAreaComunal.setText(String.valueOf(domicilio.getDimensionAreaComunal()));
+        }
+
+        // Tipo de tenencia
+        if (domicilio.getTipoTenencia() != null) {
+            if (domicilio.getTipoTenencia().equalsIgnoreCase("Propia")) {
+                rbPropia.setChecked(true);
+                layoutArrendadaPrestada.setVisibility(View.GONE);
+            } else if (domicilio.getTipoTenencia().equalsIgnoreCase("Arrendada")) {
+                rbArrendada.setChecked(true);
+                layoutArrendadaPrestada.setVisibility(View.VISIBLE);
+            } else if (domicilio.getTipoTenencia().equalsIgnoreCase("Prestada")) {
+                rbPrestada.setChecked(true);
+                layoutArrendadaPrestada.setVisibility(View.VISIBLE);
+            }
+
+            if (layoutArrendadaPrestada.getVisibility() == View.VISIBLE) {
+                if (domicilio.isPropietarioPermiteAnimales()) {
+                    rbPermiteAnimalesSi.setChecked(true);
+                } else {
+                    rbPermiteAnimalesNo.setChecked(true);
+                }
+                if (domicilio.getNombrePropietario() != null) {
+                    etNombresDueno.setText(domicilio.getNombrePropietario());
+                }
+                if (domicilio.getTelefonoPropietario() != null) {
+                    etTelefonoDueno.setText(domicilio.getTelefonoPropietario());
+                }
+            }
+        }
+
+        // Cerramiento
+        if (domicilio.isTieneCerramiento()) {
+            rbCerramientoSi.setChecked(true);
+            layoutCerramiento.setVisibility(View.VISIBLE);
+            etAlturaCerramiento.setText(String.valueOf(domicilio.getAlturaCerramiento()));
+            if (domicilio.getTipoCerramiento() != null) {
+                for (int i = 0; i < rgTipoCerramiento.getChildCount(); i++) {
+                    RadioButton rb = (RadioButton) rgTipoCerramiento.getChildAt(i);
+                    if (rb.getText().toString().equalsIgnoreCase(domicilio.getTipoCerramiento())) {
+                        rb.setChecked(true);
+                        break;
+                    }
+                }
+            }
+        } else {
+            rbCerramientoNo.setChecked(true);
+            layoutCerramiento.setVisibility(View.GONE);
+        }
+
+        // Posibilidad de escape
+        if (domicilio.isPuedeEscaparAnimal()) {
+            rbEscapeSi.setChecked(true);
+        } else {
+            rbEscapeNo.setChecked(true);
+        }
+
+        // Tipo de residencia
+        if (domicilio.getTipoResidencia() != null) {
+            for (int i = 0; i < rgFrecuenciaUso.getChildCount(); i++) {
+                RadioButton rb = (RadioButton) rgFrecuenciaUso.getChildAt(i);
+                if (rb.getText().toString().equalsIgnoreCase(domicilio.getTipoResidencia())) {
+                    rb.setChecked(true);
+                    if (rb.getId() == R.id.rbVaDeVezEnCuando || rb.getId() == R.id.rbVaFinesSemana) {
+                        tilEspecifiqueFrecuencia.setVisibility(View.VISIBLE);
+                        if (domicilio.getEspecificacionResidencia() != null) {
+                            etEspecifiqueFrecuencia.setText(domicilio.getEspecificacionResidencia());
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    private void updateData() {
+        if (!validateForm()) return;
+
+        btnSiguiente.setEnabled(false);
+
+        Domicilio domicilio = new Domicilio();
+
+        // Valores fijos necesarios para la API
+        domicilio.setParroquiaId(1);
+        domicilio.setDireccion("Dirección de ejemplo");
+        domicilio.setNumeroCasa("S/N");
+        domicilio.setEsUrbanizacion(false);
+        domicilio.setNombreUrbanizacion(null);
+        domicilio.setNumeroBloque(null);
+
+        // Tipo de vivienda
+        int tipoViviendaId = rgTipoVivienda.getCheckedRadioButtonId();
+        domicilio.setTipoVivienda(tipoViviendaId != -1 ? ((RadioButton) findViewById(tipoViviendaId)).getText().toString() : null);
+
+        // Tipo de tenencia
+        int tipoTenenciaId = rgPropiedadVivienda.getCheckedRadioButtonId();
+        domicilio.setTipoTenencia(tipoTenenciaId != -1 ? ((RadioButton) findViewById(tipoTenenciaId)).getText().toString() : null);
+
+        // Tipo de residencia
+        int tipoResidenciaId = rgFrecuenciaUso.getCheckedRadioButtonId();
+        domicilio.setTipoResidencia(tipoResidenciaId != -1 ? ((RadioButton) findViewById(tipoResidenciaId)).getText().toString() : null);
+
+        // Campos numéricos
+        try {
+            domicilio.setMetrosCuadradosVivienda(Integer.parseInt(etMetrosVivienda.getText().toString().trim()));
+        } catch (NumberFormatException e) {
+            domicilio.setMetrosCuadradosVivienda(0);
+        }
+
+        try {
+            domicilio.setMetrosCuadradosAreaVerde(Integer.parseInt(etMetrosAreaVerde.getText().toString().trim()));
+        } catch (NumberFormatException e) {
+            domicilio.setMetrosCuadradosAreaVerde(0);
+        }
+
+        String areaComunalStr = etAreaComunal.getText().toString().trim();
+        domicilio.setDimensionAreaComunal(areaComunalStr.isEmpty() ? null : Integer.parseInt(areaComunalStr));
+
+        // Datos de propietario (si es arrendada o prestada)
+        if (tipoTenenciaId == R.id.rbArrendada || tipoTenenciaId == R.id.rbPrestada) {
+            domicilio.setPropietarioPermiteAnimales(rgPermiteAnimales.getCheckedRadioButtonId() == R.id.rbPermiteAnimalesSi);
+            String nombreProp = etNombresDueno.getText().toString().trim();
+            domicilio.setNombrePropietario(nombreProp.isEmpty() ? null : nombreProp);
+            String telProp = etTelefonoDueno.getText().toString().trim();
+            domicilio.setTelefonoPropietario(telProp.isEmpty() ? null : telProp);
+        } else {
+            domicilio.setPropietarioPermiteAnimales(true);
+            domicilio.setNombrePropietario(null);
+            domicilio.setTelefonoPropietario(null);
+        }
+
+        // Cerramiento
+        boolean tieneCerramiento = rgCerramiento.getCheckedRadioButtonId() == R.id.rbCerramientoSi;
+        domicilio.setTieneCerramiento(tieneCerramiento);
+        if (tieneCerramiento) {
+            try {
+                domicilio.setAlturaCerramiento(Double.parseDouble(etAlturaCerramiento.getText().toString().trim()));
+            } catch (NumberFormatException e) {
+                domicilio.setAlturaCerramiento(0.0);
+            }
+            int tipoCerramientoId = rgTipoCerramiento.getCheckedRadioButtonId();
+            domicilio.setTipoCerramiento(tipoCerramientoId != -1 ? ((RadioButton) findViewById(tipoCerramientoId)).getText().toString() : null);
+        } else {
+            domicilio.setAlturaCerramiento(0.0);
+            domicilio.setTipoCerramiento(null);
+        }
+
+        domicilio.setPuedeEscaparAnimal(rgPosibilidadEscape.getCheckedRadioButtonId() == R.id.rbEscapeSi);
+
+        String especificacionResidencia = etEspecifiqueFrecuencia.getText().toString().trim();
+        domicilio.setEspecificacionResidencia(especificacionResidencia.isEmpty() ? null : especificacionResidencia);
+
+        updateRepository.updateDomicilioData(sessionManager.getCedula(), domicilio, new UpdateRepository.UpdateCallback() {
+            @Override
+            public void onSuccess(ApiResponse<String> response) {
+                btnSiguiente.setEnabled(true);
+                showSuccessDialog();
+            }
+
+            @Override
+            public void onError(String message) {
+                btnSiguiente.setEnabled(true);
+                Log.e(TAG, "Error al actualizar: " + message);
+                showErrorDialog("Error al actualizar los datos. Intente nuevamente.");
+            }
+        });
+    }
+
+    private void showSuccessDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("¡Éxito!")
+                .setMessage("Datos de domicilio actualizados correctamente")
+                .setPositiveButton("Aceptar", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showErrorDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("Aceptar", null)
+                .show();
+    }
+
     private void setupBackButtonHandler() {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -131,7 +374,6 @@ public class DomicilioActivity extends AppCompatActivity {
     }
 
     private void startAnimations() {
-        // ... (Tu código de animación es correcto)
         logoContainer.setAlpha(0f);
         logoContainer.setTranslationY(-50f);
         formContainer.setAlpha(0f);
@@ -151,6 +393,8 @@ public class DomicilioActivity extends AppCompatActivity {
             } else {
                 layoutArrendadaPrestada.setVisibility(View.GONE);
                 rgPermiteAnimales.clearCheck();
+                etNombresDueno.setText("");
+                etTelefonoDueno.setText("");
             }
         });
 
@@ -160,6 +404,8 @@ public class DomicilioActivity extends AppCompatActivity {
                 layoutCerramiento.setVisibility(View.VISIBLE);
             } else {
                 layoutCerramiento.setVisibility(View.GONE);
+                etAlturaCerramiento.setText("");
+                rgTipoCerramiento.clearCheck();
             }
         });
 
@@ -169,20 +415,22 @@ public class DomicilioActivity extends AppCompatActivity {
                 tilEspecifiqueFrecuencia.setVisibility(View.VISIBLE);
             } else {
                 tilEspecifiqueFrecuencia.setVisibility(View.GONE);
+                etEspecifiqueFrecuencia.setText("");
             }
         });
 
-
         btnSiguiente.setOnClickListener(v -> {
             if (validateForm()) {
-                saveDataAndContinue();
+                if (isUpdateMode) {
+                    updateData();
+                } else {
+                    saveDataAndContinue();
+                }
             }
         });
 
         btnRegresar.setOnClickListener(v -> runBackPressedAnimation());
     }
-
-    // En DomicilioActivity.java
 
     private void populateDataFromRepository() {
         Domicilio domicilio = RegistroRepository.getInstance().getRegistroData().getDomicilio();
@@ -267,29 +515,97 @@ public class DomicilioActivity extends AppCompatActivity {
 
     private boolean validateForm() {
         boolean isValid = true;
-        // ... (Se adapta la validación a los cambios)
-        if (rgTipoVivienda.getCheckedRadioButtonId() == -1) { showError("Debe seleccionar el tipo de vivienda"); shakeView(rgTipoVivienda); isValid = false; }
-        if (etMetrosVivienda.getText().toString().trim().isEmpty()) { tilMetrosVivienda.setError("Campo obligatorio"); shakeView(tilMetrosVivienda); isValid = false; } else { tilMetrosVivienda.setError(null); }
-        if (etMetrosAreaVerde.getText().toString().trim().isEmpty()) { tilMetrosAreaVerde.setError("Campo obligatorio"); shakeView(tilMetrosAreaVerde); isValid = false; } else { tilMetrosAreaVerde.setError(null); }
+
+        if (rgTipoVivienda.getCheckedRadioButtonId() == -1) {
+            showError("Debe seleccionar el tipo de vivienda");
+            shakeView(rgTipoVivienda);
+            isValid = false;
+        }
+
+        if (etMetrosVivienda.getText().toString().trim().isEmpty()) {
+            tilMetrosVivienda.setError("Campo obligatorio");
+            shakeView(tilMetrosVivienda);
+            isValid = false;
+        } else {
+            tilMetrosVivienda.setError(null);
+        }
+
+        if (etMetrosAreaVerde.getText().toString().trim().isEmpty()) {
+            tilMetrosAreaVerde.setError("Campo obligatorio");
+            shakeView(tilMetrosAreaVerde);
+            isValid = false;
+        } else {
+            tilMetrosAreaVerde.setError(null);
+        }
+
         int propiedadId = rgPropiedadVivienda.getCheckedRadioButtonId();
-        if (propiedadId == -1) { showError("Debe indicar si la vivienda es propia, arrendada o prestada"); shakeView(rgPropiedadVivienda); isValid = false; }
-        else if (propiedadId == R.id.rbArrendada || propiedadId == R.id.rbPrestada) {
-            if (rgPermiteAnimales.getCheckedRadioButtonId() == -1) { showError("Indique si el dueño permite animales"); shakeView(rgPermiteAnimales); isValid = false; }
-            if (etNombresDueno.getText().toString().trim().isEmpty()) { tilNombresDueno.setError("Campo obligatorio"); shakeView(tilNombresDueno); isValid = false; } else { tilNombresDueno.setError(null); }
-            if (etTelefonoDueno.getText().toString().trim().isEmpty()) { tilTelefonoDueno.setError("Campo obligatorio"); shakeView(tilTelefonoDueno); isValid = false; } else { tilTelefonoDueno.setError(null); }
+        if (propiedadId == -1) {
+            showError("Debe indicar si la vivienda es propia, arrendada o prestada");
+            shakeView(rgPropiedadVivienda);
+            isValid = false;
+        } else if (propiedadId == R.id.rbArrendada || propiedadId == R.id.rbPrestada) {
+            if (rgPermiteAnimales.getCheckedRadioButtonId() == -1) {
+                showError("Indique si el dueño permite animales");
+                shakeView(rgPermiteAnimales);
+                isValid = false;
+            }
+            if (etNombresDueno.getText().toString().trim().isEmpty()) {
+                tilNombresDueno.setError("Campo obligatorio");
+                shakeView(tilNombresDueno);
+                isValid = false;
+            } else {
+                tilNombresDueno.setError(null);
+            }
+            if (etTelefonoDueno.getText().toString().trim().isEmpty()) {
+                tilTelefonoDueno.setError("Campo obligatorio");
+                shakeView(tilTelefonoDueno);
+                isValid = false;
+            } else {
+                tilTelefonoDueno.setError(null);
+            }
         }
+
         int cerramientoId = rgCerramiento.getCheckedRadioButtonId();
-        if (cerramientoId == -1) { showError("Indique si la vivienda tiene cerramiento"); shakeView(rgCerramiento); isValid = false; }
-        else if (cerramientoId == R.id.rbCerramientoSi) {
-            if (etAlturaCerramiento.getText().toString().trim().isEmpty()) { tilAlturaCerramiento.setError("Indique la altura"); shakeView(tilAlturaCerramiento); isValid = false; } else { tilAlturaCerramiento.setError(null); }
-            if (rgTipoCerramiento.getCheckedRadioButtonId() == -1) { showError("Seleccione el tipo de cerramiento"); shakeView(rgTipoCerramiento); isValid = false; } // <-- CORREGIDO
+        if (cerramientoId == -1) {
+            showError("Indique si la vivienda tiene cerramiento");
+            shakeView(rgCerramiento);
+            isValid = false;
+        } else if (cerramientoId == R.id.rbCerramientoSi) {
+            if (etAlturaCerramiento.getText().toString().trim().isEmpty()) {
+                tilAlturaCerramiento.setError("Indique la altura");
+                shakeView(tilAlturaCerramiento);
+                isValid = false;
+            } else {
+                tilAlturaCerramiento.setError(null);
+            }
+            if (rgTipoCerramiento.getCheckedRadioButtonId() == -1) {
+                showError("Seleccione el tipo de cerramiento");
+                shakeView(rgTipoCerramiento);
+                isValid = false;
+            }
         }
-        if (rgPosibilidadEscape.getCheckedRadioButtonId() == -1) { showError("Indique si el perro podría escapar"); shakeView(rgPosibilidadEscape); isValid = false; }
+
+        if (rgPosibilidadEscape.getCheckedRadioButtonId() == -1) {
+            showError("Indique si el perro podría escapar");
+            shakeView(rgPosibilidadEscape);
+            isValid = false;
+        }
+
         int frecuenciaId = rgFrecuenciaUso.getCheckedRadioButtonId();
-        if (frecuenciaId == -1) { showError("Indique la frecuencia de uso del inmueble"); shakeView(rgFrecuenciaUso); isValid = false; }
-        else if (frecuenciaId == R.id.rbVaDeVezEnCuando || frecuenciaId == R.id.rbVaFinesSemana) {
-            if (etEspecifiqueFrecuencia.getText().toString().trim().isEmpty()) { tilEspecifiqueFrecuencia.setError("Especifique la frecuencia"); shakeView(tilEspecifiqueFrecuencia); isValid = false; } else { tilEspecifiqueFrecuencia.setError(null); }
+        if (frecuenciaId == -1) {
+            showError("Indique la frecuencia de uso del inmueble");
+            shakeView(rgFrecuenciaUso);
+            isValid = false;
+        } else if (frecuenciaId == R.id.rbVaDeVezEnCuando || frecuenciaId == R.id.rbVaFinesSemana) {
+            if (etEspecifiqueFrecuencia.getText().toString().trim().isEmpty()) {
+                tilEspecifiqueFrecuencia.setError("Especifique la frecuencia");
+                shakeView(tilEspecifiqueFrecuencia);
+                isValid = false;
+            } else {
+                tilEspecifiqueFrecuencia.setError(null);
+            }
         }
+
         return isValid;
     }
 
@@ -299,7 +615,7 @@ public class DomicilioActivity extends AppCompatActivity {
         shakeView(tvInfo);
 
         handler.postDelayed(() -> {
-            tvInfo.setError("Este campo es obligatorio");
+            tvInfo.setText("Este campo es obligatorio");
             tvInfo.setTextColor(ContextCompat.getColor(this, R.color.colorAccent3));
         }, 3000);
     }
@@ -317,14 +633,12 @@ public class DomicilioActivity extends AppCompatActivity {
         handler.postDelayed(this::animateSuccessTransition, 1000);
     }
 
-    // En DomicilioActivity.java
-
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
         RegistroCompleto data = repository.getRegistroData();
         Domicilio domicilio = new Domicilio();
 
-        // IDs y campos fijos (ajusta los valores de prueba según tu DB)
+        // IDs y campos fijos
         domicilio.setParroquiaId(1);
         domicilio.setDireccion("Dirección de ejemplo");
         domicilio.setNumeroCasa("S/N");
@@ -342,18 +656,23 @@ public class DomicilioActivity extends AppCompatActivity {
         int tipoResidenciaId = rgFrecuenciaUso.getCheckedRadioButtonId();
         domicilio.setTipoResidencia(tipoResidenciaId != -1 ? ((RadioButton) findViewById(tipoResidenciaId)).getText().toString() : null);
 
-        // Campos numéricos y de texto (con conversión a null si están vacíos)
+        // Campos numéricos
         try {
             domicilio.setMetrosCuadradosVivienda(Integer.parseInt(etMetrosVivienda.getText().toString().trim()));
-        } catch (NumberFormatException e) { domicilio.setMetrosCuadradosVivienda(0); }
+        } catch (NumberFormatException e) {
+            domicilio.setMetrosCuadradosVivienda(0);
+        }
+
         try {
             domicilio.setMetrosCuadradosAreaVerde(Integer.parseInt(etMetrosAreaVerde.getText().toString().trim()));
-        } catch (NumberFormatException e) { domicilio.setMetrosCuadradosAreaVerde(0); }
+        } catch (NumberFormatException e) {
+            domicilio.setMetrosCuadradosAreaVerde(0);
+        }
 
         String areaComunalStr = etAreaComunal.getText().toString().trim();
         domicilio.setDimensionAreaComunal(areaComunalStr.isEmpty() ? null : Integer.parseInt(areaComunalStr));
 
-        // --- LÓGICA DE NULL APLICADA (VIVIENDA ARRENDADA) ---
+        // Lógica de null para vivienda arrendada
         if (tipoTenenciaId == R.id.rbArrendada || tipoTenenciaId == R.id.rbPrestada) {
             domicilio.setPropietarioPermiteAnimales(rgPermiteAnimales.getCheckedRadioButtonId() == R.id.rbPermiteAnimalesSi);
             String nombreProp = etNombresDueno.getText().toString().trim();
@@ -366,7 +685,7 @@ public class DomicilioActivity extends AppCompatActivity {
             domicilio.setTelefonoPropietario(null);
         }
 
-        // --- LÓGICA DE NULL APLICADA (CERRAMIENTO) ---
+        // Lógica de null para cerramiento
         boolean tieneCerramiento = rgCerramiento.getCheckedRadioButtonId() == R.id.rbCerramientoSi;
         domicilio.setTieneCerramiento(tieneCerramiento);
         if (tieneCerramiento) {
@@ -388,7 +707,7 @@ public class DomicilioActivity extends AppCompatActivity {
         domicilio.setEspecificacionResidencia(especificacionResidencia.isEmpty() ? null : especificacionResidencia);
 
         data.setDomicilio(domicilio);
-        Log.i(TAG, "Datos de domicilio guardados (con manejo de nulos).");
+        Log.i(TAG, "Datos de domicilio guardados en el repositorio");
     }
 
     private void animateSuccessTransition() {
@@ -404,7 +723,6 @@ public class DomicilioActivity extends AppCompatActivity {
         successSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                // Navegar a RelacionConAnimalesActivity (o la siguiente pantalla)
                 Intent intent = new Intent(DomicilioActivity.this, RelacionAnimalesActivity.class);
                 startActivity(intent);
                 overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
@@ -427,17 +745,25 @@ public class DomicilioActivity extends AppCompatActivity {
         exitSet.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
-                Intent intent = new Intent(DomicilioActivity.this, EntornoFamiliarActivity.class);
-                // 2. (Opcional pero recomendado) Añadir flags para evitar crear nuevas instancias si ya existe
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                // 3. Iniciar la actividad
-                startActivity(intent);
-                finish();
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                if (isUpdateMode) {
+                    finish();
+                } else {
+                    Intent intent = new Intent(DomicilioActivity.this, EntornoFamiliarActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    startActivity(intent);
+                    finish();
+                    overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                }
             }
         });
         exitSet.start();
     }
 
-    // El método onBackPressed() obsoleto se elimina. El callback se encarga de todo.
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacksAndMessages(null);
+        if (logoContainer != null) logoContainer.clearAnimation();
+        if (formContainer != null) formContainer.clearAnimation();
+    }
 }

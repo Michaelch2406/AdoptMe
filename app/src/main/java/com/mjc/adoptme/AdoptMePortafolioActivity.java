@@ -540,7 +540,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         TextView tvRaza = dialogView.findViewById(R.id.tvRaza);
         TextView tvEdad = dialogView.findViewById(R.id.tvEdad);
         TextView tvSexo = dialogView.findViewById(R.id.tvSexo);
-        TextView tvTamaño = dialogView.findViewById(R.id.tvTamaño);
+        TextView tvTamano = dialogView.findViewById(R.id.tvTamano);
         TextView tvDescripcion = dialogView.findViewById(R.id.tvDescripcion);
         TextView tvFundacion = dialogView.findViewById(R.id.tvFundacion);
         TextView tvUbicacion = dialogView.findViewById(R.id.tvUbicacion);
@@ -549,7 +549,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         Chip chipVacunado = dialogView.findViewById(R.id.chipVacunado);
         Chip chipDesparasitado = dialogView.findViewById(R.id.chipDesparasitado);
         Chip chipEsterilizado = dialogView.findViewById(R.id.chipEsterilizado);
-        Chip chipBuenoConNiños = dialogView.findViewById(R.id.chipBuenoConNiños);
+        Chip chipBuenoConNinos = dialogView.findViewById(R.id.chipBuenoConNinos);
         Chip chipBuenoConAnimales = dialogView.findViewById(R.id.chipBuenoConAnimales);
 
         // Configurar datos
@@ -558,7 +558,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         tvEdad.setText(animal.getEdadAproximadaMeses() == 0 ? "Menos de 1 año" :
                 animal.getEdadAproximadaMeses() + " año" + (animal.getEdadAproximadaMeses() > 1 ? "s" : ""));
         tvSexo.setText(animal.getGenero().equals("MACHO") ? "Macho" : "Hembra");
-        tvTamaño.setText("Tamaño " + animal.getTamaño().toLowerCase());
+        tvTamano.setText("Tamaño " + animal.getTamaño().toLowerCase());
         tvDescripcion.setText(animal.getDescripcion());
         tvFundacion.setText(animal.getFundacionNombre());
         tvUbicacion.setText(animal.getUbicacionFundacion());
@@ -574,7 +574,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         chipVacunado.setVisibility(animal.isVacunado() ? View.VISIBLE : View.GONE);
         chipDesparasitado.setVisibility(animal.isDesparasitado() ? View.VISIBLE : View.GONE);
         chipEsterilizado.setVisibility(animal.isEsterilizado() ? View.VISIBLE : View.GONE);
-        chipBuenoConNiños.setVisibility(animal.isBuenoConNiños() ? View.VISIBLE : View.GONE);
+        chipBuenoConNinos.setVisibility(animal.isBuenoConNiños() ? View.VISIBLE : View.GONE);
         chipBuenoConAnimales.setVisibility(animal.isBuenoConAnimales() ? View.VISIBLE : View.GONE);
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)

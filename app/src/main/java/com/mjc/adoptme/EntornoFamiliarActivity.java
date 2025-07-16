@@ -29,8 +29,8 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import android.util.Log;
 import com.mjc.adoptme.data.RegistroRepository;
-import com.mjc.adoptme.models.Entorno; // <-- AÑADIDO
-import com.mjc.adoptme.models.MiembroFamiliar; // <-- AÑADIDO
+import com.mjc.adoptme.models.EntornoFamiliar;
+import com.mjc.adoptme.models.MiembroFamiliar;
 import com.mjc.adoptme.models.RegistroCompleto;
 
 import java.util.ArrayList;
@@ -149,7 +149,7 @@ public class EntornoFamiliarActivity extends AppCompatActivity {
     // En EntornoFamiliarActivity.java
 
     private void populateDataFromRepository() {
-        Entorno entorno = RegistroRepository.getInstance().getRegistroData().getEntorno();
+        EntornoFamiliar entorno = RegistroRepository.getInstance().getRegistroData().getEntorno();
         if (entorno == null) return;
 
         // Rellenar preguntas de Si/No
@@ -672,7 +672,7 @@ public class EntornoFamiliarActivity extends AppCompatActivity {
     private void saveDataToRepository() {
         RegistroRepository repository = RegistroRepository.getInstance();
         RegistroCompleto data = repository.getRegistroData();
-        Entorno entorno = new Entorno();
+        EntornoFamiliar entorno = new EntornoFamiliar();
 
         // Preguntas de Si/No
         entorno.setEsperaBebe(rbBebeSi.isChecked());

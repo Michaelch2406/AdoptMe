@@ -1,18 +1,33 @@
 package com.mjc.adoptme.models;
+
 import com.google.gson.annotations.SerializedName;
 
 public class ReferenciaPersonal {
-    @SerializedName("nombres") private String nombres;
-    @SerializedName("apellidos") private String apellidos;
-    @SerializedName("parentesco") private String parentesco;
-    @SerializedName("telefono_convencional") private String telefonoConvencional;
-    @SerializedName("telefono_movil") private String telefonoMovil;
-    @SerializedName("email") private String email;
-    // Getters y Setters...
+    @SerializedName("nombres")
+    private String nombres;
 
+    @SerializedName("apellidos")
+    private String apellidos;
+
+    @SerializedName("parentesco")
+    private String parentesco;
+
+    @SerializedName("telefono_convencional")
+    private String telefonoConvencional;
+
+    @SerializedName("telefono_movil")
+    private String telefonoMovil;
+
+    @SerializedName("email")
+    private String email;
+
+    // Constructor vacío
     public ReferenciaPersonal() {
     }
-    public ReferenciaPersonal(String nombres, String apellidos, String parentesco, String telefonoConvencional, String telefonoMovil, String email) {
+
+    // Constructor completo
+    public ReferenciaPersonal(String nombres, String apellidos, String parentesco,
+                              String telefonoConvencional, String telefonoMovil, String email) {
         this.nombres = nombres;
         this.apellidos = apellidos;
         this.parentesco = parentesco;
@@ -20,6 +35,8 @@ public class ReferenciaPersonal {
         this.telefonoMovil = telefonoMovil;
         this.email = email;
     }
+
+    // Getters y Setters
     public String getNombres() {
         return nombres;
     }

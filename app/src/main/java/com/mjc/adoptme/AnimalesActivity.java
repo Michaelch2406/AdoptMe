@@ -32,7 +32,7 @@ import com.mjc.adoptme.models.InfoAnimales;
 import com.mjc.adoptme.models.RegistroCompleto;
 import com.mjc.adoptme.models.UserData;
 import com.mjc.adoptme.network.ApiService;
-import com.mjc.adoptme.network.RetrofitClient; // <-- USA NUESTRO CLIENTE
+import com.mjc.adoptme.network.ApiClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -258,8 +258,8 @@ public class AnimalesActivity extends AppCompatActivity {
         // Obtenemos el objeto de registro completo del repositorio
         RegistroCompleto datosParaEnviar = RegistroRepository.getInstance().getRegistroData();
 
-        // Usamos el cliente Retrofit y el ApiService actualizado
-        ApiService apiService = RetrofitClient.getApiService();
+        // Usamos el cliente ApiClient y el ApiService actualizado
+        ApiService apiService = ApiClient.getApiService();
         Call<ApiResponse<UserData>> call = apiService.registrarUsuario(datosParaEnviar);
 
         // Ejecutamos la llamada

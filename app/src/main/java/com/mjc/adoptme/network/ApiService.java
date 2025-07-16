@@ -6,7 +6,7 @@ import com.mjc.adoptme.models.Domicilio;
 import com.mjc.adoptme.models.LoginRequest;
 import com.mjc.adoptme.models.ReferenciaPersonal;
 import com.mjc.adoptme.models.RegistroCompleto;
-import com.mjc.adoptme.models.UpdateRequest;
+import com.mjc.adoptme.models.UpdateDataRequest;
 import com.mjc.adoptme.models.UserData;
 
 import java.util.List;
@@ -40,11 +40,14 @@ public interface ApiService {
 
     // --- ACTUALIZAR DATOS DEL PERFIL ---
     @POST("v1/updateUserData")
-    Call<ApiResponse<String>> updateUserPersonalData(@Body UpdateRequest<DatosPersonalesData> request);
+    Call<ApiResponse<String>> updateUserData(@Body UpdateDataRequest request);
 
     @POST("v1/updateUserData")
-    Call<ApiResponse<String>> updateUserDomicilioData(@Body UpdateRequest<Domicilio> request);
+    Call<ApiResponse<String>> updateUserPersonalData(@Body UpdateDataRequest<DatosPersonalesData> request);
 
     @POST("v1/updateUserData")
-    Call<ApiResponse<String>> updateUserReferenciasData(@Body UpdateRequest<List<ReferenciaPersonal>> request);
+    Call<ApiResponse<String>> updateUserDomicilioData(@Body UpdateDataRequest<Domicilio> request);
+
+    @POST("v1/updateUserData")
+    Call<ApiResponse<String>> updateUserReferenciasData(@Body UpdateDataRequest<List<ReferenciaPersonal>> request);
 }

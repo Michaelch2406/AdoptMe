@@ -27,7 +27,8 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
     buildFeatures {
-        compose true
+        viewBinding true
+        dataBinding false
     }
 }
 
@@ -51,6 +52,11 @@ dependencies {
     implementation libs.constraintlayout
     implementation project(':SecureX')
 
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+
+    // Si no tienes AppCompat, agrégalo también
+    implementation 'androidx.appcompat:appcompat:1.6.1'
     // --- LIBRERÍAS DE RED (NETWORKING) ---
     // Retrofit: Cliente HTTP para realizar las llamadas a la API
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

@@ -212,16 +212,16 @@ public class MainActivity extends AppCompatActivity {
             public void onResponse(Call<ApiResponse<UserData>> call, Response<ApiResponse<UserData>> response) {
                 stopLoadingAnimation();
 
-                // Verificamos que la respuesta fue exitosa (código 200-299)
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse<UserData> apiResponse = response.body();
 
                     if (apiResponse.getData() != null) {
-                        String userName = apiResponse.getData().getNameUser();
-                        String cedula = apiResponse.getData().getCedula(); // <-- Obtenemos la cédula
+                        UserData userData = apiResponse.getData();
+                        String userName = userData.getNameUser();
+                        String cedula = userData.getCedula(); // <-- Obtenemos la cédula
 
                         SessionManager sessionManager = new SessionManager(getApplicationContext());
-                        // --- SE PASA LA CÉDULA AL CREAR LA SESIÓN ---
+                        // Guardamos el nombre Y la cédula en la sesión
                         sessionManager.createLoginSession(userName, cedula, "");
 
                         Toast.makeText(MainActivity.this, "¡Bienvenido, " + userName + "!", Toast.LENGTH_LONG).show();
@@ -231,14 +231,11 @@ public class MainActivity extends AppCompatActivity {
                         finish();
 
                     } else {
-                        // La respuesta fue 200, pero el campo 'data' vino vacío. Es un error del backend.
                         Toast.makeText(MainActivity.this, "Respuesta inesperada del servidor.", Toast.LENGTH_LONG).show();
-                        Log.e(TAG, "Login exitoso (código " + response.code() + ") pero el campo 'data' es nulo.");
                     }
-
                 } else {
-                    // La respuesta no fue exitosa (ej: 401 Unauthorized, 404 Not Found)
-                    String errorMessage = "Email o contraseña incorrectos.";
+                    Toast.makeText(MainActivity.this, "Email o contraseña incorrectos.", Toast.LENGTH_LONG).show();
+                    String errorMessage = "Error en el inicio de sesión";
                     try {
                         if (response.errorBody() != null) {
                             Log.e(TAG, "Error en login. Código: " + response.code() + " | Cuerpo: " + response.errorBody().string());
