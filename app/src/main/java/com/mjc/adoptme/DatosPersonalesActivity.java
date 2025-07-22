@@ -114,14 +114,13 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         configureUIForMode();
         logActivityState();
 
-        if (isUpdateMode) {
-            loadUserData();
-        } else {
-            populateDataFromRepository();
-        }
-
         setupDropdowns();
         loadDropdownData();
+        
+        if (isUpdateMode) {
+            loadUserData();
+        }
+        // Data from repository will be populated after dropdown data is loaded
         setupDatePicker();
         setupClickListeners();
         setupBackButtonHandler();
@@ -519,24 +518,47 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         });
         
         actvLugarNacimiento.setOnClickListener(v -> {
-            if (ciudades.isEmpty()) {
-                Toast.makeText(this, "Primero selecciona tu nacionalidad", Toast.LENGTH_SHORT).show();
-                return;
-            }
             actvLugarNacimiento.showDropDown();
         });
 
         rgTrabaja.setOnCheckedChangeListener((group, checkedId) -> {
+            // Cancel any existing animations and reset state
+            layoutCamposTrabajo.animate().cancel();
+            layoutCamposTrabajo.clearAnimation();
+            
             if (checkedId == R.id.rbTrabajaSi) {
-                animateViewVisibility(layoutCamposTrabajo, true);
+                // Show work fields with animation
+                layoutCamposTrabajo.setVisibility(View.VISIBLE);
+                layoutCamposTrabajo.setAlpha(0f);
+                layoutCamposTrabajo.setTranslationY(20f);
+                layoutCamposTrabajo.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(300)
+                    .setListener(null)
+                    .start();
             } else if (checkedId == R.id.rbTrabajaNo) {
-                animateViewVisibility(layoutCamposTrabajo, false);
+                // Clear work fields and hide with animation
                 etLugarTrabajo.setText("");
                 etDireccionTrabajo.setText("");
                 etTelefonoTrabajo.setText("");
                 tilLugarTrabajo.setError(null);
                 tilDireccionTrabajo.setError(null);
                 tilTelefonoTrabajo.setError(null);
+                
+                layoutCamposTrabajo.animate()
+                    .alpha(0f)
+                    .translationY(20f)
+                    .setDuration(200)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            layoutCamposTrabajo.setVisibility(View.GONE);
+                            layoutCamposTrabajo.setAlpha(1f);
+                            layoutCamposTrabajo.setTranslationY(0f);
+                        }
+                    })
+                    .start();
             }
         });
 
@@ -572,11 +594,25 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                     // Configurar listener para selección de país
                     actvNacionalidad.setOnItemClickListener((parent, view, position, id) -> {
                         paisSeleccionado = paises.get(position);
-                        loadCiudades(paisSeleccionado.getId());
+                        Log.d(TAG, "País seleccionado: " + paisSeleccionado.getNombre() + " (ID: " + paisSeleccionado.getId() + ")");
+                        
+                        // Validar que el ID del país es válido antes de llamar a la API
+                        if (paisSeleccionado.getId() > 0) {
+                            loadCiudades(paisSeleccionado.getId());
+                        } else {
+                            Log.e(TAG, "ID de país inválido: " + paisSeleccionado.getId());
+                            Toast.makeText(DatosPersonalesActivity.this, "Error: ID de país inválido", Toast.LENGTH_SHORT).show();
+                        }
+                        
                         // Limpiar ciudad seleccionada
                         actvLugarNacimiento.setText("");
                         ciudadSeleccionada = null;
                     });
+                    
+                    // Populate data from repository after countries are loaded (only in registration mode)
+                    if (!isUpdateMode) {
+                        populateDataFromRepository();
+                    }
                 } else {
                     Log.e(TAG, "Error al cargar países: " + response.message());
                 }
@@ -590,37 +626,81 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     }
 
     private void loadCiudades(int paisId) {
+        Log.d(TAG, "Cargando ciudades para país ID: " + paisId);
+        
         apiService.getCiudades(paisId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    ciudades = response.body().getData();
-                    Log.d(TAG, "Ciudades cargadas: " + ciudades.size());
-                    
-                    // Configurar adapter para AutoCompleteTextView de ciudades
-                    ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
-                            android.R.layout.simple_dropdown_item_1line, ciudades);
-                    actvLugarNacimiento.setAdapter(adapterCiudades);
-                    
-                    // Configurar listener para selección de ciudad
-                    actvLugarNacimiento.setOnItemClickListener((parent, view, position, id) -> {
-                        ciudadSeleccionada = ciudades.get(position);
-                    });
+                Log.d(TAG, "Respuesta recibida para ciudades. Código: " + response.code());
+                
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
+                        Log.d(TAG, "Cuerpo de respuesta no nulo");
+                        ApiResponse<List<Ciudad>> apiResponse = response.body();
+                        
+                        if (apiResponse.getData() != null) {
+                            ciudades = apiResponse.getData();
+                            Log.d(TAG, "Ciudades cargadas exitosamente: " + ciudades.size());
+                            
+                            if (ciudades.isEmpty()) {
+                                Log.w(TAG, "No se encontraron ciudades para el país ID: " + paisId);
+                                Toast.makeText(DatosPersonalesActivity.this, 
+                                    "No se encontraron ciudades para este país", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+                            
+                            // Configurar adapter para AutoCompleteTextView de ciudades
+                            ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
+                                    android.R.layout.simple_dropdown_item_1line, ciudades);
+                            actvLugarNacimiento.setAdapter(adapterCiudades);
+                            
+                            // Configurar listener para selección de ciudad
+                            actvLugarNacimiento.setOnItemClickListener((parent, view, position, id) -> {
+                                ciudadSeleccionada = ciudades.get(position);
+                                Log.d(TAG, "Ciudad seleccionada: " + ciudadSeleccionada.getNombre());
+                            });
+                        } else {
+                            Log.e(TAG, "Datos de ciudades son nulos en la respuesta");
+                            Toast.makeText(DatosPersonalesActivity.this, 
+                                "Error: No se recibieron datos de ciudades", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Log.e(TAG, "Cuerpo de respuesta es nulo");
+                        Toast.makeText(DatosPersonalesActivity.this, 
+                            "Error: Respuesta vacía del servidor", Toast.LENGTH_SHORT).show();
+                    }
                 } else {
-                    Log.e(TAG, "Error al cargar ciudades: " + response.message());
+                    Log.e(TAG, "Error al cargar ciudades. Código: " + response.code() + 
+                           ", Mensaje: " + response.message());
+                    
+                    String errorMessage = "Error al cargar ciudades";
+                    if (response.code() == 500) {
+                        errorMessage = "Error interno del servidor. Verifique el ID del país.";
+                    } else if (response.code() == 404) {
+                        errorMessage = "No se encontraron ciudades para este país.";
+                    }
+                    
+                    Toast.makeText(DatosPersonalesActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar ciudades", t);
+                Log.e(TAG, "Error de conexión al cargar ciudades para país ID: " + paisId, t);
+                Toast.makeText(DatosPersonalesActivity.this, 
+                    "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
 
     private void animateViewVisibility(final View view, boolean show) {
+        // Clear any existing animation to prevent conflicts
+        view.clearAnimation();
+        view.animate().cancel();
+        
         if (show) {
+            // Ensure view is visible before animation
             view.setVisibility(View.VISIBLE);
             view.setAlpha(0f);
             view.setTranslationY(20f);
@@ -628,6 +708,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                     .alpha(1f)
                     .translationY(0f)
                     .setDuration(300)
+                    .setListener(null) // Clear any previous listeners
                     .start();
         } else {
             view.animate()
@@ -638,6 +719,16 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             view.setVisibility(View.GONE);
+                            // Clear animation state
+                            view.setAlpha(1f);
+                            view.setTranslationY(0f);
+                        }
+                        
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+                            view.setVisibility(View.GONE);
+                            view.setAlpha(1f);
+                            view.setTranslationY(0f);
                         }
                     })
                     .start();
@@ -796,7 +887,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         }
 
         if (actvNacionalidad.getText().toString().trim().isEmpty()) {
-            tilNacionalidad.setError("La nacionalidad es obligatoria");
+            tilNacionalidad.setError("El país de nacimiento es obligatorio");
             shakeView(tilNacionalidad);
             isValid = false;
         } else {
@@ -1001,8 +1092,14 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             @Override
             public void onAnimationEnd(Animator animation) {
                 if (isUpdateMode) {
+                    // In update mode, just finish to return to previous activity
                     finish();
+                } else if (isRegistrationMode) {
+                    // In registration mode, just finish to return to RegistroActivity without creating new instance
+                    finish();
+                    overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right);
                 } else {
+                    // Default behavior for other modes
                     Intent intent = new Intent(DatosPersonalesActivity.this, RegistroActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                     startActivity(intent);

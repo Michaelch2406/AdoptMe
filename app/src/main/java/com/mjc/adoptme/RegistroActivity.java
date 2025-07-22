@@ -55,6 +55,13 @@ public class RegistroActivity extends AppCompatActivity {
     private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // Restore data from repository when returning from DatosPersonalesActivity
+        restoreDataFromRepository();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
@@ -242,6 +249,26 @@ public class RegistroActivity extends AppCompatActivity {
         Log.i(TAG, "Datos iniciales guardados en el repositorio con contraseña hasheada.");
     }
 
+    private void restoreDataFromRepository() {
+        RegistroRepository repository = RegistroRepository.getInstance();
+        RegistroCompleto data = repository.getRegistroData();
+        
+        if (data != null) {
+            // Only restore if fields are empty (to avoid overwriting user input)
+            if (etNombres.getText().toString().trim().isEmpty() && data.getNombres() != null) {
+                etNombres.setText(data.getNombres());
+            }
+            if (etApellidos.getText().toString().trim().isEmpty() && data.getApellidos() != null) {
+                etApellidos.setText(data.getApellidos());
+            }
+            if (etEmail.getText().toString().trim().isEmpty() && data.getEmail() != null) {
+                etEmail.setText(data.getEmail());
+            }
+            // Don't restore password fields for security
+            Log.d(TAG, "Datos restaurados desde el repositorio");
+        }
+    }
+
 
     private boolean validateForm() {
         boolean isValid = true;
@@ -322,7 +349,8 @@ public class RegistroActivity extends AppCompatActivity {
                     // Usar la animación fade que prefieres
                     overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
 
-                    finish();
+                    // Don't finish() in registration flow so user can return with preserved data
+                    // finish();
                     Log.d(TAG, "Transición completada exitosamente");
 
                 } catch (Exception e) {
