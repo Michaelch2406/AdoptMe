@@ -39,12 +39,12 @@ public class SolicitudAdopcion {
         private String ubicacion_noche;
         private String lugar_dormir;
         private String lugar_necesidades;
-        private String frecuencia_bano;
+        private String frecuencia_baño;
         private String frecuencia_corte_pelo;
         private String tipo_alimentacion;
         private boolean conoce_toxicos;
         private String toxicos_conocidos;
-        private int anos_vida_estimados;
+        private int años_vida_estimados;
         private String plan_enfermedad;
         private String responsable_costos;
         private String presupuesto_mensual;
@@ -86,8 +86,8 @@ public class SolicitudAdopcion {
         public String getLugarNecesidades() { return lugar_necesidades; }
         public void setLugarNecesidades(String lugar_necesidades) { this.lugar_necesidades = lugar_necesidades; }
 
-        public String getFrecuenciaBano() { return frecuencia_bano; }
-        public void setFrecuenciaBano(String frecuencia_bano) { this.frecuencia_bano = frecuencia_bano; }
+        public String getFrecuenciaBano() { return frecuencia_baño; }
+        public void setFrecuenciaBano(String frecuencia_baño) { this.frecuencia_baño = frecuencia_baño; }
 
         public String getFrecuenciaCorte_pelo() { return frecuencia_corte_pelo; }
         public void setFrecuenciaCorte_pelo(String frecuencia_corte_pelo) { this.frecuencia_corte_pelo = frecuencia_corte_pelo; }
@@ -101,8 +101,8 @@ public class SolicitudAdopcion {
         public String getToxicosConocidos() { return toxicos_conocidos; }
         public void setToxicosConocidos(String toxicos_conocidos) { this.toxicos_conocidos = toxicos_conocidos; }
 
-        public int getAnosVidaEstimados() { return anos_vida_estimados; }
-        public void setAnosVidaEstimados(int anos_vida_estimados) { this.anos_vida_estimados = anos_vida_estimados; }
+        public int getAnosVidaEstimados() { return años_vida_estimados; }
+        public void setAnosVidaEstimados(int años_vida_estimados) { this.años_vida_estimados = años_vida_estimados; }
 
         public String getPlanEnfermedad() { return plan_enfermedad; }
         public void setPlanEnfermedad(String plan_enfermedad) { this.plan_enfermedad = plan_enfermedad; }

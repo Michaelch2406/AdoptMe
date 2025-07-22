@@ -4,21 +4,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/windowBackground"
+    android:background="#F8F9FA"
     tools:context=".ProcesarAdopcionActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:background="?android:attr/windowBackground">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:background="?android:attr/windowBackground">
+            android:padding="16dp">
 
             <!-- Header -->
             <com.google.android.material.card.MaterialCardView
@@ -84,14 +82,11 @@
                     android:layout_height="wrap_content"
                     android:hint="¿Por qué desea adoptar un animal de familia? *"
                     android:inputType="textMultiLine"
-                    android:minLines="3"
-                    android:maxLines="5"
+                    android:minLines="2"
+                    android:maxLines="4"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:gravity="top|start" />
+                    android:layout_marginBottom="16dp" />
 
                 <EditText
                     android:id="@+id/etPlanCambio"
@@ -99,14 +94,11 @@
                     android:layout_height="wrap_content"
                     android:hint="Si tuviera que cambiar de domicilio y no aceptan animales, ¿qué pasaría? *"
                     android:inputType="textMultiLine"
-                    android:minLines="3"
-                    android:maxLines="5"
+                    android:minLines="2"
+                    android:maxLines="4"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:gravity="top|start" />
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Plan de viajes -->
                 <TextView
@@ -171,9 +163,7 @@
                     android:maxLines="4"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <EditText
                     android:id="@+id/etHorasSolo"
@@ -183,9 +173,7 @@
                     android:inputType="number"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Sección 2: Ubicación y cuidados -->
                 <TextView
@@ -206,9 +194,7 @@
                     android:inputType="text"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <EditText
                     android:id="@+id/etUbicacionNoche"
@@ -218,9 +204,7 @@
                     android:inputType="text"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <EditText
                     android:id="@+id/etLugarDormir"
@@ -230,9 +214,7 @@
                     android:inputType="text"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Lugar de necesidades -->
                 <TextView
@@ -507,9 +489,7 @@
                     android:maxLines="4"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Expectativa de vida -->
                 <EditText
@@ -520,9 +500,7 @@
                     android:inputType="number"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Sección 3: Costos y responsabilidades -->
                 <TextView
@@ -541,14 +519,11 @@
                     android:layout_height="wrap_content"
                     android:hint="Si su perro se enferma, usted: *"
                     android:inputType="textMultiLine"
-                    android:minLines="3"
-                    android:maxLines="5"
+                    android:minLines="2"
+                    android:maxLines="4"
                     android:background="@drawable/edittext_background"
-                    android:padding="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:gravity="top|start" />
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp" />
 
                 <EditText
                     android:id="@+id/etResponsableCostos"
@@ -557,12 +532,8 @@
                     android:hint="¿Quién será responsable de los costos económicos? *"
                     android:inputType="text"
                     android:background="@drawable/edittext_background"
-                    android:padding="16dp"
-                    android:minHeight="56dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:gravity="center_vertical|start" />
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Presupuesto mensual -->
                 <TextView
@@ -697,9 +668,7 @@
                     android:maxLines="4"
                     android:background="@drawable/edittext_background"
                     android:padding="12dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary" />
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Conoce beneficios -->
                 <TextView
@@ -737,14 +706,11 @@
                     android:layout_height="wrap_content"
                     android:hint="Si el comportamiento no es el esperado, ¿qué haría? *"
                     android:inputType="textMultiLine"
-                    android:minLines="3"
-                    android:maxLines="5"
+                    android:minLines="2"
+                    android:maxLines="4"
                     android:background="@drawable/edittext_background"
-                    android:padding="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:textColor="?android:attr/textColorPrimary"
-                    android:textColorHint="?android:attr/textColorSecondary"
-                    android:gravity="top|start" />
+                    android:padding="12dp"
+                    android:layout_marginBottom="16dp" />
 
                 <!-- Consciente de maltrato -->
                 <TextView

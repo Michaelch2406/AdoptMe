@@ -1,6 +1,7 @@
 package com.mjc.adoptme;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -24,6 +25,8 @@ import com.mjc.adoptme.network.RetrofitClient;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.Gson;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -162,6 +165,11 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
         solicitud.setMotivaciones(buildMotivaciones());
         solicitud.setCuidados(buildCuidados());
 
+        // Log JSON request for debugging
+        Gson gson = new Gson();
+        String jsonRequest = gson.toJson(solicitud);
+        Log.d("AdopcionRequest", "JSON siendo enviado: " + jsonRequest);
+
         // Submit to API
         ApiService apiService = RetrofitClient.getApiService();
         Call<ApiResponse<AdopcionResponse>> call = apiService.solicitarAdopcion(solicitud);
@@ -200,7 +208,7 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
     }
 
     private boolean validateForm() {
-        // Basic validation
+        // Basic validation for required text fields
         if (etMotivoAdopcion.getText().toString().trim().isEmpty()) {
             etMotivoAdopcion.setError("Este campo es obligatorio");
             etMotivoAdopcion.requestFocus();
@@ -219,14 +227,119 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
             return false;
         }
         
-        // Validate radio groups
+        if (etAnosVida.getText().toString().trim().isEmpty()) {
+            etAnosVida.setError("Este campo es obligatorio");
+            etAnosVida.requestFocus();
+            return false;
+        }
+        
+        if (etPlanEnfermedad.getText().toString().trim().isEmpty()) {
+            etPlanEnfermedad.setError("Este campo es obligatorio");
+            etPlanEnfermedad.requestFocus();
+            return false;
+        }
+        
+        if (etResponsableCostos.getText().toString().trim().isEmpty()) {
+            etResponsableCostos.setError("Este campo es obligatorio");
+            etResponsableCostos.requestFocus();
+            return false;
+        }
+        
+        if (etPlanMalComportamiento.getText().toString().trim().isEmpty()) {
+            etPlanMalComportamiento.setError("Este campo es obligatorio");
+            etPlanMalComportamiento.requestFocus();
+            return false;
+        }
+        
+        // Validate required radio groups
         if (rgPlanViajes.getCheckedRadioButtonId() == -1) {
             Toast.makeText(this, "Por favor selecciona una opción para el plan de viajes", Toast.LENGTH_SHORT).show();
             return false;
         }
         
+        if (rgLugarNecesidades.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor selecciona dónde hará sus necesidades fisiológicas", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgFrecuenciaBano.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor selecciona la frecuencia de baño", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgTipoAlimentacion.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor selecciona el tipo de alimentación", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgConoceToxicos.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor indica si conoces qué alimentos son tóxicos", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgPresupuestoMensual.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor selecciona tu presupuesto mensual estimado", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgRecursosVeterinarios.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor indica si cuentas con recursos para gastos veterinarios", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgAceptaVisitas.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor indica si aceptas visitas periódicas de la fundación", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgAceptaEsterilizacion.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor indica si estás de acuerdo con la esterilización", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        if (rgConoceBeneficios.getCheckedRadioButtonId() == -1) {
+            Toast.makeText(this, "Por favor indica si conoces los beneficios de la esterilización", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
         if (rgConscienteMaltrato.getCheckedRadioButtonId() == -1) {
             Toast.makeText(this, "Por favor confirma si estás consciente sobre el maltrato animal", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        
+        // Validate that at least one care option is selected
+        if (!cbPaseos.isChecked() && !cbJuguetes.isChecked() && !cbCollar.isChecked() && 
+            !cbComida.isChecked() && !cbContacto.isChecked() && !cbClima.isChecked() && 
+            !cbLugar.isChecked() && !cbCepillar.isChecked() && !cbDientes.isChecked() && 
+            !cbVeterinario.isChecked()) {
+            Toast.makeText(this, "Por favor selecciona al menos un cuidado que estés dispuesto a brindar", Toast.LENGTH_LONG).show();
+            return false;
+        }
+        
+        // Validate numeric fields
+        try {
+            int horas = Integer.parseInt(etHorasSolo.getText().toString().trim());
+            if (horas < 0 || horas > 24) {
+                etHorasSolo.setError("Las horas deben estar entre 0 y 24");
+                etHorasSolo.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            etHorasSolo.setError("Por favor ingresa un número válido");
+            etHorasSolo.requestFocus();
+            return false;
+        }
+        
+        try {
+            int anos = Integer.parseInt(etAnosVida.getText().toString().trim());
+            if (anos < 1 || anos > 30) {
+                etAnosVida.setError("Los años deben estar entre 1 y 30");
+                etAnosVida.requestFocus();
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            etAnosVida.setError("Por favor ingresa un número válido");
+            etAnosVida.requestFocus();
             return false;
         }
         
