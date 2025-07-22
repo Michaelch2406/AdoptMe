@@ -38,6 +38,7 @@ import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.Ciudad;
 import com.mjc.adoptme.models.DatosPersonalesData;
 import com.mjc.adoptme.models.Pais;
+import com.mjc.adoptme.models.Provincia;
 import com.mjc.adoptme.models.RegistroCompleto;
 import com.mjc.adoptme.models.UpdateDataRequest;
 import com.mjc.adoptme.network.ApiClient;
@@ -67,13 +68,13 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     private ProgressBar progressBar;
 
     // Campos del Formulario
-    private TextInputLayout tilNombres, tilApellidos, tilEmail, tilCedula, tilFechaNacimiento, tilLugarNacimiento, tilNacionalidad;
+    private TextInputLayout tilNombres, tilApellidos, tilEmail, tilCedula, tilFechaNacimiento, tilPais, tilProvincia, tilCiudad;
     private TextInputLayout tilTelefonoConvencional, tilTelefonoMovil, tilOcupacion, tilNivelInstruccion, tilLugarTrabajo, tilTelefonoTrabajo, tilDireccionTrabajo;
     private TextInputLayout tilNivelInstruccionOtro;
     private TextInputEditText etNombres, etApellidos, etEmail, etCedula, etFechaNacimiento;
     private TextInputEditText etTelefonoConvencional, etTelefonoMovil, etOcupacion, etLugarTrabajo, etTelefonoTrabajo, etDireccionTrabajo;
     private TextInputEditText etNivelInstruccionOtro;
-    private AutoCompleteTextView actvNivelInstruccion, actvLugarNacimiento, actvNacionalidad;
+    private AutoCompleteTextView actvNivelInstruccion, actvPais, actvProvincia, actvCiudad;
     private RadioGroup rgTrabaja;
     private RadioButton rbTrabajaSi, rbTrabajaNo;
     private LinearLayout layoutCamposTrabajo;
@@ -92,8 +93,10 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     
     // Datos para dropdowns
     private List<Pais> paises = new ArrayList<>();
+    private List<Provincia> provincias = new ArrayList<>();
     private List<Ciudad> ciudades = new ArrayList<>();
     private Pais paisSeleccionado;
+    private Provincia provinciaSeleccionada;
     private Ciudad ciudadSeleccionada;
 
     @Override
@@ -197,8 +200,9 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         tilEmail = findViewById(R.id.tilEmail);
         tilCedula = findViewById(R.id.tilCedula);
         tilFechaNacimiento = findViewById(R.id.tilFechaNacimiento);
-        tilLugarNacimiento = findViewById(R.id.tilLugarNacimiento);
-        tilNacionalidad = findViewById(R.id.tilNacionalidad);
+        tilPais = findViewById(R.id.tilPais);
+        tilProvincia = findViewById(R.id.tilProvincia);
+        tilCiudad = findViewById(R.id.tilCiudad);
         tilTelefonoConvencional = findViewById(R.id.tilTelefonoConvencional);
         tilTelefonoMovil = findViewById(R.id.tilTelefonoMovil);
         tilOcupacion = findViewById(R.id.tilOcupacion);
@@ -216,8 +220,9 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         etEmail = findViewById(R.id.etEmail);
         etCedula = findViewById(R.id.etCedula);
         etFechaNacimiento = findViewById(R.id.etFechaNacimiento);
-        actvLugarNacimiento = findViewById(R.id.actvLugarNacimiento);
-        actvNacionalidad = findViewById(R.id.actvNacionalidad);
+        actvPais = findViewById(R.id.actvPais);
+        actvProvincia = findViewById(R.id.actvProvincia);
+        actvCiudad = findViewById(R.id.actvCiudad);
         etTelefonoConvencional = findViewById(R.id.etTelefonoConvencional);
         etTelefonoMovil = findViewById(R.id.etTelefonoMovil);
         etOcupacion = findViewById(R.id.etOcupacion);
@@ -258,7 +263,8 @@ public class DatosPersonalesActivity extends AppCompatActivity {
 
     private void populateForm(DatosPersonalesData data) {
         // Rellenar campos básicos
-        if (data.getCedula() != null) etCedula.setText(data.getCedula());
+        // Cédula se obtiene de session manager, no de los datos
+        if (sessionManager.getCedula() != null) etCedula.setText(sessionManager.getCedula());
         if (data.getNombres() != null) etNombres.setText(data.getNombres());
         if (data.getApellidos() != null) etApellidos.setText(data.getApellidos());
         if (data.getEmail() != null) etEmail.setText(data.getEmail());
@@ -274,25 +280,24 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             }
         }
 
-        if (data.getLugar_nacimiento() != null) {
-            actvLugarNacimiento.setText(data.getLugar_nacimiento(), false);
-            // Buscar ciudad por nombre y establecerla
-            for (Ciudad ciudad : ciudades) {
-                if (ciudad.getNombre().equalsIgnoreCase(data.getLugar_nacimiento())) {
-                    ciudadSeleccionada = ciudad;
-                    break;
-                }
-            }
-        }
-        if (data.getNacionalidad() != null) {
-            actvNacionalidad.setText(data.getNacionalidad(), false);
-            // Buscar país por nombre y establecerlo
-            for (Pais pais : paises) {
-                if (pais.getNombre().equalsIgnoreCase(data.getNacionalidad())) {
-                    paisSeleccionado = pais;
-                    // Cargar ciudades del país seleccionado
-                    loadCiudades(pais.getId());
-                    break;
+        // Parsear lugar de nacimiento: "País, Provincia, Ciudad"
+        if (data.getLugar_nacimiento() != null && !data.getLugar_nacimiento().isEmpty()) {
+            String[] partes = data.getLugar_nacimiento().split(",\\s*");
+            if (partes.length >= 3) {
+                String nombrePais = partes[0].trim();
+                String nombreProvincia = partes[1].trim();
+                String nombreCiudad = partes[2].trim();
+                
+                // Buscar y seleccionar país
+                for (Pais pais : paises) {
+                    if (pais.getNombre().equalsIgnoreCase(nombrePais)) {
+                        paisSeleccionado = pais;
+                        actvPais.setText(pais.getNombre(), false);
+                        
+                        // Cargar provincias y luego seleccionar la provincia
+                        loadProvinciasAndSelect(pais.getId(), nombreProvincia, nombreCiudad);
+                        break;
+                    }
                 }
             }
         }
@@ -321,11 +326,25 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         btnSiguiente.setEnabled(false);
 
         DatosPersonalesData data = new DatosPersonalesData();
-        data.setCedula(etCedula.getText().toString().trim());
+        // NO establecer cedula aquí, ya se envía en el nivel superior del JSON
+        
+        // Inicializar todos los campos para evitar nulls
+        data.setNombres("");
+        data.setApellidos("");
+        data.setFecha_nacimiento("");
+        data.setLugar_nacimiento("");
+        data.setEmail("");
+        data.setTelefono_convencional("");
+        data.setTelefono_movil("");
+        data.setOcupacion("");
+        data.setNivel_instruccion("");
+        data.setLugar_trabajo("");
+        data.setDireccion_trabajo("");
+        data.setTelefono_trabajo("");
         
         // Log para debugging
         Log.d(TAG, "=== DATOS PARA ACTUALIZAR ===");
-        Log.d(TAG, "Cédula: " + data.getCedula());
+        Log.d(TAG, "Cédula (session): " + sessionManager.getCedula());
         Log.d(TAG, "País seleccionado: " + (paisSeleccionado != null ? paisSeleccionado.getNombre() : "null"));
         Log.d(TAG, "Ciudad seleccionada: " + (ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : "null"));
         Log.d(TAG, "===============================");
@@ -346,14 +365,29 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             Date date = displayDateFormat.parse(etFechaNacimiento.getText().toString());
             data.setFecha_nacimiento(apiDateFormat.format(date));
         } catch (ParseException e) {
-            data.setFecha_nacimiento(null);
+            Log.e(TAG, "Error al parsear fecha", e);
+            // Mantener string vacío ya inicializado
         }
 
-        data.setLugar_nacimiento(ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : actvLugarNacimiento.getText().toString().trim());
-        data.setNacionalidad(paisSeleccionado != null ? paisSeleccionado.getNombre() : actvNacionalidad.getText().toString().trim());
+        // Concatenar lugar de nacimiento: "País, Provincia, Ciudad"
+        String lugarNacimiento = "";
+        if (paisSeleccionado != null && provinciaSeleccionada != null && ciudadSeleccionada != null) {
+            lugarNacimiento = paisSeleccionado.getNombre() + ", " + 
+                             provinciaSeleccionada.getNombre() + ", " + 
+                             ciudadSeleccionada.getNombre();
+        } else {
+            // Fallback en caso de que no se hayan seleccionado desde dropdowns
+            String pais = actvPais.getText().toString().trim();
+            String provincia = actvProvincia.getText().toString().trim();
+            String ciudad = actvCiudad.getText().toString().trim();
+            if (!pais.isEmpty() && !provincia.isEmpty() && !ciudad.isEmpty()) {
+                lugarNacimiento = pais + ", " + provincia + ", " + ciudad;
+            }
+        }
+        data.setLugar_nacimiento(lugarNacimiento);
 
         String telConv = etTelefonoConvencional.getText().toString().trim();
-        data.setTelefono_convencional(telConv.isEmpty() ? null : telConv);
+        data.setTelefono_convencional(telConv);
 
         data.setTelefono_movil(etTelefonoMovil.getText().toString().trim());
         data.setOcupacion(etOcupacion.getText().toString().trim());
@@ -365,17 +399,37 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             data.setNivel_instruccion(nivelInstruccion);
         }
 
-        // Datos de trabajo
+        // Datos de trabajo - SIEMPRE enviar algo para evitar constraint violations
         if (rbTrabajaSi.isChecked()) {
-            data.setLugar_trabajo(etLugarTrabajo.getText().toString().trim());
-            data.setDireccion_trabajo(etDireccionTrabajo.getText().toString().trim());
+            String lugarTrabajo = etLugarTrabajo.getText().toString().trim();
+            String direccionTrabajo = etDireccionTrabajo.getText().toString().trim();
             String telTrabajo = etTelefonoTrabajo.getText().toString().trim();
-            data.setTelefono_trabajo(telTrabajo.isEmpty() ? null : telTrabajo);
+            
+            data.setLugar_trabajo(lugarTrabajo.isEmpty() ? "No especificado" : lugarTrabajo);
+            data.setDireccion_trabajo(direccionTrabajo.isEmpty() ? "No especificado" : direccionTrabajo);
+            data.setTelefono_trabajo(telTrabajo);
         } else {
-            data.setLugar_trabajo(null);
-            data.setDireccion_trabajo(null);
-            data.setTelefono_trabajo(null);
+            // Cuando no trabaja, mantener strings vacíos ya inicializados
+            data.setLugar_trabajo("No trabaja");
+            data.setDireccion_trabajo("No aplica");
+            // telefono_trabajo queda como string vacío
         }
+
+        // Log datos finales antes de enviar
+        Log.d(TAG, "=== DATOS FINALES PARA ENVIAR ===");
+        Log.d(TAG, "nombres: " + data.getNombres());
+        Log.d(TAG, "apellidos: " + data.getApellidos());
+        Log.d(TAG, "fecha_nacimiento: " + data.getFecha_nacimiento());
+        Log.d(TAG, "lugar_nacimiento: " + data.getLugar_nacimiento());
+        Log.d(TAG, "email: " + data.getEmail());
+        Log.d(TAG, "telefono_convencional: " + data.getTelefono_convencional());
+        Log.d(TAG, "telefono_movil: " + data.getTelefono_movil());
+        Log.d(TAG, "ocupacion: " + data.getOcupacion());
+        Log.d(TAG, "nivel_instruccion: " + data.getNivel_instruccion());
+        Log.d(TAG, "lugar_trabajo: " + data.getLugar_trabajo());
+        Log.d(TAG, "direccion_trabajo: " + data.getDireccion_trabajo());
+        Log.d(TAG, "telefono_trabajo: " + data.getTelefono_trabajo());
+        Log.d(TAG, "==============================");
 
         updateRepository.updatePersonalData(sessionManager.getCedula(), data, new UpdateRepository.UpdateCallback() {
             @Override
@@ -435,27 +489,29 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         if (tilEmail.getVisibility() == View.VISIBLE && data.getEmail() != null) {
             etEmail.setText(data.getEmail());
         }
-        if (data.getCedula() != null) etCedula.setText(data.getCedula());
-        
-        // Campos adicionales
-        if (data.getLugarNacimiento() != null) {
-            actvLugarNacimiento.setText(data.getLugarNacimiento(), false);
-            // Buscar ciudad por nombre
-            for (Ciudad ciudad : ciudades) {
-                if (ciudad.getNombre().equalsIgnoreCase(data.getLugarNacimiento())) {
-                    ciudadSeleccionada = ciudad;
-                    break;
-                }
-            }
+        // Siempre llenar cédula desde el repository
+        if (data.getCedula() != null) {
+            etCedula.setText(data.getCedula());
         }
-        if (data.getNacionalidad() != null) {
-            actvNacionalidad.setText(data.getNacionalidad(), false);
-            // Buscar país por nombre
-            for (Pais pais : paises) {
-                if (pais.getNombre().equalsIgnoreCase(data.getNacionalidad())) {
-                    paisSeleccionado = pais;
-                    loadCiudades(pais.getId());
-                    break;
+        
+        // Parsear lugar de nacimiento: "País, Provincia, Ciudad"
+        if (data.getLugarNacimiento() != null && !data.getLugarNacimiento().isEmpty()) {
+            String[] partes = data.getLugarNacimiento().split(",\\s*");
+            if (partes.length >= 3) {
+                String nombrePais = partes[0].trim();
+                String nombreProvincia = partes[1].trim();
+                String nombreCiudad = partes[2].trim();
+                
+                // Buscar y seleccionar país
+                for (Pais pais : paises) {
+                    if (pais.getNombre().equalsIgnoreCase(nombrePais)) {
+                        paisSeleccionado = pais;
+                        actvPais.setText(pais.getNombre(), false);
+                        
+                        // Cargar provincias y luego seleccionar la provincia
+                        loadProvinciasAndSelect(pais.getId(), nombreProvincia, nombreCiudad);
+                        break;
+                    }
                 }
             }
         }
@@ -499,7 +555,13 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             }
         });
 
-        btnRegresar.setOnClickListener(v -> handleExitAnimation());
+        btnRegresar.setOnClickListener(v -> {
+            // Save current data before going back
+            if (isRegistrationMode) {
+                saveDataToRepositoryForBackButton();
+            }
+            handleExitAnimation();
+        });
     }
 
     private void setupDropdowns() {
@@ -508,17 +570,37 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         ArrayAdapter<String> adapterNiveles = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, niveles);
         actvNivelInstruccion.setAdapter(adapterNiveles);
         
-        // Configurar listeners para AutoCompleteTextView de países y ciudades
-        actvNacionalidad.setOnClickListener(v -> {
+        // Configurar listeners para AutoCompleteTextView cascadeados
+        actvPais.setOnClickListener(v -> {
             if (paises.isEmpty()) {
                 Toast.makeText(this, "Cargando países...", Toast.LENGTH_SHORT).show();
                 return;
             }
-            actvNacionalidad.showDropDown();
+            actvPais.showDropDown();
         });
         
-        actvLugarNacimiento.setOnClickListener(v -> {
-            actvLugarNacimiento.showDropDown();
+        actvProvincia.setOnClickListener(v -> {
+            if (paisSeleccionado == null) {
+                Toast.makeText(this, "Primero seleccione un país", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (provincias.isEmpty()) {
+                Toast.makeText(this, "Cargando provincias...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            actvProvincia.showDropDown();
+        });
+        
+        actvCiudad.setOnClickListener(v -> {
+            if (provinciaSeleccionada == null) {
+                Toast.makeText(this, "Primero seleccione una provincia", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (ciudades.isEmpty()) {
+                Toast.makeText(this, "Cargando ciudades...", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            actvCiudad.showDropDown();
         });
 
         rgTrabaja.setOnCheckedChangeListener((group, checkedId) -> {
@@ -589,25 +671,39 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                     // Configurar adapter para AutoCompleteTextView de países
                     ArrayAdapter<Pais> adapterPaises = new ArrayAdapter<>(DatosPersonalesActivity.this, 
                             android.R.layout.simple_dropdown_item_1line, paises);
-                    actvNacionalidad.setAdapter(adapterPaises);
+                    actvPais.setAdapter(adapterPaises);
                     
                     // Configurar listener para selección de país
-                    actvNacionalidad.setOnItemClickListener((parent, view, position, id) -> {
+                    actvPais.setOnItemClickListener((parent, view, position, id) -> {
                         paisSeleccionado = paises.get(position);
                         Log.d(TAG, "País seleccionado: " + paisSeleccionado.getNombre() + " (ID: " + paisSeleccionado.getId() + ")");
                         
+                        // Limpiar provincia y ciudad seleccionadas
+                        actvProvincia.setText("");
+                        actvCiudad.setText("");
+                        provinciaSeleccionada = null;
+                        ciudadSeleccionada = null;
+                        provincias.clear();
+                        ciudades.clear();
+                        
                         // Validar que el ID del país es válido antes de llamar a la API
                         if (paisSeleccionado.getId() > 0) {
-                            loadCiudades(paisSeleccionado.getId());
+                            loadProvincias(paisSeleccionado.getId());
                         } else {
                             Log.e(TAG, "ID de país inválido: " + paisSeleccionado.getId());
                             Toast.makeText(DatosPersonalesActivity.this, "Error: ID de país inválido", Toast.LENGTH_SHORT).show();
                         }
-                        
-                        // Limpiar ciudad seleccionada
-                        actvLugarNacimiento.setText("");
-                        ciudadSeleccionada = null;
                     });
+                    
+                    // Set Ecuador as default if available
+                    for (Pais pais : paises) {
+                        if ("Ecuador".equalsIgnoreCase(pais.getNombre())) {
+                            paisSeleccionado = pais;
+                            actvPais.setText(pais.getNombre(), false);
+                            loadProvincias(pais.getId());
+                            break;
+                        }
+                    }
                     
                     // Populate data from repository after countries are loaded (only in registration mode)
                     if (!isUpdateMode) {
@@ -625,10 +721,127 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         });
     }
 
-    private void loadCiudades(int paisId) {
-        Log.d(TAG, "Cargando ciudades para país ID: " + paisId);
+    private void loadProvincias(int paisId) {
+        Log.d(TAG, "Cargando provincias para país ID: " + paisId);
         
-        apiService.getCiudades(paisId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+        apiService.getProvincias(paisId).enqueue(new Callback<ApiResponse<List<Provincia>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Provincia>>> call, Response<ApiResponse<List<Provincia>>> response) {
+                Log.d(TAG, "Respuesta recibida para provincias. Código: " + response.code());
+                
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    provincias = response.body().getData();
+                    Log.d(TAG, "Provincias cargadas exitosamente: " + provincias.size());
+                    
+                    if (provincias.isEmpty()) {
+                        Log.w(TAG, "No se encontraron provincias para el país ID: " + paisId);
+                        Toast.makeText(DatosPersonalesActivity.this, 
+                            "No se encontraron provincias para este país", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    
+                    // Configurar adapter para AutoCompleteTextView de provincias
+                    ArrayAdapter<Provincia> adapterProvincias = new ArrayAdapter<>(DatosPersonalesActivity.this, 
+                            android.R.layout.simple_dropdown_item_1line, provincias);
+                    actvProvincia.setAdapter(adapterProvincias);
+                    
+                    // Configurar listener para selección de provincia
+                    actvProvincia.setOnItemClickListener((parent, view, position, id) -> {
+                        provinciaSeleccionada = provincias.get(position);
+                        Log.d(TAG, "Provincia seleccionada: " + provinciaSeleccionada.getNombre());
+                        
+                        // Limpiar ciudad seleccionada
+                        actvCiudad.setText("");
+                        ciudadSeleccionada = null;
+                        ciudades.clear();
+                        
+                        // Cargar ciudades de la provincia seleccionada
+                        loadCiudades(provinciaSeleccionada.getId());
+                    });
+                } else {
+                    Log.e(TAG, "Error al cargar provincias. Código: " + response.code() + 
+                           ", Mensaje: " + response.message());
+                    Toast.makeText(DatosPersonalesActivity.this, 
+                        "Error al cargar provincias", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Provincia>>> call, Throwable t) {
+                Log.e(TAG, "Error de conexión al cargar provincias para país ID: " + paisId, t);
+                Toast.makeText(DatosPersonalesActivity.this, 
+                    "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadProvinciasAndSelect(int paisId, String nombreProvincia, String nombreCiudad) {
+        apiService.getProvincias(paisId).enqueue(new Callback<ApiResponse<List<Provincia>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Provincia>>> call, Response<ApiResponse<List<Provincia>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    provincias = response.body().getData();
+                    
+                    // Configurar adapter
+                    ArrayAdapter<Provincia> adapterProvincias = new ArrayAdapter<>(DatosPersonalesActivity.this, 
+                            android.R.layout.simple_dropdown_item_1line, provincias);
+                    actvProvincia.setAdapter(adapterProvincias);
+                    
+                    // Buscar y seleccionar provincia
+                    for (Provincia provincia : provincias) {
+                        if (provincia.getNombre().equalsIgnoreCase(nombreProvincia)) {
+                            provinciaSeleccionada = provincia;
+                            actvProvincia.setText(provincia.getNombre(), false);
+                            
+                            // Cargar ciudades y luego seleccionar la ciudad
+                            loadCiudadesAndSelect(provincia.getId(), nombreCiudad);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Provincia>>> call, Throwable t) {
+                Log.e(TAG, "Error al cargar provincias para restaurar datos", t);
+            }
+        });
+    }
+
+    private void loadCiudadesAndSelect(int provinciaId, String nombreCiudad) {
+        apiService.getCiudades(provinciaId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    ciudades = response.body().getData();
+                    
+                    // Configurar adapter
+                    ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
+                            android.R.layout.simple_dropdown_item_1line, ciudades);
+                    actvCiudad.setAdapter(adapterCiudades);
+                    
+                    // Buscar y seleccionar ciudad
+                    for (Ciudad ciudad : ciudades) {
+                        if (ciudad.getNombre().equalsIgnoreCase(nombreCiudad)) {
+                            ciudadSeleccionada = ciudad;
+                            actvCiudad.setText(ciudad.getNombre(), false);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
+                Log.e(TAG, "Error al cargar ciudades para restaurar datos", t);
+            }
+        });
+    }
+
+    private void loadCiudades(int provinciaId) {
+        Log.d(TAG, "Cargando ciudades para provincia ID: " + provinciaId);
+        
+        apiService.getCiudades(provinciaId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
             @Override
             public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
                 Log.d(TAG, "Respuesta recibida para ciudades. Código: " + response.code());
@@ -643,19 +856,19 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                             Log.d(TAG, "Ciudades cargadas exitosamente: " + ciudades.size());
                             
                             if (ciudades.isEmpty()) {
-                                Log.w(TAG, "No se encontraron ciudades para el país ID: " + paisId);
+                                Log.w(TAG, "No se encontraron ciudades para la provincia ID: " + provinciaId);
                                 Toast.makeText(DatosPersonalesActivity.this, 
-                                    "No se encontraron ciudades para este país", Toast.LENGTH_SHORT).show();
+                                    "No se encontraron ciudades para esta provincia", Toast.LENGTH_SHORT).show();
                                 return;
                             }
                             
                             // Configurar adapter para AutoCompleteTextView de ciudades
                             ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
                                     android.R.layout.simple_dropdown_item_1line, ciudades);
-                            actvLugarNacimiento.setAdapter(adapterCiudades);
+                            actvCiudad.setAdapter(adapterCiudades);
                             
                             // Configurar listener para selección de ciudad
-                            actvLugarNacimiento.setOnItemClickListener((parent, view, position, id) -> {
+                            actvCiudad.setOnItemClickListener((parent, view, position, id) -> {
                                 ciudadSeleccionada = ciudades.get(position);
                                 Log.d(TAG, "Ciudad seleccionada: " + ciudadSeleccionada.getNombre());
                             });
@@ -675,9 +888,9 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                     
                     String errorMessage = "Error al cargar ciudades";
                     if (response.code() == 500) {
-                        errorMessage = "Error interno del servidor. Verifique el ID del país.";
+                        errorMessage = "Error interno del servidor. Verifique el ID de la provincia.";
                     } else if (response.code() == 404) {
-                        errorMessage = "No se encontraron ciudades para este país.";
+                        errorMessage = "No se encontraron ciudades para esta provincia.";
                     }
                     
                     Toast.makeText(DatosPersonalesActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
@@ -686,7 +899,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar ciudades para país ID: " + paisId, t);
+                Log.e(TAG, "Error de conexión al cargar ciudades para provincia ID: " + provinciaId, t);
                 Toast.makeText(DatosPersonalesActivity.this, 
                     "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
             }
@@ -878,20 +1091,28 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             tilFechaNacimiento.setError(null);
         }
 
-        if (actvLugarNacimiento.getText().toString().trim().isEmpty()) {
-            tilLugarNacimiento.setError("El lugar de nacimiento es obligatorio");
-            shakeView(tilLugarNacimiento);
+        if (actvPais.getText().toString().trim().isEmpty()) {
+            tilPais.setError("El país es obligatorio");
+            shakeView(tilPais);
             isValid = false;
         } else {
-            tilLugarNacimiento.setError(null);
+            tilPais.setError(null);
         }
 
-        if (actvNacionalidad.getText().toString().trim().isEmpty()) {
-            tilNacionalidad.setError("El país de nacimiento es obligatorio");
-            shakeView(tilNacionalidad);
+        if (actvProvincia.getText().toString().trim().isEmpty()) {
+            tilProvincia.setError("La provincia es obligatoria");
+            shakeView(tilProvincia);
             isValid = false;
         } else {
-            tilNacionalidad.setError(null);
+            tilProvincia.setError(null);
+        }
+
+        if (actvCiudad.getText().toString().trim().isEmpty()) {
+            tilCiudad.setError("La ciudad es obligatoria");
+            shakeView(tilCiudad);
+            isValid = false;
+        } else {
+            tilCiudad.setError(null);
         }
 
         String telefonoMovil = etTelefonoMovil.getText().toString().trim();
@@ -1021,15 +1242,28 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             data.setFechaNacimiento(apiDateFormat.format(date));
         } catch (ParseException e) {
             Log.e(TAG, "Error al parsear la fecha", e);
-            data.setFechaNacimiento(null);
+            data.setFechaNacimiento("");
         }
         
-        // Guardar otros campos
-        data.setLugarNacimiento(ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : actvLugarNacimiento.getText().toString().trim());
-        data.setNacionalidad(paisSeleccionado != null ? paisSeleccionado.getNombre() : actvNacionalidad.getText().toString().trim());
+        // Concatenar lugar de nacimiento: "País, Provincia, Ciudad"
+        String lugarNacimiento = "";
+        if (paisSeleccionado != null && provinciaSeleccionada != null && ciudadSeleccionada != null) {
+            lugarNacimiento = paisSeleccionado.getNombre() + ", " + 
+                             provinciaSeleccionada.getNombre() + ", " + 
+                             ciudadSeleccionada.getNombre();
+        } else {
+            // Fallback en caso de que no se hayan seleccionado desde dropdowns
+            String pais = actvPais.getText().toString().trim();
+            String provincia = actvProvincia.getText().toString().trim();
+            String ciudad = actvCiudad.getText().toString().trim();
+            if (!pais.isEmpty() && !provincia.isEmpty() && !ciudad.isEmpty()) {
+                lugarNacimiento = pais + ", " + provincia + ", " + ciudad;
+            }
+        }
+        data.setLugarNacimiento(lugarNacimiento);
 
         String telConvencional = etTelefonoConvencional.getText().toString().trim();
-        data.setTelefonoConvencional(telConvencional.isEmpty() ? null : telConvencional);
+        data.setTelefonoConvencional(telConvencional);
 
         data.setTelefonoMovil(etTelefonoMovil.getText().toString().trim());
         data.setOcupacion(etOcupacion.getText().toString().trim());
@@ -1037,7 +1271,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         String nivelInstruccion = actvNivelInstruccion.getText().toString().trim();
         if ("Otro".equals(nivelInstruccion)) {
             String otroNivel = etNivelInstruccionOtro.getText().toString().trim();
-            data.setNivelInstruccion(otroNivel.isEmpty() ? null : otroNivel);
+            data.setNivelInstruccion(otroNivel.isEmpty() ? "No especificado" : otroNivel);
         } else {
             data.setNivelInstruccion(nivelInstruccion);
         }
@@ -1047,16 +1281,47 @@ public class DatosPersonalesActivity extends AppCompatActivity {
             String direccionTrabajo = etDireccionTrabajo.getText().toString().trim();
             String telefonoTrabajo = etTelefonoTrabajo.getText().toString().trim();
 
-            data.setLugarTrabajo(lugarTrabajo);
-            data.setDireccionTrabajo(direccionTrabajo);
-            data.setTelefonoTrabajo(telefonoTrabajo.isEmpty() ? null : telefonoTrabajo);
+            data.setLugarTrabajo(lugarTrabajo.isEmpty() ? "No especificado" : lugarTrabajo);
+            data.setDireccionTrabajo(direccionTrabajo.isEmpty() ? "No especificado" : direccionTrabajo);
+            data.setTelefonoTrabajo(telefonoTrabajo);
         } else {
-            data.setLugarTrabajo(null);
-            data.setDireccionTrabajo(null);
-            data.setTelefonoTrabajo(null);
+            data.setLugarTrabajo("No trabaja");
+            data.setDireccionTrabajo("No aplica");
+            data.setTelefonoTrabajo("");
         }
 
         Log.i(TAG, "Datos personales guardados en el repositorio");
+        Log.d(TAG, "Datos guardados - Nombres: " + data.getNombres() + ", Apellidos: " + data.getApellidos() + ", Email: " + data.getEmail());
+    }
+
+    private void saveDataToRepositoryForBackButton() {
+        RegistroRepository repository = RegistroRepository.getInstance();
+        RegistroCompleto data = repository.getRegistroData();
+
+        // Solo guardar campos básicos que el usuario pudo haber editado
+        if (tilNombres.getVisibility() == View.VISIBLE) {
+            String nombres = etNombres.getText().toString().trim();
+            if (!nombres.isEmpty()) {
+                data.setNombres(nombres);
+                Log.d(TAG, "Guardando nombres al regresar: " + nombres);
+            }
+        }
+        if (tilApellidos.getVisibility() == View.VISIBLE) {
+            String apellidos = etApellidos.getText().toString().trim();
+            if (!apellidos.isEmpty()) {
+                data.setApellidos(apellidos);
+                Log.d(TAG, "Guardando apellidos al regresar: " + apellidos);
+            }
+        }
+        if (tilEmail.getVisibility() == View.VISIBLE) {
+            String email = etEmail.getText().toString().trim();
+            if (!email.isEmpty()) {
+                data.setEmail(email);
+                Log.d(TAG, "Guardando email al regresar: " + email);
+            }
+        }
+        
+        Log.d(TAG, "Datos básicos guardados para regresar a RegistroActivity");
     }
 
     private void animateSuccessTransition() {

@@ -7,6 +7,7 @@ import com.mjc.adoptme.models.Domicilio;
 import com.mjc.adoptme.models.LoginRequest;
 import com.mjc.adoptme.models.Pais;
 import com.mjc.adoptme.models.Parroquia;
+import com.mjc.adoptme.models.Provincia;
 import com.mjc.adoptme.models.ReferenciaPersonal;
 import com.mjc.adoptme.models.RegistroCompleto;
 import com.mjc.adoptme.models.TipoAnimal;
@@ -61,8 +62,11 @@ public interface ApiService {
     @GET("v1/paises")
     Call<ApiResponse<List<Pais>>> getPaises();
 
-    @GET("v1/ciudades/{pais_id}")
-    Call<ApiResponse<List<Ciudad>>> getCiudades(@Path("pais_id") int paisId);
+    @GET("v1/provincias/{pais_id}")
+    Call<ApiResponse<List<Provincia>>> getProvincias(@Path("pais_id") int paisId);
+
+    @GET("v1/ciudades/{provincia_id}")
+    Call<ApiResponse<List<Ciudad>>> getCiudades(@Path("provincia_id") int provinciaId);
 
     @GET("v1/parroquias/{ciudad_id}")
     Call<ApiResponse<List<Parroquia>>> getParroquias(@Path("ciudad_id") int ciudadId);

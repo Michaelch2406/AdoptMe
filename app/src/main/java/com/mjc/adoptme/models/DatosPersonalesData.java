@@ -3,9 +3,6 @@ package com.mjc.adoptme.models;
 import com.google.gson.annotations.SerializedName;
 
 public class DatosPersonalesData {
-    @SerializedName("cedula")
-    private String cedula;
-
     @SerializedName("nombres")
     private String nombres;
 
@@ -17,9 +14,6 @@ public class DatosPersonalesData {
 
     @SerializedName("lugar_nacimiento")
     private String lugar_nacimiento;
-
-    @SerializedName("nacionalidad")
-    private String nacionalidad;
 
     @SerializedName("email")
     private String email;
@@ -50,14 +44,6 @@ public class DatosPersonalesData {
     }
 
     // Getters y Setters
-    public String getCedula() {
-        return cedula;
-    }
-
-    public void setCedula(String cedula) {
-        this.cedula = cedula;
-    }
-
     public String getNombres() {
         return nombres;
     }
@@ -90,13 +76,6 @@ public class DatosPersonalesData {
         this.lugar_nacimiento = lugar_nacimiento;
     }
 
-    public String getNacionalidad() {
-        return nacionalidad;
-    }
-
-    public void setNacionalidad(String nacionalidad) {
-        this.nacionalidad = nacionalidad;
-    }
 
     public String getEmail() {
         return email;

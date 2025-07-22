@@ -27,9 +27,6 @@ public class RegistroCompleto {
     @SerializedName("lugar_nacimiento")
     private String lugarNacimiento;
 
-    @SerializedName("nacionalidad")
-    private String nacionalidad;
-
     @SerializedName("telefono_convencional")
     private String telefonoConvencional;
 
@@ -69,6 +66,21 @@ public class RegistroCompleto {
 
     // Constructor vacío
     public RegistroCompleto() {
+        // Inicializar todos los campos con strings vacíos para evitar nulls
+        this.nombres = "";
+        this.apellidos = "";
+        this.email = "";
+        this.passwordHash = "";
+        this.cedula = "";
+        this.fechaNacimiento = "";
+        this.lugarNacimiento = "";
+        this.telefonoConvencional = "";
+        this.telefonoMovil = "";
+        this.ocupacion = "";
+        this.nivelInstruccion = "";
+        this.lugarTrabajo = "";
+        this.direccionTrabajo = "";
+        this.telefonoTrabajo = "";
     }
 
     // Getters y Setters
@@ -128,13 +140,6 @@ public class RegistroCompleto {
         this.lugarNacimiento = lugarNacimiento;
     }
 
-    public String getNacionalidad() {
-        return nacionalidad;
-    }
-
-    public void setNacionalidad(String nacionalidad) {
-        this.nacionalidad = nacionalidad;
-    }
 
     public String getTelefonoConvencional() {
         return telefonoConvencional;

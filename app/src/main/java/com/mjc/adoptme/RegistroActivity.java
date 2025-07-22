@@ -57,8 +57,26 @@ public class RegistroActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Restore data from repository when returning from DatosPersonalesActivity
-        restoreDataFromRepository();
+        Log.d(TAG, "onResume() called");
+        
+        // Ensure views are visible when returning
+        if (logoContainer != null && formContainer != null) {
+            Log.d(TAG, "Restoring view visibility");
+            logoContainer.setVisibility(View.VISIBLE);
+            logoContainer.setAlpha(1f);
+            logoContainer.setTranslationY(0f);
+            
+            formContainer.setVisibility(View.VISIBLE);
+            formContainer.setAlpha(1f);
+            formContainer.setTranslationY(0f);
+            
+            // Restore data from repository when returning from DatosPersonalesActivity
+            // Only restore if views are initialized
+            if (etNombres != null && etApellidos != null && etEmail != null) {
+                Log.d(TAG, "Restoring data from repository");
+                restoreDataFromRepository();
+            }
+        }
     }
 
     @Override
@@ -253,19 +271,28 @@ public class RegistroActivity extends AppCompatActivity {
         RegistroRepository repository = RegistroRepository.getInstance();
         RegistroCompleto data = repository.getRegistroData();
         
+        Log.d(TAG, "restoreDataFromRepository() - data is null: " + (data == null));
+        
         if (data != null) {
-            // Only restore if fields are empty (to avoid overwriting user input)
-            if (etNombres.getText().toString().trim().isEmpty() && data.getNombres() != null) {
+            Log.d(TAG, "Datos disponibles - Nombres: " + data.getNombres() + ", Apellidos: " + data.getApellidos() + ", Email: " + data.getEmail());
+            
+            // Always restore data when returning from DatosPersonalesActivity
+            if (data.getNombres() != null) {
                 etNombres.setText(data.getNombres());
+                Log.d(TAG, "Nombres restaurados: " + data.getNombres());
             }
-            if (etApellidos.getText().toString().trim().isEmpty() && data.getApellidos() != null) {
+            if (data.getApellidos() != null) {
                 etApellidos.setText(data.getApellidos());
+                Log.d(TAG, "Apellidos restaurados: " + data.getApellidos());
             }
-            if (etEmail.getText().toString().trim().isEmpty() && data.getEmail() != null) {
+            if (data.getEmail() != null) {
                 etEmail.setText(data.getEmail());
+                Log.d(TAG, "Email restaurado: " + data.getEmail());
             }
             // Don't restore password fields for security
-            Log.d(TAG, "Datos restaurados desde el repositorio");
+            Log.d(TAG, "Datos restaurados desde el repositorio completamente");
+        } else {
+            Log.w(TAG, "No hay datos en el repositorio para restaurar");
         }
     }
 

@@ -252,40 +252,9 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Campo de lugar de nacimiento -->
+            <!-- Campo de País -->
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilLugarNacimiento"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
-                app:boxBackgroundMode="filled"
-                app:boxBackgroundColor="@color/white"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:startIconDrawable="@android:drawable/ic_menu_mylocation"
-                app:startIconTint="@color/colorPrimary"
-                app:hintTextColor="@color/colorPrimary"
-                app:boxStrokeColor="@color/colorAccent2"
-                app:errorEnabled="true">
-
-                <AutoCompleteTextView
-                    android:id="@+id/actvLugarNacimiento"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Lugar de nacimiento *"
-                    android:inputType="none"
-                    android:textColor="@color/black"
-                    android:textSize="16sp"
-                    android:paddingVertical="16dp"/>
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <!-- Campo de nacionalidad -->
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilNacionalidad"
+                android:id="@+id/tilPais"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -303,10 +272,72 @@
                 app:errorEnabled="true">
 
                 <AutoCompleteTextView
-                    android:id="@+id/actvNacionalidad"
+                    android:id="@+id/actvPais"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="País de nacimiento *"
+                    android:hint="País *"
+                    android:inputType="none"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingVertical="16dp"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Campo de Provincia -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilProvincia"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="@color/white"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:startIconDrawable="@android:drawable/ic_menu_mylocation"
+                app:startIconTint="@color/colorPrimary"
+                app:hintTextColor="@color/colorPrimary"
+                app:boxStrokeColor="@color/colorAccent2"
+                app:errorEnabled="true">
+
+                <AutoCompleteTextView
+                    android:id="@+id/actvProvincia"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Provincia *"
+                    android:inputType="none"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:paddingVertical="16dp"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Campo de Ciudad -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilCiudad"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                app:boxBackgroundMode="filled"
+                app:boxBackgroundColor="@color/white"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:startIconDrawable="@android:drawable/ic_menu_compass"
+                app:startIconTint="@color/colorPrimary"
+                app:hintTextColor="@color/colorPrimary"
+                app:boxStrokeColor="@color/colorAccent2"
+                app:errorEnabled="true">
+
+                <AutoCompleteTextView
+                    android:id="@+id/actvCiudad"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Ciudad *"
                     android:inputType="none"
                     android:textColor="@color/black"
                     android:textSize="16sp"
