@@ -120,10 +120,7 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         setupDropdowns();
         loadDropdownData();
         
-        if (isUpdateMode) {
-            loadUserData();
-        }
-        // Data from repository will be populated after dropdown data is loaded
+        // Data population happens after dropdown data is loaded
         setupDatePicker();
         setupClickListeners();
         setupBackButtonHandler();
@@ -262,6 +259,15 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     }
 
     private void populateForm(DatosPersonalesData data) {
+        Log.d(TAG, "=== POBLANDO FORMULARIO ===");
+        Log.d(TAG, "Nombres: " + data.getNombres());
+        Log.d(TAG, "Apellidos: " + data.getApellidos());
+        Log.d(TAG, "Email: " + data.getEmail());
+        Log.d(TAG, "Fecha nacimiento: " + data.getFecha_nacimiento());
+        Log.d(TAG, "Lugar nacimiento: " + data.getLugar_nacimiento());
+        Log.d(TAG, "Nivel instrucción: " + data.getNivel_instruccion());
+        Log.d(TAG, "Países disponibles: " + paises.size());
+        
         // Rellenar campos básicos
         // Cédula se obtiene de session manager, no de los datos
         if (sessionManager.getCedula() != null) etCedula.setText(sessionManager.getCedula());
@@ -705,8 +711,12 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                         }
                     }
                     
-                    // Populate data from repository after countries are loaded (only in registration mode)
-                    if (!isUpdateMode) {
+                    // Populate data after countries are loaded
+                    if (isUpdateMode) {
+                        // En modo actualización, cargar datos del usuario desde la API
+                        loadUserData();
+                    } else {
+                        // En modo registro, cargar datos desde el repository local
                         populateDataFromRepository();
                     }
                 } else {
