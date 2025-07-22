@@ -372,53 +372,11 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
 
-                        <!-- Card Fundaciones -->
-                        <com.google.android.material.card.MaterialCardView
-                            android:id="@+id/cardFundaciones"
-                            android:layout_width="0dp"
-                            android:layout_height="160dp"
-                            android:layout_weight="1"
-                            android:layout_marginEnd="8dp"
-                            app:cardCornerRadius="20dp"
-                            app:cardElevation="6dp"
-                            android:clickable="true"
-                            android:focusable="true">
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:background="@drawable/card_gradient_accent2"
-                                android:gravity="center"
-                                android:orientation="vertical"
-                                android:padding="20dp">
-
-                                <ImageView
-                                    android:layout_width="56dp"
-                                    android:layout_height="56dp"
-                                    android:src="@drawable/ic_foundation"
-                                    android:tint="@color/white"
-                                    tools:ignore="UseAppTint" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Fundaciones"
-                                    android:textColor="@color/white"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold"
-                                    android:layout_marginTop="12dp" />
-
-                            </LinearLayout>
-
-                        </com.google.android.material.card.MaterialCardView>
-
                         <!-- Card Portafolio -->
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/cardPortafolio"
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="160dp"
-                            android:layout_weight="1"
-                            android:layout_marginStart="8dp"
                             app:cardCornerRadius="20dp"
                             app:cardElevation="6dp"
                             android:clickable="true"

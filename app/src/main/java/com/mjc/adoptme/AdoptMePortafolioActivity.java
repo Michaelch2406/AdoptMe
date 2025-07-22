@@ -9,9 +9,12 @@ import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -24,12 +27,14 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
@@ -41,7 +46,24 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.mjc.adoptme.adapters.AnimalesPortafolioAdapter;
+import com.mjc.adoptme.adapters.FundacionesPortafolioAdapter;
+import com.mjc.adoptme.data.SessionManager;
 import com.mjc.adoptme.models.Animal;
+import com.mjc.adoptme.models.AnimalAPI;
+import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.Fundacion;
+import com.mjc.adoptme.network.ApiService;
+import com.mjc.adoptme.network.RetrofitClient;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.Priority;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,9 +85,17 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     private Chip chipTodos, chipPerros, chipGatos, chipCachorros, chipAdultos;
 
     // Adapter y listas
-    private AnimalesPortafolioAdapter adapter;
+    private AnimalesPortafolioAdapter animalAdapter;
+    private FundacionesPortafolioAdapter fundacionAdapter;
     private List<Animal> animalesCompletos = new ArrayList<>();
     private List<Animal> animalesFiltrados = new ArrayList<>();
+    private List<Fundacion> fundacionesCompletas = new ArrayList<>();
+    private List<Fundacion> fundacionesFiltradas = new ArrayList<>();
+    
+    // Estados de la actividad
+    private boolean mostrandoFundaciones = true;
+    private Fundacion fundacionSeleccionada;
+    private SessionManager sessionManager;
 
     // Filtros
     private String filtroTipo = "TODOS";
@@ -76,7 +106,13 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
 
     // Ubicación
     private Location ubicacionActual;
+    private LocationManager locationManager;
+    private FusedLocationProviderClient fusedLocationClient;
+    private LocationCallback locationCallback;
+    private LocationRequest locationRequest;
+    private boolean locationRequested = false;
     private static final int LOCATION_PERMISSION_REQUEST = 1001;
+    private static final long LOCATION_TIMEOUT = 30000; // 30 segundos
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -85,13 +121,15 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_adopt_me_portafolio);
 
+        sessionManager = new SessionManager(this);
+        
         initViews();
         setupRecyclerView();
         setupClickListeners();
         setupBackButtonHandler();
         setupSearchFilter();
+        setupLocationServices();
         checkLocationPermission();
-        loadData();
         startAnimations();
     }
 
@@ -129,17 +167,48 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        adapter = new AnimalesPortafolioAdapter();
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
+        // Configurar adapter de animales
+        animalAdapter = new AnimalesPortafolioAdapter();
+        animalAdapter.setOnItemClickListener(animal -> showAnimalDetail(animal));
+        animalAdapter.setOnAdoptClickListener(animal -> startAdoptionProcess(animal));
+        
+        // Configurar adapter de fundaciones
+        fundacionAdapter = new FundacionesPortafolioAdapter();
+        fundacionAdapter.setOnItemClickListener(fundacion -> {
+            try {
+                Log.d("AdoptMePortafolio", "Foundation clicked: " + (fundacion != null ? fundacion.getNombreFundacion() : "null"));
+                
+                fundacionSeleccionada = fundacion;
+                if (fundacion != null && fundacion.getRuc() != null && !fundacion.getRuc().trim().isEmpty()) {
+                    Log.d("AdoptMePortafolio", "Loading animals for RUC: " + fundacion.getRuc());
+                    loadAnimalsPorFundacion(fundacion.getRuc());
+                } else {
+                    String errorMsg = "Error: " + (fundacion == null ? "Fundación no válida" : 
+                        "RUC de fundación no disponible");
+                    Log.e("AdoptMePortafolio", errorMsg);
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                Log.e("AdoptMePortafolio", "Error clicking foundation", e);
+                e.printStackTrace();
+                Toast.makeText(this, "Error al cargar animales: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        
+        // Inicializar con fundaciones
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         rvAnimales.setLayoutManager(layoutManager);
-        rvAnimales.setAdapter(adapter);
-
-        adapter.setOnItemClickListener(animal -> showAnimalDetail(animal));
-        adapter.setOnAdoptClickListener(animal -> startAdoptionProcess(animal));
+        rvAnimales.setAdapter(fundacionAdapter);
     }
 
     private void setupClickListeners() {
-        btnRegresar.setOnClickListener(v -> handleExitAnimation());
+        btnRegresar.setOnClickListener(v -> {
+            if (mostrandoFundaciones) {
+                handleExitAnimation();
+            } else {
+                volverAFundaciones();
+            }
+        });
         fabFilter.setOnClickListener(v -> showAdvancedFilters());
 
         chipTodos.setOnClickListener(v -> {
@@ -217,24 +286,198 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         });
     }
 
+    private void setupLocationServices() {
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        
+        // Configurar LocationRequest
+        locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 10000)
+                .setWaitForAccurateLocation(false)
+                .setMinUpdateIntervalMillis(5000)
+                .setMaxUpdateDelayMillis(15000)
+                .build();
+        
+        // Callback para recibir ubicaciones
+        locationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                Location location = locationResult.getLastLocation();
+                if (location != null) {
+                    ubicacionActual = location;
+                    onLocationReceived(location);
+                    stopLocationUpdates();
+                }
+            }
+        };
+    }
+
     private void checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) 
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST);
+            
+            // Mostrar diálogo explicativo
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Ubicación requerida")
+                    .setMessage("AdoptMe necesita acceso a tu ubicación para mostrar fundaciones cercanas. ¿Permitir acceso a la ubicación?")
+                    .setPositiveButton("Permitir", (dialog, which) -> {
+                        ActivityCompat.requestPermissions(this,
+                                new String[]{
+                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                },
+                                LOCATION_PERMISSION_REQUEST);
+                    })
+                    .setNegativeButton("Usar ubicación por defecto", (dialog, which) -> {
+                        usarUbicacionPorDefecto();
+                    })
+                    .setCancelable(false)
+                    .show();
         } else {
             obtenerUbicacion();
         }
     }
 
     private void obtenerUbicacion() {
-        // Simulación de ubicación en Cayambe
-        ubicacionActual = new Location("");
-        ubicacionActual.setLatitude(0.0411);
-        ubicacionActual.setLongitude(-78.1437);
+        if (locationRequested) {
+            return;
+        }
+        
+        locationRequested = true;
+        
+        // Mostrar indicador de carga
+        tvLocationInfo.setText("📍 Obteniendo ubicación...");
+        tvLocationInfo.setVisibility(View.VISIBLE);
+        
+        // Intentar múltiples métodos para obtener ubicación
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            
+            // Método 1: Intentar obtener última ubicación conocida
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, location -> {
+                        if (location != null && !isLocationTooOld(location)) {
+                            ubicacionActual = location;
+                            onLocationReceived(location);
+                        } else {
+                            // Método 2: Solicitar actualizaciones de ubicación
+                            requestLocationUpdates();
+                        }
+                    })
+                    .addOnFailureListener(this, e -> {
+                        // Método 3: Usar LocationManager como fallback
+                        tryLocationManager();
+                    });
+            
+            // Timeout para ubicación
+            handler.postDelayed(() -> {
+                if (ubicacionActual == null) {
+                    Toast.makeText(this, "No se pudo obtener la ubicación, usando ubicación por defecto", Toast.LENGTH_LONG).show();
+                    usarUbicacionPorDefecto();
+                }
+            }, LOCATION_TIMEOUT);
+            
+        } else {
+            usarUbicacionPorDefecto();
+        }
+    }
 
-        tvLocationInfo.setText("📍 Cayambe, Ecuador");
+    private boolean isLocationTooOld(Location location) {
+        long locationAge = System.currentTimeMillis() - location.getTime();
+        return locationAge > 5 * 60 * 1000; // 5 minutos
+    }
+
+    private void requestLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            
+            fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        }
+    }
+
+    private void tryLocationManager() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            
+            LocationListener locationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    if (location != null) {
+                        ubicacionActual = location;
+                        onLocationReceived(location);
+                        locationManager.removeUpdates(this);
+                    }
+                }
+            };
+            
+            // Intentar con GPS primero
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    0,
+                    0,
+                    locationListener
+                );
+            }
+            // Fallback a network provider
+            else if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                locationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER,
+                    0,
+                    0,
+                    locationListener
+                );
+            } else {
+                usarUbicacionPorDefecto();
+            }
+        } else {
+            usarUbicacionPorDefecto();
+        }
+    }
+
+    private void stopLocationUpdates() {
+        if (fusedLocationClient != null && locationCallback != null) {
+            fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+        if (locationManager != null) {
+            locationManager.removeUpdates(new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {}
+            });
+        }
+    }
+
+    private void onLocationReceived(Location location) {
+        String locationText = String.format(Locale.getDefault(), 
+            "📍 Lat: %.4f, Lng: %.4f", 
+            location.getLatitude(), 
+            location.getLongitude()
+        );
+        
+        tvLocationInfo.setText(locationText);
+        
+        // Animar entrada del texto de ubicación
+        tvLocationInfo.setAlpha(0f);
+        tvLocationInfo.animate()
+                .alpha(1f)
+                .setDuration(500)
+                .start();
+
+        // Cargar fundaciones cercanas
+        loadFundacionesCercanas();
+    }
+
+    private void usarUbicacionPorDefecto() {
+        // Ubicación por defecto: Quito, Ecuador
+        ubicacionActual = new Location("default");
+        ubicacionActual.setLatitude(-0.1807);
+        ubicacionActual.setLongitude(-78.4678);
+
+        tvLocationInfo.setText("📍 Quito, Ecuador (por defecto)");
         tvLocationInfo.setVisibility(View.VISIBLE);
 
         // Animar entrada del texto de ubicación
@@ -244,19 +487,45 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                 .setDuration(500)
                 .start();
 
-        applyFilters();
+        // Cargar fundaciones cercanas
+        loadFundacionesCercanas();
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            boolean fineLocationGranted = false;
+            boolean coarseLocationGranted = false;
+            
+            for (int i = 0; i < permissions.length; i++) {
+                if (Manifest.permission.ACCESS_FINE_LOCATION.equals(permissions[i])) {
+                    fineLocationGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+                } else if (Manifest.permission.ACCESS_COARSE_LOCATION.equals(permissions[i])) {
+                    coarseLocationGranted = grantResults[i] == PackageManager.PERMISSION_GRANTED;
+                }
+            }
+            
+            if (fineLocationGranted || coarseLocationGranted) {
                 obtenerUbicacion();
             } else {
-                tvLocationInfo.setText("📍 Ubicación no disponible");
-                tvLocationInfo.setVisibility(View.VISIBLE);
+                // Mostrar diálogo para usar ubicación por defecto
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("Permisos denegados")
+                        .setMessage("Sin permisos de ubicación, se usará la ubicación por defecto (Quito, Ecuador)")
+                        .setPositiveButton("Continuar", (dialog, which) -> usarUbicacionPorDefecto())
+                        .setCancelable(false)
+                        .show();
             }
+        }
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopLocationUpdates();
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
         }
     }
 
@@ -394,9 +663,16 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void updateResultCount() {
-        String texto = animalesFiltrados.size() + " mascota" +
-                (animalesFiltrados.size() != 1 ? "s" : "") + " encontrada" +
-                (animalesFiltrados.size() != 1 ? "s" : "");
+        String texto;
+        if (mostrandoFundaciones) {
+            texto = fundacionesFiltradas.size() + " fundación" +
+                    (fundacionesFiltradas.size() != 1 ? "es" : "") + " encontrada" +
+                    (fundacionesFiltradas.size() != 1 ? "s" : "");
+        } else {
+            texto = animalesFiltrados.size() + " mascota" +
+                    (animalesFiltrados.size() != 1 ? "s" : "") + " encontrada" +
+                    (animalesFiltrados.size() != 1 ? "s" : "");
+        }
         tvResultCount.setText(texto);
 
         // Animar el contador
@@ -413,68 +689,300 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                handleExitAnimation();
+                if (mostrandoFundaciones) {
+                    handleExitAnimation();
+                } else {
+                    volverAFundaciones();
+                }
             }
         });
     }
 
-    private void loadData() {
-        animalesCompletos = new ArrayList<>();
+    private void loadFundacionesCercanas() {
+        if (ubicacionActual == null) {
+            return;
+        }
 
-        // Datos de ejemplo usando el NUEVO constructor corregido
+        ApiService apiService = RetrofitClient.getApiService();
+        Call<ApiResponse<List<Fundacion>>> call = apiService.getFundacionesCercanas(
+                ubicacionActual.getLatitude(),
+                ubicacionActual.getLongitude()
+        );
+
+        call.enqueue(new Callback<ApiResponse<List<Fundacion>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<Fundacion>>> call, Response<ApiResponse<List<Fundacion>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    fundacionesCompletas = response.body().getData();
+                    if (fundacionesCompletas != null && !fundacionesCompletas.isEmpty()) {
+                        fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
+                        updateResultCount();
+                        showFundaciones(fundacionesFiltradas);
+                        Toast.makeText(AdoptMePortafolioActivity.this, 
+                                "Se encontraron " + fundacionesCompletas.size() + " fundaciones cercanas", 
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        // API respondió pero sin datos
+                        Toast.makeText(AdoptMePortafolioActivity.this, 
+                                "No se encontraron fundaciones cercanas. Mostrando datos de ejemplo.", 
+                                Toast.LENGTH_LONG).show();
+                        loadMockFundaciones();
+                    }
+                } else {
+                    // Error en la respuesta
+                    Toast.makeText(AdoptMePortafolioActivity.this, 
+                            "Error al obtener fundaciones. Mostrando datos de ejemplo.", 
+                            Toast.LENGTH_LONG).show();
+                    loadMockFundaciones();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<Fundacion>>> call, Throwable t) {
+                // En caso de error de conexión, usar datos mock
+                Toast.makeText(AdoptMePortafolioActivity.this, 
+                        "Sin conexión. Mostrando fundaciones de ejemplo.", 
+                        Toast.LENGTH_LONG).show();
+                loadMockFundaciones();
+            }
+        });
+    }
+
+    private void loadMockFundaciones() {
+        fundacionesCompletas = new ArrayList<>();
+        
+        // Usar ubicación base (actual o por defecto)
+        double baseLat = ubicacionActual != null ? ubicacionActual.getLatitude() : -0.1807;
+        double baseLng = ubicacionActual != null ? ubicacionActual.getLongitude() : -78.4678;
+        
+        // Generar fundaciones cerca de la ubicación actual
+        fundacionesCompletas.add(new Fundacion(
+                "Fundación Patitas Felices",
+                "1792123456001",
+                "Sucursal Principal",
+                "Av. Simón Bolívar y Galo Plaza Lasso",
+                baseLat + 0.01, baseLng + 0.01, 12
+        ));
+
+        fundacionesCompletas.add(new Fundacion(
+                "Refugio Animal Esperanza",
+                "1792123456002",
+                "Sucursal Norte",
+                "Calle Rafael Ramos y 10 de Agosto",
+                baseLat - 0.015, baseLng + 0.02, 8
+        ));
+
+        fundacionesCompletas.add(new Fundacion(
+                "Protectora de Animales Unidos",
+                "1792123456003",
+                "Sucursal Central",
+                "Av. América y República",
+                baseLat + 0.02, baseLng - 0.01, 15
+        ));
+
+        fundacionesCompletas.add(new Fundacion(
+                "Centro de Rescate Huellitas",
+                "1792123456004",
+                "Sucursal Sur",
+                "Av. Quitumbe y Morán Valverde",
+                baseLat - 0.01, baseLng - 0.015, 6
+        ));
+
+        fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
+        updateResultCount();
+        showFundaciones(fundacionesFiltradas);
+    }
+
+    private void loadAnimalsPorFundacion(String ruc) {
+        mostrandoFundaciones = false;
+        
+        ApiService apiService = RetrofitClient.getApiService();
+        Call<ApiResponse<List<AnimalAPI>>> call = apiService.getAnimalesPorFundacion(ruc);
+
+        call.enqueue(new Callback<ApiResponse<List<AnimalAPI>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<AnimalAPI>>> call, Response<ApiResponse<List<AnimalAPI>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<AnimalAPI> animalesAPI = response.body().getData();
+                    if (animalesAPI != null && !animalesAPI.isEmpty()) {
+                        animalesCompletos = convertirAnimales(animalesAPI);
+                        animalesFiltrados = new ArrayList<>(animalesCompletos);
+                        cambiarAVistaAnimales();
+                        Toast.makeText(AdoptMePortafolioActivity.this, 
+                                "Se encontraron " + animalesAPI.size() + " animales disponibles", 
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        // API respondió pero sin animales
+                        Toast.makeText(AdoptMePortafolioActivity.this, 
+                                "Esta fundación no tiene animales disponibles actualmente. Mostrando ejemplos.", 
+                                Toast.LENGTH_LONG).show();
+                        loadMockAnimales();
+                    }
+                } else {
+                    // Error en la respuesta
+                    Toast.makeText(AdoptMePortafolioActivity.this, 
+                            "Error al obtener animales. Mostrando datos de ejemplo.", 
+                            Toast.LENGTH_LONG).show();
+                    loadMockAnimales();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<AnimalAPI>>> call, Throwable t) {
+                // En caso de error de conexión, usar datos mock
+                Toast.makeText(AdoptMePortafolioActivity.this, 
+                        "Sin conexión. Mostrando animales de ejemplo.", 
+                        Toast.LENGTH_LONG).show();
+                loadMockAnimales();
+            }
+        });
+    }
+
+    private void loadMockAnimales() {
+        animalesCompletos = new ArrayList<>();
+        
+        String fundacionNombre = fundacionSeleccionada != null ? fundacionSeleccionada.getNombreFundacion() : "Fundación Ejemplo";
+        String fundacionDireccion = fundacionSeleccionada != null ? fundacionSeleccionada.getDireccion() : "Dirección no disponible";
+        double lat = fundacionSeleccionada != null ? fundacionSeleccionada.getLatitud() : -0.1807;
+        double lng = fundacionSeleccionada != null ? fundacionSeleccionada.getLongitud() : -78.4678;
+        
         animalesCompletos.add(new Animal(
                 1, "Max", "Golden Retriever", "PERRO", 24, "ADULTO",
-                "GRANDE", "MACHO", "Muy amigable y juguetón. Le encanta correr y jugar con niños.",
-                "Fundación Patitas Felices", "Quito",
+                "GRANDE", "MACHO", "Muy amigable y juguetón. Le encanta correr y jugar con niños. Está completamente vacunado y busca una familia amorosa.",
+                fundacionNombre, fundacionDireccion,
                 true, true, true, true, false,
-                "https://example.com/max.jpg", -0.1807, -78.4678, 0f
+                "", lat, lng, 0f
         ));
 
         animalesCompletos.add(new Animal(
                 2, "Luna", "Siamés", "GATO", 8, "CACHORRO",
-                "PEQUEÑO", "HEMBRA", "Gatita cariñosa y tranquila. Ideal para departamentos.",
-                "Refugio Animal Esperanza", "Cayambe",
+                "PEQUEÑO", "HEMBRA", "Gatita cariñosa y tranquila. Ideal para departamentos. Muy sociable y le gusta jugar.",
+                fundacionNombre, fundacionDireccion,
                 true, false, true, true, false,
-                "https://example.com/luna.jpg", 0.0411, -78.1437, 0f
+                "", lat, lng, 0f
         ));
 
         animalesCompletos.add(new Animal(
                 3, "Rocky", "Mestizo", "PERRO", 36, "ADULTO",
-                "MEDIANO", "MACHO", "Perro guardián, muy leal y protector.",
-                "Protectora de Animales Cayambe", "Cayambe",
+                "MEDIANO", "MACHO", "Perro guardián muy leal y protector. Excelente con niños y busca un hogar con patio.",
+                fundacionNombre, fundacionDireccion,
                 true, true, false, true, false,
-                "https://example.com/rocky.jpg", 0.0450, -78.1400, 0f
+                "", lat, lng, 0f
         ));
 
         animalesCompletos.add(new Animal(
-                4, "Mia", "Persa", "GATO", 48, "ADULTO",
-                "PEQUEÑO", "HEMBRA", "Gata adulta muy tranquila, perfecta para personas mayores.",
-                "Centro de Rescate Felino", "Quito",
+                4, "Mimi", "Angora", "GATO", 18, "ADULTO",
+                "PEQUEÑO", "HEMBRA", "Gata adulta muy tranquila y cariñosa. Perfecta para personas que buscan compañía silenciosa.",
+                fundacionNombre, fundacionDireccion,
                 true, false, true, false, true,
-                "https://example.com/mia.jpg", -0.2025, -78.4918, 0f
+                "", lat, lng, 0f
         ));
 
         animalesCompletos.add(new Animal(
-                5, "Bruno", "Labrador", "PERRO", 72, "ADULTO",
-                "GRANDE", "MACHO", "Perro adulto con mucha energía. Necesita espacio para correr.",
-                "Fundación Huellitas con Amor", "Otavalo",
+                5, "Bruno", "Labrador", "PERRO", 48, "ADULTO",
+                "GRANDE", "MACHO", "Perro adulto con mucha energía. Necesita ejercicio diario y espacio para correr. Muy obediente.",
+                fundacionNombre, fundacionDireccion,
                 true, true, true, true, false,
-                "https://example.com/bruno.jpg", 0.2343, -78.2611, 0f
+                "", lat, lng, 0f
         ));
 
-        animalesCompletos.add(new Animal(
-                6, "Pelusa", "Angora", "GATO", 2, "CACHORRO",
-                "PEQUEÑO", "HEMBRA", "Gatita bebé de 2 meses, muy juguetona.",
-                "Protectora de Animales Cayambe", "Cayambe",
-                true, false, true, true, false,
-                "https://example.com/pelusa.jpg", 0.0390, -78.1450, 0f
-        ));
-
-        // Aplicar filtros iniciales
         animalesFiltrados = new ArrayList<>(animalesCompletos);
-        chipTodos.setChecked(true);
+        cambiarAVistaAnimales();
+    }
+
+    private List<Animal> convertirAnimales(List<AnimalAPI> animalesAPI) {
+        List<Animal> animales = new ArrayList<>();
+        
+        for (AnimalAPI animalAPI : animalesAPI) {
+            Animal animal = new Animal(
+                    animalAPI.getId(),
+                    animalAPI.getNombre(),
+                    "Raza desconocida", // TODO: obtener raza de lookup tables
+                    animalAPI.getTipoAnimalId() == 1 ? "PERRO" : "GATO",
+                    animalAPI.getEdadAproximada(),
+                    animalAPI.getRangoEdadId() == 1 ? "CACHORRO" : "ADULTO",
+                    animalAPI.getTamanoId() == 1 ? "PEQUEÑO" : animalAPI.getTamanoId() == 2 ? "MEDIANO" : "GRANDE",
+                    animalAPI.getGeneroId() == 1 ? "MACHO" : "HEMBRA",
+                    animalAPI.getDescripcion(),
+                    fundacionSeleccionada.getNombreFundacion(),
+                    fundacionSeleccionada.getDireccion(),
+                    false, false, animalAPI.isEsterilizado(), false, false,
+                    "",
+                    fundacionSeleccionada.getLatitud(),
+                    fundacionSeleccionada.getLongitud(),
+                    0f
+            );
+            animales.add(animal);
+        }
+        
+        return animales;
+    }
+
+    private void cambiarAVistaAnimales() {
+        mostrandoFundaciones = false;
+        
+        // Cambiar el layout manager para animales (grid)
+        try {
+            GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 2);
+            rvAnimales.setLayoutManager(gridLayoutManager);
+            rvAnimales.setAdapter(animalAdapter);
+            Log.d("AdoptMePortafolio", "Switched to animal adapter");
+        } catch (Exception e) {
+            Log.e("AdoptMePortafolio", "Error switching to animal adapter", e);
+        }
+        
+        // Actualizar el subtítulo
+        tvSubtitle.setText("Animales de " + fundacionSeleccionada.getNombreFundacion());
+        
+        // Mostrar botón de regreso a fundaciones
+        btnRegresar.setText("← Volver a fundaciones");
+        
         updateResultCount();
         showAnimales(animalesFiltrados);
+    }
+
+    private void volverAFundaciones() {
+        mostrandoFundaciones = true;
+        
+        // Cambiar el layout manager para fundaciones (linear)
+        try {
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+            rvAnimales.setLayoutManager(linearLayoutManager);
+            rvAnimales.setAdapter(fundacionAdapter);
+            Log.d("AdoptMePortafolio", "Switched to foundation adapter");
+        } catch (Exception e) {
+            Log.e("AdoptMePortafolio", "Error switching to foundation adapter", e);
+        }
+        
+        // Restaurar el subtítulo
+        tvSubtitle.setText("Primero selecciona una fundación");
+        
+        // Restaurar botón de regreso
+        btnRegresar.setText("← Regresar");
+        
+        updateResultCount();
+        showFundaciones(fundacionesFiltradas);
+    }
+
+    private void showFundaciones(List<Fundacion> fundaciones) {
+        Log.d("AdoptMePortafolio", "showFundaciones called with " + fundaciones.size() + " items");
+        
+        if (fundaciones.isEmpty()) {
+            Log.d("AdoptMePortafolio", "No foundations, showing empty state");
+            animateEmptyState(true);
+            animateRecyclerView(false);
+        } else {
+            Log.d("AdoptMePortafolio", "Showing foundations, hiding empty state");
+            animateEmptyState(false);
+            animateRecyclerView(true);
+            
+            // Ensure RecyclerView is properly set up
+            rvAnimales.setVisibility(View.VISIBLE);
+            fundacionAdapter.setFundaciones(fundaciones);
+            
+            Log.d("AdoptMePortafolio", "Adapter item count: " + fundacionAdapter.getItemCount());
+            Log.d("AdoptMePortafolio", "RecyclerView visibility: " + rvAnimales.getVisibility());
+        }
     }
 
     private void showAnimales(List<Animal> animales) {
@@ -484,7 +992,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         } else {
             animateEmptyState(false);
             animateRecyclerView(true);
-            adapter.setAnimales(animales);
+            animalAdapter.setAnimales(animales);
         }
     }
 
@@ -604,14 +1112,10 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                 .setTitle("Iniciar proceso de adopción")
                 .setMessage("¿Deseas iniciar el proceso de adopción de " + animal.getNombre() + "?")
                 .setPositiveButton("Sí, continuar", (dialog, which) -> {
-                    // Aquí iría la navegación a la actividad de adopción
-                    Snackbar.make(contentContainer,
-                                    "Proceso de adopción iniciado",
-                                    Snackbar.LENGTH_LONG)
-                            .setAction("Ver detalles", v -> {
-                                // Navegar a detalles de adopción
-                            })
-                            .show();
+                    Intent intent = new Intent(AdoptMePortafolioActivity.this, ProcesarAdopcionActivity.class);
+                    intent.putExtra("animal_id", animal.getId());
+                    intent.putExtra("animal_nombre", animal.getNombre());
+                    startActivity(intent);
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();

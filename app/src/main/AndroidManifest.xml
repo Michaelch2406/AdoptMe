@@ -20,6 +20,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AdoptMe">
         <activity
+            android:name=".ProcesarAdopcionActivity"
+            android:exported="false" />
+        <activity
             android:name=".AdoptMePortafolioActivity"
             android:exported="false" />
         <activity

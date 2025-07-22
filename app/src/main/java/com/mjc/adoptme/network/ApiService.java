@@ -1,15 +1,19 @@
 package com.mjc.adoptme.network;
 
+import com.mjc.adoptme.models.AdopcionResponse;
+import com.mjc.adoptme.models.AnimalAPI;
 import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.Ciudad;
 import com.mjc.adoptme.models.DatosPersonalesData;
 import com.mjc.adoptme.models.Domicilio;
+import com.mjc.adoptme.models.Fundacion;
 import com.mjc.adoptme.models.LoginRequest;
 import com.mjc.adoptme.models.Pais;
 import com.mjc.adoptme.models.Parroquia;
 import com.mjc.adoptme.models.Provincia;
 import com.mjc.adoptme.models.ReferenciaPersonal;
 import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.SolicitudAdopcion;
 import com.mjc.adoptme.models.TipoAnimal;
 import com.mjc.adoptme.models.UpdateDataRequest;
 import com.mjc.adoptme.models.UserData;
@@ -73,4 +77,14 @@ public interface ApiService {
 
     @GET("v1/tipos-animales")
     Call<ApiResponse<List<TipoAnimal>>> getTiposAnimales();
+
+    // --- ADOPCIÓN ---
+    @GET("v1/fundaciones-cercanas")
+    Call<ApiResponse<List<Fundacion>>> getFundacionesCercanas(@Query("lat") double latitud, @Query("lng") double longitud);
+
+    @GET("v1/animales-por-fundacion")
+    Call<ApiResponse<List<AnimalAPI>>> getAnimalesPorFundacion(@Query("ruc") String ruc);
+
+    @POST("v1/solicitarAdopcion")
+    Call<ApiResponse<AdopcionResponse>> solicitarAdopcion(@Body SolicitudAdopcion solicitud);
 }

@@ -29,7 +29,7 @@ public class PanelActivity extends AppCompatActivity {
     private ImageView ivUserAvatar, ivLogoPet;
     private TextView tvUserName, tvGreeting, tvDate;
     private LinearLayout cardsContainer;
-    private MaterialCardView cardPerfil, cardAdopciones, cardFundaciones, cardPortafolio;
+    private MaterialCardView cardPerfil, cardAdopciones, cardPortafolio;
     private LinearLayout statsContainer;
     private TextView tvTotalAdopciones, tvEnProceso, tvCompletadas;
     private TextView tvLogout;
@@ -83,7 +83,6 @@ public class PanelActivity extends AppCompatActivity {
         cardsContainer = findViewById(R.id.cardsContainer);
         cardPerfil = findViewById(R.id.cardPerfil);
         cardAdopciones = findViewById(R.id.cardAdopciones);
-        cardFundaciones = findViewById(R.id.cardFundaciones);
         cardPortafolio = findViewById(R.id.cardPortafolio);
         statsContainer = findViewById(R.id.statsContainer);
         tvTotalAdopciones = findViewById(R.id.tvTotalAdopciones);
@@ -150,14 +149,6 @@ public class PanelActivity extends AppCompatActivity {
             }
         });
 
-        cardFundaciones.setOnClickListener(v -> {
-            if (!isAnimating) {
-                animateCardClick(v);
-                Intent intent = new Intent(PanelActivity.this, FundacionesActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
-            }
-        });
 
         cardPortafolio.setOnClickListener(v -> {
             if (!isAnimating) {
@@ -265,7 +256,7 @@ public class PanelActivity extends AppCompatActivity {
         containerAnimator.setDuration(600);
         containerAnimator.setStartDelay(600);
         containerAnimator.start();
-        MaterialCardView[] cards = {cardPerfil, cardAdopciones, cardFundaciones, cardPortafolio};
+        MaterialCardView[] cards = {cardPerfil, cardAdopciones, cardPortafolio};
         for (int i = 0; i < cards.length; i++) {
             animateIndividualCard(cards[i], i * 100 + 800);
         }
