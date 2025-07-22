@@ -30,6 +30,15 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+import com.mjc.adoptme.data.SessionManager;
+import com.mjc.adoptme.models.AdopcionUsuario;
+import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.network.ApiService;
+import com.mjc.adoptme.network.RetrofitClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -51,9 +60,12 @@ public class MisAdopcionesActivity extends AppCompatActivity {
 
     // Adapter
     private AdopcionesAdapter adapter;
-    private List<Adopcion> adopcionesEnProceso;
-    private List<Adopcion> adopcionesHistorial;
-    private List<Adopcion> adopcionesCanceladas;
+    private List<AdopcionUsuario> adopcionesEnProceso;
+    private List<AdopcionUsuario> adopcionesHistorial;
+    private List<AdopcionUsuario> adopcionesCanceladas;
+    private List<AdopcionUsuario> todasLasAdopciones;
+    
+    private SessionManager sessionManager;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -62,6 +74,7 @@ public class MisAdopcionesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mis_adopciones);
 
+        sessionManager = new SessionManager(this);
         initViews();
         setupRecyclerView();
         setupClickListeners();
@@ -147,69 +160,113 @@ public class MisAdopcionesActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        // Simulación de datos - En producción vendría de una base de datos
+        String cedula = sessionManager.getCedula();
+        if (cedula == null) {
+            showEmptyState();
+            return;
+        }
+
+        ApiService apiService = RetrofitClient.getApiService();
+        Call<ApiResponse<List<AdopcionUsuario>>> call = apiService.getAdopcionesPorUsuario(cedula);
+
+        call.enqueue(new Callback<ApiResponse<List<AdopcionUsuario>>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<List<AdopcionUsuario>>> call, Response<ApiResponse<List<AdopcionUsuario>>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<AdopcionUsuario> adopciones = response.body().getData();
+                    if (adopciones != null) {
+                        processAdopciones(adopciones);
+                    } else {
+                        initializeEmptyLists();
+                        showEmptyState();
+                    }
+                } else {
+                    initializeEmptyLists();
+                    Snackbar.make(findViewById(android.R.id.content), 
+                            "Error al cargar adopciones", Snackbar.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<List<AdopcionUsuario>>> call, Throwable t) {
+                initializeEmptyLists();
+                Snackbar.make(findViewById(android.R.id.content), 
+                        "Error de conexión", Snackbar.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void processAdopciones(List<AdopcionUsuario> adopciones) {
+        todasLasAdopciones = adopciones;
         adopcionesEnProceso = new ArrayList<>();
         adopcionesHistorial = new ArrayList<>();
         adopcionesCanceladas = new ArrayList<>();
 
-        // Datos de ejemplo - En Proceso
-        adopcionesEnProceso.add(new Adopcion(
-                1, "Max", "Golden Retriever",
-                "En revisión de documentos",
-                "2024-03-15", null,
-                EstadoAdopcion.EN_PROCESO,
-                "Tu solicitud está siendo revisada por nuestro equipo."
-        ));
-
-        adopcionesEnProceso.add(new Adopcion(
-                2, "Luna", "Gato Siamés",
-                "Esperando visita domiciliaria",
-                "2024-03-10", null,
-                EstadoAdopcion.EN_PROCESO,
-                "Próxima visita programada para el 20 de marzo."
-        ));
-
-        // Datos de ejemplo - Historial
-        adopcionesHistorial.add(new Adopcion(
-                3, "Rocky", "Bulldog Francés",
-                "Adopción completada",
-                "2024-01-05", "2024-02-01",
-                EstadoAdopcion.COMPLETADA,
-                "¡Felicidades! Rocky encontró su hogar."
-        ));
-
-        // Datos de ejemplo - Canceladas
-        adopcionesCanceladas.add(new Adopcion(
-                4, "Bella", "Pastor Alemán",
-                "Cancelada por el usuario",
-                "2024-02-20", "2024-02-25",
-                EstadoAdopcion.CANCELADA,
-                "Adopción cancelada a petición del solicitante."
-        ));
+        for (AdopcionUsuario adopcion : adopciones) {
+            String estado = adopcion.getEstado();
+            switch (estado) {
+                case "SOLICITADA":
+                case "EN_REVISION":
+                case "EN_ESPERA":
+                case "APROBADA":
+                    adopcionesEnProceso.add(adopcion);
+                    break;
+                case "COMPLETADA":
+                    adopcionesHistorial.add(adopcion);
+                    break;
+                case "RECHAZADA":
+                case "CANCELADA":
+                case "DEVUELTA":
+                    adopcionesCanceladas.add(adopcion);
+                    break;
+            }
+        }
 
         // Mostrar adopciones en proceso por defecto
         chipEnProceso.setChecked(true);
         showAdopciones(adopcionesEnProceso);
     }
 
-    private void showAdopciones(List<Adopcion> adopciones) {
+    private void initializeEmptyLists() {
+        todasLasAdopciones = new ArrayList<>();
+        adopcionesEnProceso = new ArrayList<>();
+        adopcionesHistorial = new ArrayList<>();
+        adopcionesCanceladas = new ArrayList<>();
+    }
+
+    private void showEmptyState() {
+        initializeEmptyLists();
+        chipEnProceso.setChecked(true);
+        showAdopciones(adopcionesEnProceso);
+    }
+
+    private void showAdopciones(List<AdopcionUsuario> adopciones) {
         if (adopciones.isEmpty()) {
             animateEmptyState(true);
             animateRecyclerView(false);
         } else {
             animateEmptyState(false);
             animateRecyclerView(true);
+            
+            // Ensure RecyclerView is properly set up
+            rvAdopciones.setVisibility(View.VISIBLE);
             adapter.setAdopciones(adopciones);
+            adapter.notifyDataSetChanged();
         }
     }
 
     private void animateEmptyState(boolean show) {
+        // Clear any existing animations to avoid conflicts
+        emptyStateContainer.animate().cancel();
+        emptyStateContainer.clearAnimation();
+        
         if (show) {
             emptyStateContainer.setVisibility(View.VISIBLE);
             emptyStateContainer.setAlpha(0f);
             emptyStateContainer.animate()
                     .alpha(1f)
                     .setDuration(300)
+                    .setListener(null)
                     .start();
         } else {
             emptyStateContainer.animate()
@@ -226,12 +283,17 @@ public class MisAdopcionesActivity extends AppCompatActivity {
     }
 
     private void animateRecyclerView(boolean show) {
+        // Clear any existing animations to avoid conflicts
+        rvAdopciones.animate().cancel();
+        rvAdopciones.clearAnimation();
+        
         if (show) {
             rvAdopciones.setVisibility(View.VISIBLE);
             rvAdopciones.setAlpha(0f);
             rvAdopciones.animate()
                     .alpha(1f)
                     .setDuration(300)
+                    .setListener(null) // Clear any previous listeners
                     .start();
         } else {
             rvAdopciones.animate()
@@ -247,7 +309,7 @@ public class MisAdopcionesActivity extends AppCompatActivity {
         }
     }
 
-    private void showAdopcionDetail(Adopcion adopcion) {
+    private void showAdopcionDetail(AdopcionUsuario adopcion) {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_adopcion_detail, null);
 
         TextView tvMascotaNombre = dialogView.findViewById(R.id.tvMascotaNombre);
@@ -258,35 +320,28 @@ public class MisAdopcionesActivity extends AppCompatActivity {
         TextView tvDetalles = dialogView.findViewById(R.id.tvDetalles);
         LinearLayout layoutFechaResolucion = dialogView.findViewById(R.id.layoutFechaResolucion);
 
-        tvMascotaNombre.setText(adopcion.getNombreMascota());
-        tvMascotaRaza.setText(adopcion.getRaza());
-        tvEstado.setText(adopcion.getEstadoDescripcion());
-        tvFechaSolicitud.setText("Fecha de solicitud: " + adopcion.getFechaSolicitud());
-        tvDetalles.setText(adopcion.getDetalles());
+        tvMascotaNombre.setText(adopcion.getNombreAnimal());
+        tvMascotaRaza.setText(""); // No hay raza en el modelo actual
+        tvEstado.setText(adopcion.getEstadoDisplayText());
+        tvFechaSolicitud.setText("Fecha de solicitud: " + formatearFecha(adopcion.getFechaSolicitud()));
+        
+        // Mostrar detalles según el estado
+        String detalles = getDetallesSegunEstado(adopcion);
+        tvDetalles.setText(detalles);
 
-        if (adopcion.getFechaResolucion() != null) {
+        // Mostrar fecha relevante según el estado
+        String fechaRelevante = adopcion.getFechaRelevante();
+        if (fechaRelevante != null && !fechaRelevante.equals(adopcion.getFechaSolicitud())) {
             layoutFechaResolucion.setVisibility(View.VISIBLE);
-            tvFechaResolucion.setText("Fecha de resolución: " + adopcion.getFechaResolucion());
+            tvFechaResolucion.setText(getTituloFechaSegunEstado(adopcion.getEstado()) + ": " + formatearFecha(fechaRelevante));
         } else {
             layoutFechaResolucion.setVisibility(View.GONE);
         }
 
-        // Colorear según estado
-        int colorResId;
-        switch (adopcion.getEstado()) {
-            case EN_PROCESO:
-                colorResId = R.color.colorAccent2;
-                break;
-            case COMPLETADA:
-                colorResId = R.color.colorPrimary;
-                break;
-            case CANCELADA:
-                colorResId = R.color.colorAccent3;
-                break;
-            default:
-                colorResId = R.color.black;
-        }
-        tvEstado.setTextColor(ContextCompat.getColor(this, colorResId));
+        // Colorear según estado usando el color del helper
+        String colorHex = adopcion.getEstadoColor();
+        int color = android.graphics.Color.parseColor(colorHex);
+        tvEstado.setTextColor(color);
 
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
                 .setView(dialogView)
@@ -308,11 +363,11 @@ public class MisAdopcionesActivity extends AppCompatActivity {
                 .start();
     }
 
-    private void showCancelDialog(Adopcion adopcion) {
+    private void showCancelDialog(AdopcionUsuario adopcion) {
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Cancelar adopción")
                 .setMessage("¿Estás seguro de que deseas cancelar el proceso de adopción de " +
-                        adopcion.getNombreMascota() + "?")
+                        adopcion.getNombreAnimal() + "?")
                 .setPositiveButton("Sí, cancelar", (dialog, which) -> {
                     cancelarAdopcion(adopcion);
                 })
@@ -320,41 +375,13 @@ public class MisAdopcionesActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void cancelarAdopcion(Adopcion adopcion) {
-        // Animar la eliminación del item
-        int position = adopcionesEnProceso.indexOf(adopcion);
-        if (position != -1) {
-            adopcionesEnProceso.remove(position);
-
-            // Actualizar estado y mover a canceladas
-            adopcion.setEstado(EstadoAdopcion.CANCELADA);
-            adopcion.setEstadoDescripcion("Cancelada por el usuario");
-            adopcion.setFechaResolucion(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date()));
-            adopcionesCanceladas.add(adopcion);
-
-            adapter.notifyItemRemoved(position);
-
-            if (adopcionesEnProceso.isEmpty()) {
-                animateEmptyState(true);
-                animateRecyclerView(false);
-            }
-
-            Snackbar.make(contentContainer, "Adopción cancelada", Snackbar.LENGTH_LONG)
-                    .setAction("Deshacer", v -> {
-                        // Deshacer la cancelación
-                        adopcionesCanceladas.remove(adopcion);
-                        adopcion.setEstado(EstadoAdopcion.EN_PROCESO);
-                        adopcion.setFechaResolucion(null);
-                        adopcionesEnProceso.add(position, adopcion);
-                        adapter.notifyItemInserted(position);
-
-                        if (!adopcionesEnProceso.isEmpty()) {
-                            animateEmptyState(false);
-                            animateRecyclerView(true);
-                        }
-                    })
-                    .show();
-        }
+    private void cancelarAdopcion(AdopcionUsuario adopcion) {
+        // En una implementación completa, aquí se haría una llamada a la API para cancelar
+        // Por ahora, solo mostramos un mensaje informativo
+        
+        Snackbar.make(contentContainer, 
+                "Para cancelar esta adopción, por favor contacta a la fundación.", 
+                Snackbar.LENGTH_LONG).show();
     }
 
     private void startAnimations() {
@@ -444,48 +471,59 @@ public class MisAdopcionesActivity extends AppCompatActivity {
         });
         exitSet.start();
     }
-
-    // Enum para estados
-    enum EstadoAdopcion {
-        EN_PROCESO, COMPLETADA, CANCELADA
-    }
-
-    // Clase modelo Adopcion
-    static class Adopcion {
-        private int id;
-        private String nombreMascota;
-        private String raza;
-        private String estadoDescripcion;
-        private String fechaSolicitud;
-        private String fechaResolucion;
-        private EstadoAdopcion estado;
-        private String detalles;
-
-        public Adopcion(int id, String nombreMascota, String raza, String estadoDescripcion,
-                        String fechaSolicitud, String fechaResolucion, EstadoAdopcion estado,
-                        String detalles) {
-            this.id = id;
-            this.nombreMascota = nombreMascota;
-            this.raza = raza;
-            this.estadoDescripcion = estadoDescripcion;
-            this.fechaSolicitud = fechaSolicitud;
-            this.fechaResolucion = fechaResolucion;
-            this.estado = estado;
-            this.detalles = detalles;
+    
+    // Helper methods
+    private String formatearFecha(String fechaStr) {
+        if (fechaStr == null || fechaStr.isEmpty()) {
+            return "";
         }
-
-        // Getters y setters
-        public int getId() { return id; }
-        public String getNombreMascota() { return nombreMascota; }
-        public String getRaza() { return raza; }
-        public String getEstadoDescripcion() { return estadoDescripcion; }
-        public String getFechaSolicitud() { return fechaSolicitud; }
-        public String getFechaResolucion() { return fechaResolucion; }
-        public EstadoAdopcion getEstado() { return estado; }
-        public String getDetalles() { return detalles; }
-
-        public void setEstado(EstadoAdopcion estado) { this.estado = estado; }
-        public void setEstadoDescripcion(String estadoDescripcion) { this.estadoDescripcion = estadoDescripcion; }
-        public void setFechaResolucion(String fechaResolucion) { this.fechaResolucion = fechaResolucion; }
+        
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            SimpleDateFormat outputFormat = new SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale.getDefault());
+            Date fecha = inputFormat.parse(fechaStr);
+            return fecha != null ? outputFormat.format(fecha) : fechaStr.split(" ")[0];
+        } catch (Exception e) {
+            return fechaStr.split(" ")[0];
+        }
+    }
+    
+    private String getDetallesSegunEstado(AdopcionUsuario adopcion) {
+        switch (adopcion.getEstado()) {
+            case "SOLICITADA":
+                return "Tu solicitud de adopción ha sido enviada y está esperando revisión.";
+            case "EN_REVISION":
+                return "Tu solicitud está siendo revisada por el equipo de la fundación.";
+            case "EN_ESPERA":
+                return "Tu solicitud está en espera de procesamiento.";
+            case "APROBADA":
+                return "¡Felicidades! Tu solicitud ha sido aprobada. Pronto te contactarán para coordinar la entrega.";
+            case "COMPLETADA":
+                return "¡Adopción completada exitosamente! Gracias por darle un hogar a esta mascota.";
+            case "RECHAZADA":
+                return "Tu solicitud ha sido rechazada. Puedes intentar con otra mascota.";
+            case "CANCELADA":
+                return "Esta adopción ha sido cancelada.";
+            case "DEVUELTA":
+                return "La mascota ha sido devuelta a la fundación.";
+            default:
+                return "Estado de adopción: " + adopcion.getEstadoDisplayText();
+        }
+    }
+    
+    private String getTituloFechaSegunEstado(String estado) {
+        switch (estado) {
+            case "APROBADA":
+                return "Fecha de aprobación";
+            case "COMPLETADA":
+                return "Fecha de completado";
+            case "RECHAZADA":
+            case "CANCELADA":
+                return "Fecha de cancelación";
+            case "DEVUELTA":
+                return "Fecha de devolución";
+            default:
+                return "Fecha de actualización";
+        }
     }
 }

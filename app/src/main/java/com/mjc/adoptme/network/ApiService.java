@@ -1,6 +1,7 @@
 package com.mjc.adoptme.network;
 
 import com.mjc.adoptme.models.AdopcionResponse;
+import com.mjc.adoptme.models.AdopcionUsuario;
 import com.mjc.adoptme.models.AnimalAPI;
 import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.Ciudad;
@@ -87,4 +88,7 @@ public interface ApiService {
 
     @POST("v1/solicitarAdopcion")
     Call<ApiResponse<AdopcionResponse>> solicitarAdopcion(@Body SolicitudAdopcion solicitud);
+    
+    @GET("v1/adoptions/by-user-app/{cedula}")
+    Call<ApiResponse<List<AdopcionUsuario>>> getAdopcionesPorUsuario(@Path("cedula") String cedula);
 }

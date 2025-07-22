@@ -123,7 +123,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                android:hint="Buscar mascota por nombre o raza..."
+                android:hint="Buscar fundación por nombre..."
                 app:boxStrokeColor="@color/colorPrimary"
                 app:endIconMode="clear_text"
                 app:endIconTint="@color/colorPrimary"
@@ -140,94 +140,6 @@
                     android:textColorHint="@color/colorPrimary" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:scrollbars="none">
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:selectionRequired="true"
-                    app:singleSelection="true">
-
-                    <!-- ESTOS CHIPS FALTABAN -->
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipTodos"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Todos"
-                        android:textColor="@color/chip_text_color"
-                        app:chipBackgroundColor="@color/chip_state_list"
-                        app:chipIcon="@drawable/ic_pets"
-                        app:chipStrokeColor="@color/colorPrimary"
-                        app:chipStrokeWidth="1dp"
-                        app:checkedIconVisible="false" />
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipPerros"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Perros"
-                        android:textColor="@color/chip_text_color"
-                        app:chipBackgroundColor="@color/chip_state_list"
-                        app:chipIcon="@drawable/ic_dog"
-                        app:chipStrokeColor="@color/colorPrimary"
-                        app:chipStrokeWidth="1dp"
-                        app:checkedIconVisible="false" />
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipGatos"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Gatos"
-                        android:textColor="@color/chip_text_color"
-                        app:chipBackgroundColor="@color/chip_state_list"
-                        app:chipIcon="@drawable/ic_cat"
-                        app:chipStrokeColor="@color/colorPrimary"
-                        app:chipStrokeWidth="1dp"
-                        app:checkedIconVisible="false" />
-
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
-                android:scrollbars="none">
-                <com.google.android.material.chip.ChipGroup
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:singleSelection="false">
-
-                    <!-- ESTOS CHIPS FALTABAN -->
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipCachorros"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cachorros"
-                        android:textColor="@color/chip_text_color"
-                        app:chipBackgroundColor="@color/chip_state_list"
-                        app:chipStrokeColor="@color/colorAccent1"
-                        app:chipStrokeWidth="1dp"
-                        app:checkedIconVisible="true" />
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chipAdultos"
-                        style="@style/Widget.MaterialComponents.Chip.Filter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Adultos"
-                        android:textColor="@color/chip_text_color"
-                        app:chipBackgroundColor="@color/chip_state_list"
-                        app:chipStrokeColor="@color/colorAccent2"
-                        app:chipStrokeWidth="1dp"
-                        app:checkedIconVisible="true" />
-
-                </com.google.android.material.chip.ChipGroup>
-            </HorizontalScrollView>
 
             <TextView
                 android:id="@+id/tvResultCount"

@@ -85,8 +85,6 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     private TextInputLayout tilBuscar;
     private TextInputEditText etBuscar;
 
-    // Chips para filtros rápidos
-    private Chip chipTodos, chipPerros, chipGatos, chipCachorros, chipAdultos;
 
     // Adapter y listas
     private AnimalesPortafolioAdapter animalAdapter;
@@ -156,11 +154,6 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         rvAnimales = findViewById(R.id.rvAnimales);
         tilBuscar = findViewById(R.id.tilBuscar);
         etBuscar = findViewById(R.id.etBuscar);
-        chipTodos = findViewById(R.id.chipTodos);
-        chipPerros = findViewById(R.id.chipPerros);
-        chipGatos = findViewById(R.id.chipGatos);
-        chipCachorros = findViewById(R.id.chipCachorros);
-        chipAdultos = findViewById(R.id.chipAdultos);
 
         // Estado inicial de vistas
         logoContainer.setAlpha(0f);
@@ -215,63 +208,8 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         });
         fabFilter.setOnClickListener(v -> showAdvancedFilters());
 
-        chipTodos.setOnClickListener(v -> {
-            selectTipoChip(chipTodos);
-            filtroTipo = "TODOS";
-            applyFilters();
-        });
-
-        chipPerros.setOnClickListener(v -> {
-            selectTipoChip(chipPerros);
-            filtroTipo = "PERRO";
-            applyFilters();
-        });
-
-        chipGatos.setOnClickListener(v -> {
-            selectTipoChip(chipGatos);
-            filtroTipo = "GATO";
-            applyFilters();
-        });
-
-        chipCachorros.setOnClickListener(v -> {
-            selectEdadChip(chipCachorros);
-            filtroEdad = "CACHORRO";
-            applyFilters();
-        });
-
-        chipAdultos.setOnClickListener(v -> {
-            selectEdadChip(chipAdultos);
-            filtroEdad = "ADULTO";
-            applyFilters();
-        });
     }
 
-    private void selectTipoChip(Chip selectedChip) {
-        chipTodos.setChecked(selectedChip == chipTodos);
-        chipPerros.setChecked(selectedChip == chipPerros);
-        chipGatos.setChecked(selectedChip == chipGatos);
-
-        animateChipSelection(selectedChip);
-    }
-
-    private void selectEdadChip(Chip selectedChip) {
-        if (selectedChip.isChecked()) {
-            // Si ya está seleccionado, deseleccionar
-            selectedChip.setChecked(false);
-            filtroEdad = "TODOS";
-        } else {
-            // Deseleccionar el otro chip
-            chipCachorros.setChecked(selectedChip == chipCachorros);
-            chipAdultos.setChecked(selectedChip == chipAdultos);
-        }
-
-        animateChipSelection(selectedChip);
-    }
-
-    private void animateChipSelection(Chip chip) {
-        ObjectAnimator.ofFloat(chip, "scaleX", 1f, 1.1f, 1f).setDuration(200).start();
-        ObjectAnimator.ofFloat(chip, "scaleY", 1f, 1.1f, 1f).setDuration(200).start();
-    }
 
     private void setupSearchFilter() {
         etBuscar.addTextChangedListener(new TextWatcher() {
@@ -605,6 +543,64 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void showAdvancedFilters() {
+        if (mostrandoFundaciones) {
+            showFundacionesAdvancedFilters();
+        } else {
+            showAnimalesAdvancedFilters();
+        }
+    }
+
+    private void showFundacionesAdvancedFilters() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_filtros_avanzados, null);
+
+        RangeSlider sliderDistancia = dialogView.findViewById(R.id.sliderDistancia);
+        TextView tvDistanciaValue = dialogView.findViewById(R.id.tvDistanciaValue);
+        Spinner spinnerTamaño = dialogView.findViewById(R.id.spinnerTamaño);
+        Spinner spinnerSexo = dialogView.findViewById(R.id.spinnerSexo);
+
+        // Configurar slider de distancia (máximo 50km para fundaciones)
+        sliderDistancia.setValueTo(50f);
+        sliderDistancia.setValues(Math.min(distanciaMaxima, 50f));
+        tvDistanciaValue.setText(String.format(Locale.getDefault(), "%.0f km", Math.min(distanciaMaxima, 50f)));
+
+        sliderDistancia.addOnChangeListener((slider, value, fromUser) -> {
+            tvDistanciaValue.setText(String.format(Locale.getDefault(), "%.0f km", value));
+        });
+
+        // Ocultar spinners que no aplican para fundaciones
+        spinnerTamaño.setVisibility(View.GONE);
+        spinnerSexo.setVisibility(View.GONE);
+
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this)
+                .setTitle("Filtros de fundaciones")
+                .setView(dialogView)
+                .setPositiveButton("Aplicar", (dialog, which) -> {
+                    distanciaMaxima = Math.min(sliderDistancia.getValues().get(0), 50f);
+                    applyFilters();
+                })
+                .setNegativeButton("Cancelar", null)
+                .setNeutralButton("Restablecer", (dialog, which) -> {
+                    distanciaMaxima = 50f;
+                    applyFilters();
+                });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Animar entrada del diálogo
+        dialogView.setScaleX(0.8f);
+        dialogView.setScaleY(0.8f);
+        dialogView.setAlpha(0f);
+        dialogView.animate()
+                .scaleX(1f)
+                .scaleY(1f)
+                .alpha(1f)
+                .setDuration(300)
+                .setInterpolator(new DecelerateInterpolator())
+                .start();
+    }
+
+    private void showAnimalesAdvancedFilters() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_filtros_avanzados, null);
 
         RangeSlider sliderDistancia = dialogView.findViewById(R.id.sliderDistancia);
@@ -841,75 +837,31 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     } else {
                         // API respondió pero sin datos
+                        fundacionesCompletas = new ArrayList<>();
+                        fundacionesFiltradas = new ArrayList<>();
+                        showFundaciones(fundacionesFiltradas);
                         Toast.makeText(AdoptMePortafolioActivity.this, 
-                                "No se encontraron fundaciones cercanas. Mostrando datos de ejemplo.", 
+                                "No se encontraron fundaciones cercanas.", 
                                 Toast.LENGTH_LONG).show();
-                        loadMockFundaciones();
                     }
                 } else {
                     // Error en la respuesta
                     Toast.makeText(AdoptMePortafolioActivity.this, 
-                            "Error al obtener fundaciones. Mostrando datos de ejemplo.", 
+                            "Error al obtener fundaciones. Por favor intenta nuevamente.", 
                             Toast.LENGTH_LONG).show();
-                    loadMockFundaciones();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<Fundacion>>> call, Throwable t) {
-                // En caso de error de conexión, usar datos mock
+                // En caso de error de conexión
                 Toast.makeText(AdoptMePortafolioActivity.this, 
-                        "Sin conexión. Mostrando fundaciones de ejemplo.", 
+                        "Error de conexión. Por favor verifica tu conexión a internet.", 
                         Toast.LENGTH_LONG).show();
-                loadMockFundaciones();
             }
         });
     }
 
-    private void loadMockFundaciones() {
-        fundacionesCompletas = new ArrayList<>();
-        
-        // Usar ubicación base (actual o por defecto)
-        double baseLat = ubicacionActual != null ? ubicacionActual.getLatitude() : -0.1807;
-        double baseLng = ubicacionActual != null ? ubicacionActual.getLongitude() : -78.4678;
-        
-        // Generar fundaciones cerca de la ubicación actual
-        fundacionesCompletas.add(new Fundacion(
-                "Fundación Patitas Felices",
-                "1792123456001",
-                "Sucursal Principal",
-                "Av. Simón Bolívar y Galo Plaza Lasso",
-                baseLat + 0.01, baseLng + 0.01, 12
-        ));
-
-        fundacionesCompletas.add(new Fundacion(
-                "Refugio Animal Esperanza",
-                "1792123456002",
-                "Sucursal Norte",
-                "Calle Rafael Ramos y 10 de Agosto",
-                baseLat - 0.015, baseLng + 0.02, 8
-        ));
-
-        fundacionesCompletas.add(new Fundacion(
-                "Protectora de Animales Unidos",
-                "1792123456003",
-                "Sucursal Central",
-                "Av. América y República",
-                baseLat + 0.02, baseLng - 0.01, 15
-        ));
-
-        fundacionesCompletas.add(new Fundacion(
-                "Centro de Rescate Huellitas",
-                "1792123456004",
-                "Sucursal Sur",
-                "Av. Quitumbe y Morán Valverde",
-                baseLat - 0.01, baseLng - 0.015, 6
-        ));
-
-        fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
-        updateResultCount();
-        showFundaciones(fundacionesFiltradas);
-    }
 
     private void loadAnimalsPorFundacion(String ruc) {
         mostrandoFundaciones = false;
@@ -932,82 +884,31 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     } else {
                         // API respondió pero sin animales
+                        animalesCompletos = new ArrayList<>();
+                        animalesFiltrados = new ArrayList<>();
+                        cambiarAVistaAnimales();
                         Toast.makeText(AdoptMePortafolioActivity.this, 
-                                "Esta fundación no tiene animales disponibles actualmente. Mostrando ejemplos.", 
+                                "Esta fundación no tiene animales disponibles actualmente.", 
                                 Toast.LENGTH_LONG).show();
-                        loadMockAnimales();
                     }
                 } else {
                     // Error en la respuesta
                     Toast.makeText(AdoptMePortafolioActivity.this, 
-                            "Error al obtener animales. Mostrando datos de ejemplo.", 
+                            "Error al obtener animales. Por favor intenta nuevamente.", 
                             Toast.LENGTH_LONG).show();
-                    loadMockAnimales();
                 }
             }
 
             @Override
             public void onFailure(Call<ApiResponse<List<AnimalAPI>>> call, Throwable t) {
-                // En caso de error de conexión, usar datos mock
+                // En caso de error de conexión
                 Toast.makeText(AdoptMePortafolioActivity.this, 
-                        "Sin conexión. Mostrando animales de ejemplo.", 
+                        "Error de conexión. Por favor verifica tu conexión a internet.", 
                         Toast.LENGTH_LONG).show();
-                loadMockAnimales();
             }
         });
     }
 
-    private void loadMockAnimales() {
-        animalesCompletos = new ArrayList<>();
-        
-        String fundacionNombre = fundacionSeleccionada != null ? fundacionSeleccionada.getNombreFundacion() : "Fundación Ejemplo";
-        String fundacionDireccion = fundacionSeleccionada != null ? fundacionSeleccionada.getDireccion() : "Dirección no disponible";
-        double lat = fundacionSeleccionada != null ? fundacionSeleccionada.getLatitud() : -0.1807;
-        double lng = fundacionSeleccionada != null ? fundacionSeleccionada.getLongitud() : -78.4678;
-        
-        animalesCompletos.add(new Animal(
-                1, "Max", "Golden Retriever", "PERRO", 24, "ADULTO",
-                "GRANDE", "MACHO", "Muy amigable y juguetón. Le encanta correr y jugar con niños. Está completamente vacunado y busca una familia amorosa.",
-                fundacionNombre, fundacionDireccion,
-                true, true, true, true, false,
-                "", lat, lng, 0f
-        ));
-
-        animalesCompletos.add(new Animal(
-                2, "Luna", "Siamés", "GATO", 8, "CACHORRO",
-                "PEQUEÑO", "HEMBRA", "Gatita cariñosa y tranquila. Ideal para departamentos. Muy sociable y le gusta jugar.",
-                fundacionNombre, fundacionDireccion,
-                true, false, true, true, false,
-                "", lat, lng, 0f
-        ));
-
-        animalesCompletos.add(new Animal(
-                3, "Rocky", "Mestizo", "PERRO", 36, "ADULTO",
-                "MEDIANO", "MACHO", "Perro guardián muy leal y protector. Excelente con niños y busca un hogar con patio.",
-                fundacionNombre, fundacionDireccion,
-                true, true, false, true, false,
-                "", lat, lng, 0f
-        ));
-
-        animalesCompletos.add(new Animal(
-                4, "Mimi", "Angora", "GATO", 18, "ADULTO",
-                "PEQUEÑO", "HEMBRA", "Gata adulta muy tranquila y cariñosa. Perfecta para personas que buscan compañía silenciosa.",
-                fundacionNombre, fundacionDireccion,
-                true, false, true, false, true,
-                "", lat, lng, 0f
-        ));
-
-        animalesCompletos.add(new Animal(
-                5, "Bruno", "Labrador", "PERRO", 48, "ADULTO",
-                "GRANDE", "MACHO", "Perro adulto con mucha energía. Necesita ejercicio diario y espacio para correr. Muy obediente.",
-                fundacionNombre, fundacionDireccion,
-                true, true, true, true, false,
-                "", lat, lng, 0f
-        ));
-
-        animalesFiltrados = new ArrayList<>(animalesCompletos);
-        cambiarAVistaAnimales();
-    }
 
     private List<Animal> convertirAnimales(List<AnimalAPI> animalesAPI) {
         List<Animal> animales = new ArrayList<>();
@@ -1063,12 +964,23 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     private void volverAFundaciones() {
         mostrandoFundaciones = true;
         
+        // Clear any ongoing animations first
+        rvAnimales.animate().cancel();
+        rvAnimales.clearAnimation();
+        rvAnimales.setVisibility(View.VISIBLE);
+        rvAnimales.setAlpha(1f);
+        
         // Cambiar el layout manager para fundaciones (linear)
         try {
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
             rvAnimales.setLayoutManager(linearLayoutManager);
             rvAnimales.setAdapter(fundacionAdapter);
-            Log.d("AdoptMePortafolio", "Switched to foundation adapter");
+            
+            // Force refresh the adapter data
+            fundacionAdapter.setFundaciones(fundacionesFiltradas);
+            fundacionAdapter.notifyDataSetChanged();
+            
+            Log.d("AdoptMePortafolio", "Switched to foundation adapter with " + fundacionesFiltradas.size() + " items");
         } catch (Exception e) {
             Log.e("AdoptMePortafolio", "Error switching to foundation adapter", e);
         }
@@ -1098,6 +1010,10 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
             // Ensure RecyclerView is properly set up
             rvAnimales.setVisibility(View.VISIBLE);
             fundacionAdapter.setFundaciones(fundaciones);
+            fundacionAdapter.notifyDataSetChanged();
+            
+            // Ensure the RecyclerView updates its layout
+            rvAnimales.post(() -> rvAnimales.requestLayout());
             
             Log.d("AdoptMePortafolio", "Adapter item count: " + fundacionAdapter.getItemCount());
             Log.d("AdoptMePortafolio", "RecyclerView visibility: " + rvAnimales.getVisibility());
@@ -1138,12 +1054,17 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void animateRecyclerView(boolean show) {
+        // Clear any existing animations to avoid conflicts
+        rvAnimales.animate().cancel();
+        rvAnimales.clearAnimation();
+        
         if (show) {
             rvAnimales.setVisibility(View.VISIBLE);
             rvAnimales.setAlpha(0f);
             rvAnimales.animate()
                     .alpha(1f)
                     .setDuration(300)
+                    .setListener(null) // Clear any previous listeners
                     .start();
         } else {
             rvAnimales.animate()

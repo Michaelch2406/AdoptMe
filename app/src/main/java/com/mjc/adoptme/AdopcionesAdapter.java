@@ -15,22 +15,27 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
+import com.mjc.adoptme.models.AdopcionUsuario;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class AdopcionesAdapter extends RecyclerView.Adapter<AdopcionesAdapter.AdopcionViewHolder> {
 
-    private List<MisAdopcionesActivity.Adopcion> adopciones = new ArrayList<>();
+    private List<AdopcionUsuario> adopciones = new ArrayList<>();
     private OnItemClickListener onItemClickListener;
     private OnCancelClickListener onCancelClickListener;
 
     public interface OnItemClickListener {
-        void onItemClick(MisAdopcionesActivity.Adopcion adopcion);
+        void onItemClick(AdopcionUsuario adopcion);
     }
 
     public interface OnCancelClickListener {
-        void onCancelClick(MisAdopcionesActivity.Adopcion adopcion);
+        void onCancelClick(AdopcionUsuario adopcion);
     }
 
     public void setOnItemClickListener(OnItemClickListener listener) {
@@ -41,7 +46,7 @@ public class AdopcionesAdapter extends RecyclerView.Adapter<AdopcionesAdapter.Ad
         this.onCancelClickListener = listener;
     }
 
-    public void setAdopciones(List<MisAdopcionesActivity.Adopcion> adopciones) {
+    public void setAdopciones(List<AdopcionUsuario> adopciones) {
         this.adopciones = adopciones;
         notifyDataSetChanged();
     }
@@ -56,7 +61,7 @@ public class AdopcionesAdapter extends RecyclerView.Adapter<AdopcionesAdapter.Ad
 
     @Override
     public void onBindViewHolder(@NonNull AdopcionViewHolder holder, int position) {
-        MisAdopcionesActivity.Adopcion adopcion = adopciones.get(position);
+        AdopcionUsuario adopcion = adopciones.get(position);
         holder.bind(adopcion);
 
         // Animación de entrada
@@ -101,40 +106,24 @@ public class AdopcionesAdapter extends RecyclerView.Adapter<AdopcionesAdapter.Ad
             viewStatusIndicator = itemView.findViewById(R.id.viewStatusIndicator);
         }
 
-        public void bind(MisAdopcionesActivity.Adopcion adopcion) {
-            tvNombreMascota.setText(adopcion.getNombreMascota());
-            tvRaza.setText(adopcion.getRaza());
-            tvEstado.setText(adopcion.getEstadoDescripcion());
-            tvFecha.setText(adopcion.getFechaSolicitud());
+        public void bind(AdopcionUsuario adopcion) {
+            tvNombreMascota.setText(adopcion.getNombreAnimal());
+            tvRaza.setText(""); // No hay raza en el modelo actual, podría agregarse después
+            tvEstado.setText(adopcion.getEstadoDisplayText());
+            tvFecha.setText(formatFecha(adopcion.getFechaRelevante()));
 
-            // Configurar colores según estado
-            int colorResId;
-            int pawColorResId;
-            switch (adopcion.getEstado()) {
-                case EN_PROCESO:
-                    colorResId = R.color.colorAccent2;
-                    pawColorResId = R.color.colorAccent1;
-                    btnCancelar.setVisibility(View.VISIBLE);
-                    break;
-                case COMPLETADA:
-                    colorResId = R.color.colorPrimary;
-                    pawColorResId = R.color.colorPrimary;
-                    btnCancelar.setVisibility(View.GONE);
-                    break;
-                case CANCELADA:
-                    colorResId = R.color.colorAccent3;
-                    pawColorResId = R.color.colorAccent3;
-                    btnCancelar.setVisibility(View.GONE);
-                    break;
-                default:
-                    colorResId = R.color.black;
-                    pawColorResId = R.color.black;
-                    btnCancelar.setVisibility(View.GONE);
-            }
+            // Configurar colores según estado usando los colores del helper
+            String colorHex = adopcion.getEstadoColor();
+            int color = android.graphics.Color.parseColor(colorHex);
+            
+            tvEstado.setTextColor(color);
+            viewStatusIndicator.setBackgroundColor(color);
+            ivPaw.setColorFilter(color);
 
-            tvEstado.setTextColor(ContextCompat.getColor(itemView.getContext(), colorResId));
-            viewStatusIndicator.setBackgroundColor(ContextCompat.getColor(itemView.getContext(), colorResId));
-            ivPaw.setColorFilter(ContextCompat.getColor(itemView.getContext(), pawColorResId));
+            // Mostrar botón cancelar solo para adopciones que se pueden cancelar
+            String estado = adopcion.getEstado();
+            boolean puedeCanlar = "SOLICITADA".equals(estado) || "EN_REVISION".equals(estado) || "EN_ESPERA".equals(estado);
+            btnCancelar.setVisibility(puedeCanlar ? View.VISIBLE : View.GONE);
 
             // Click listeners
             cardView.setOnClickListener(v -> {
@@ -152,6 +141,22 @@ public class AdopcionesAdapter extends RecyclerView.Adapter<AdopcionesAdapter.Ad
                     onCancelClickListener.onCancelClick(adopcion);
                 }
             });
+        }
+        
+        private String formatFecha(String fechaStr) {
+            if (fechaStr == null || fechaStr.isEmpty()) {
+                return "";
+            }
+            
+            try {
+                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                SimpleDateFormat outputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault());
+                Date fecha = inputFormat.parse(fechaStr);
+                return fecha != null ? outputFormat.format(fecha) : fechaStr;
+            } catch (ParseException e) {
+                // Si no se puede parsear, devolver la fecha original
+                return fechaStr.split(" ")[0]; // Tomar solo la parte de fecha
+            }
         }
     }
 }
