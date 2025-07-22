@@ -293,6 +293,13 @@ public class AnimalesActivity extends AppCompatActivity {
 
         // Obtenemos el objeto de registro completo del repositorio
         RegistroCompleto datosParaEnviar = RegistroRepository.getInstance().getRegistroData();
+        
+        // LOG: Imprimir el JSON completo que se va a enviar
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonString = gson.toJson(datosParaEnviar);
+        Log.d(TAG, "JSON COMPLETO A ENVIAR:");
+        Log.d(TAG, jsonString);
+        Log.d(TAG, "TAMAÑO DEL JSON: " + jsonString.length() + " caracteres");
 
         // Usamos el cliente ApiClient y el ApiService actualizado
         ApiService apiService = ApiClient.getApiService();
@@ -303,10 +310,24 @@ public class AnimalesActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<ApiResponse<UserData>> call, Response<ApiResponse<UserData>> response) {
                 progressBar.setVisibility(View.GONE);
+                
+                // LOG: Detalles completos de la respuesta
+                Log.d(TAG, "CÓDIGO DE RESPUESTA: " + response.code());
+                Log.d(TAG, "MENSAJE DE RESPUESTA: " + response.message());
+                Log.d(TAG, "HEADERS DE RESPUESTA: " + response.headers().toString());
 
                 if (response.isSuccessful() && response.body() != null) {
                     // Código 201 Created! Registro exitoso.
                     ApiResponse<UserData> apiResponse = response.body();
+                    
+                    // LOG: Contenido completo de la respuesta exitosa
+                    Log.d(TAG, "RESPUESTA EXITOSA COMPLETA:");
+                    Log.d(TAG, "Status: " + apiResponse.getStatus());
+                    Log.d(TAG, "Message: " + apiResponse.getMessage());
+                    if (apiResponse.getData() != null) {
+                        Log.d(TAG, "Data - Name: " + apiResponse.getData().getNameUser());
+                        Log.d(TAG, "Data - Cedula: " + apiResponse.getData().getCedula());
+                    }
 
                     String userName = "Usuario"; // Valor por defecto
                     if (apiResponse.getData() != null && apiResponse.getData().getNameUser() != null) {

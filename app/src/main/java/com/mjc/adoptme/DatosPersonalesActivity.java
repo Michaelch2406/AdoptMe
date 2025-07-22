@@ -519,12 +519,12 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         if (data.getTelefonoMovil() != null) etTelefonoMovil.setText(data.getTelefonoMovil());
         if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
 
-        if (data.getFechaNacimiento() != null) {
+        if (data.getFechaNacimiento() != null && !data.getFechaNacimiento().trim().isEmpty()) {
             try {
                 Date date = apiDateFormat.parse(data.getFechaNacimiento());
                 etFechaNacimiento.setText(displayDateFormat.format(date));
             } catch (ParseException e) {
-                Log.e(TAG, "No se pudo parsear la fecha guardada", e);
+                Log.e(TAG, "No se pudo parsear la fecha guardada: '" + data.getFechaNacimiento() + "'", e);
             }
         }
 
