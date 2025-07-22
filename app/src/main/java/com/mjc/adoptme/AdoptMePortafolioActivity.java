@@ -915,7 +915,8 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         mostrandoFundaciones = false;
         
         ApiService apiService = RetrofitClient.getApiService();
-        Call<ApiResponse<List<AnimalAPI>>> call = apiService.getAnimalesPorFundacion(ruc);
+        String cedula = sessionManager.getCedula();
+        Call<ApiResponse<List<AnimalAPI>>> call = apiService.getAnimalesPorFundacion(ruc, cedula);
 
         call.enqueue(new Callback<ApiResponse<List<AnimalAPI>>>() {
             @Override

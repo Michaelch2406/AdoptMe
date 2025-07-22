@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Form Field Dimensions for tablets and large screens -->
+    <dimen name="form_edittext_min_height">80dp</dimen>
+    <dimen name="form_edittext_padding_horizontal">20dp</dimen>
+    <dimen name="form_edittext_padding_vertical">24dp</dimen>
+    <dimen name="form_edittext_margin_bottom">20dp</dimen>
+    <dimen name="form_text_size">18sp</dimen>
+    <dimen name="form_line_spacing">6dp</dimen>
+    <dimen name="form_multiline_padding_vertical">20dp</dimen>
+</resources>

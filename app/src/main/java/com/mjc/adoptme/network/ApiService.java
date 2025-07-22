@@ -83,7 +83,7 @@ public interface ApiService {
     Call<ApiResponse<List<Fundacion>>> getFundacionesCercanas(@Query("lat") double latitud, @Query("lng") double longitud);
 
     @GET("v1/animales-por-fundacion")
-    Call<ApiResponse<List<AnimalAPI>>> getAnimalesPorFundacion(@Query("ruc") String ruc);
+    Call<ApiResponse<List<AnimalAPI>>> getAnimalesPorFundacion(@Query("ruc") String ruc, @Query("cedula") String cedula);
 
     @POST("v1/solicitarAdopcion")
     Call<ApiResponse<AdopcionResponse>> solicitarAdopcion(@Body SolicitudAdopcion solicitud);

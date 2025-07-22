@@ -1,11 +1,19 @@
 package com.mjc.adoptme.models;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.List;
 
 public class SolicitudAdopcion {
+    @SerializedName("animal_id")
     private int animal_id;
+    
+    @SerializedName("cedula_adoptante")
     private String cedula_adoptante;
+    
+    @SerializedName("motivaciones")
     private Motivaciones motivaciones;
+    
+    @SerializedName("cuidados")
     private List<String> cuidados;
 
     public SolicitudAdopcion() {}
@@ -30,30 +38,79 @@ public class SolicitudAdopcion {
     public void setCuidados(List<String> cuidados) { this.cuidados = cuidados; }
 
     public static class Motivaciones {
+        @SerializedName("motivo_adopcion")
         private String motivo_adopcion;
+        
+        @SerializedName("plan_cambio_domicilio")
         private String plan_cambio_domicilio;
+        
+        @SerializedName("plan_viajes")
         private String plan_viajes;
+        
+        @SerializedName("plan_viajes_largos")
         private String plan_viajes_largos;
+        
+        @SerializedName("horas_solo_diarias")
         private int horas_solo_diarias;
+        
+        @SerializedName("ubicacion_dia")
         private String ubicacion_dia;
+        
+        @SerializedName("ubicacion_noche")
         private String ubicacion_noche;
+        
+        @SerializedName("lugar_dormir")
         private String lugar_dormir;
+        
+        @SerializedName("lugar_necesidades")
         private String lugar_necesidades;
+        
+        @SerializedName("frecuencia_baño")
         private String frecuencia_baño;
+        
+        @SerializedName("frecuencia_corte_pelo")
         private String frecuencia_corte_pelo;
+        
+        @SerializedName("tipo_alimentacion")
         private String tipo_alimentacion;
+        
+        @SerializedName("conoce_toxicos")
         private boolean conoce_toxicos;
+        
+        @SerializedName("toxicos_conocidos")
         private String toxicos_conocidos;
+        
+        @SerializedName("años_vida_estimados")
         private int años_vida_estimados;
+        
+        @SerializedName("plan_enfermedad")
         private String plan_enfermedad;
+        
+        @SerializedName("responsable_costos")
         private String responsable_costos;
+        
+        @SerializedName("presupuesto_mensual")
         private String presupuesto_mensual;
+        
+        @SerializedName("recursos_veterinarios")
         private boolean recursos_veterinarios;
+        
+        @SerializedName("acepta_visitas")
         private boolean acepta_visitas;
+        
+        @SerializedName("acepta_esterilizacion")
         private boolean acepta_esterilizacion;
+        
+        @SerializedName("razon_esterilizacion")
         private String razon_esterilizacion;
+        
+        @SerializedName("conoce_beneficios_esterilizacion")
         private boolean conoce_beneficios_esterilizacion;
+        
+        @SerializedName("plan_mal_comportamiento")
         private String plan_mal_comportamiento;
+        
+        @SerializedName("consciente_maltrato")
         private boolean consciente_maltrato;
 
         public Motivaciones() {}

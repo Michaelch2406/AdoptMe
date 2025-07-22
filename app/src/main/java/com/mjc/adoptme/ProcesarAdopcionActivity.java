@@ -189,9 +189,17 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
                             Toast.LENGTH_LONG).show();
                     finish();
                 } else {
-                    Toast.makeText(ProcesarAdopcionActivity.this, 
-                            "Error al enviar la solicitud. Por favor intenta nuevamente.", 
-                            Toast.LENGTH_LONG).show();
+                    String errorMessage = "Error al enviar la solicitud. Por favor intenta nuevamente.";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e("AdopcionError", "Error response: " + errorBody);
+                            Log.e("AdopcionError", "Response code: " + response.code());
+                        }
+                    } catch (Exception e) {
+                        Log.e("AdopcionError", "Error reading error body", e);
+                    }
+                    Toast.makeText(ProcesarAdopcionActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                 }
             }
 

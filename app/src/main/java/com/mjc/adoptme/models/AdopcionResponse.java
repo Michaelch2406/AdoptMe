@@ -1,6 +1,9 @@
 package com.mjc.adoptme.models;
 
+import com.google.gson.annotations.SerializedName;
+
 public class AdopcionResponse {
+    @SerializedName("adopcion_id")
     private int adopcion_id;
 
     public AdopcionResponse() {}
