@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?attr/android:windowBackground"
     tools:context=".MisAdopcionesActivity">
 
     <ScrollView
@@ -96,8 +96,7 @@
                     android:layout_height="wrap_content"
                     android:text="Mis Adopciones"
                     android:textSize="18sp"
-                    android:textColor="@color/black"
-                    android:alpha="0.7"
+                    android:textColor="?attr/android:textColorSecondary"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -128,6 +127,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="En Proceso"
+                            android:textColor="@color/chip_text_color"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             app:chipBackgroundColor="@color/chip_state_list"
                             app:chipStrokeColor="@color/colorPrimary"
@@ -139,6 +139,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Historial"
+                            android:textColor="@color/chip_text_color"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             app:chipBackgroundColor="@color/chip_state_list"
                             app:chipStrokeColor="@color/colorPrimary"
@@ -150,6 +151,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Canceladas"
+                            android:textColor="@color/chip_text_color"
                             style="@style/Widget.MaterialComponents.Chip.Choice"
                             app:chipBackgroundColor="@color/chip_state_list"
                             app:chipStrokeColor="@color/colorPrimary"

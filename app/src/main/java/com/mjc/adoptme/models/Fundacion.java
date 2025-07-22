@@ -8,6 +8,7 @@ public class Fundacion {
     private double latitud;
     private double longitud;
     private int cantidad_animales;
+    private float distancia; // Para almacenar la distancia calculada
 
     public Fundacion() {}
 
@@ -42,4 +43,7 @@ public class Fundacion {
 
     public int getCantidadAnimales() { return cantidad_animales; }
     public void setCantidadAnimales(int cantidad_animales) { this.cantidad_animales = cantidad_animales; }
+
+    public float getDistancia() { return distancia; }
+    public void setDistancia(float distancia) { this.distancia = distancia; }
 }

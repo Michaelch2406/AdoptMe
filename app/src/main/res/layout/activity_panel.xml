@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?android:attr/colorBackground"
     tools:context=".PanelActivity">
 
     <ScrollView
@@ -39,7 +39,7 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
+                        android:layout_weight="1.2"
                         android:orientation="vertical">
 
                         <TextView
@@ -66,8 +66,9 @@
 
                     <!-- Avatar y nombre del usuario -->
                     <LinearLayout
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1.5"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
                         android:background="@drawable/user_badge_background"
@@ -95,8 +96,7 @@
                             android:textSize="16sp"
                             android:textStyle="bold"
                             android:layout_marginStart="8dp"
-                            android:maxWidth="120dp"
-                            android:maxLines="1"
+                            android:maxLines="2"
                             android:ellipsize="end" />
 
                     </LinearLayout>
@@ -171,7 +171,7 @@
                             android:layout_height="wrap_content"
                             android:text="Total"
                             android:textSize="12sp"
-                            android:textColor="@color/black"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:alpha="0.6" />
 
                     </LinearLayout>
@@ -207,7 +207,7 @@
                             android:layout_height="wrap_content"
                             android:text="En proceso"
                             android:textSize="12sp"
-                            android:textColor="@color/black"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:alpha="0.6" />
 
                     </LinearLayout>
@@ -243,7 +243,7 @@
                             android:layout_height="wrap_content"
                             android:text="Completadas"
                             android:textSize="12sp"
-                            android:textColor="@color/black"
+                            android:textColor="?android:attr/textColorPrimary"
                             android:alpha="0.6" />
 
                     </LinearLayout>
@@ -267,7 +267,7 @@
                     android:text="¿Qué deseas hacer?"
                     android:textSize="18sp"
                     android:textStyle="bold"
-                    android:textColor="@color/black"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:layout_marginBottom="16dp" />
 
                 <!-- Grid de cards 2x2 -->
@@ -422,7 +422,7 @@
                     android:layout_marginTop="24dp"
                     android:layout_marginBottom="24dp"
                     app:cardCornerRadius="16dp"
-                    app:cardElevation="0dp"
+                    app:cardElevation="4dp"
                     app:strokeWidth="1dp"
                     app:strokeColor="#E0E0E0">
 
@@ -430,16 +430,17 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:padding="20dp"
+                        android:padding="24dp"
                         android:gravity="center_vertical"
-                        android:background="@drawable/motivational_card_background">
+                        android:background="@drawable/motivational_card_background"
+                        android:minHeight="100dp">
 
                         <ImageView
-                            android:layout_width="40dp"
-                            android:layout_height="40dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:src="@drawable/ic_heart"
                             android:tint="@color/colorAccent3"
-                            android:layout_marginEnd="16dp"
+                            android:layout_marginEnd="20dp"
                             tools:ignore="UseAppTint" />
 
                         <LinearLayout
@@ -453,18 +454,18 @@
                                 android:layout_height="wrap_content"
                                 android:text="¿Sabías que...?"
                                 android:textColor="@color/colorPrimary"
-                                android:textSize="14sp"
+                                android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Cada adopción salva una vida y llena de amor un hogar"
-                                android:textColor="@color/black"
-                                android:textSize="13sp"
+                                android:text="Cada adopción salva una vida y llena de amor un hogar."
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textSize="14sp"
                                 android:alpha="0.8"
-                                android:layout_marginTop="4dp"
-                                android:lineSpacingExtra="2dp" />
+                                android:layout_marginTop="6dp"
+                                android:lineSpacingExtra="3dp" />
 
                         </LinearLayout>
 
@@ -486,7 +487,7 @@
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
-                    android:background="@color/black"
+                    android:background="?android:attr/textColorPrimary"
                     android:alpha="0.1"
                     android:layout_marginBottom="24dp" />
 
@@ -511,7 +512,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="AdoptMe v1.0"
-                    android:textColor="@color/black"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textSize="12sp"
                     android:alpha="0.4"
                     android:layout_marginTop="16dp" />

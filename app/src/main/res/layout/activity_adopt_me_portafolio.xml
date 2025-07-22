@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="?android:attr/colorBackground"
     tools:context=".AdoptMePortafolioActivity">
 
     <LinearLayout
@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content"
                 android:text="Catálogo de Mascotas"
                 android:textSize="16sp"
-                android:textColor="@color/black"
+                android:textColor="?android:attr/textColorPrimary"
                 android:alpha="0.7"
                 android:layout_marginTop="2dp" />
 
@@ -136,7 +136,7 @@
                     android:layout_height="wrap_content"
                     android:inputType="text"
                     android:maxLines="1"
-                    android:textColor="@color/black"
+                    android:textColor="?android:attr/textColorPrimary"
                     android:textColorHint="@color/colorPrimary" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -236,7 +236,7 @@
                 android:layout_marginBottom="12dp"
                 android:alpha="0.6"
                 android:text="0 mascotas encontradas"
-                android:textColor="@color/black"
+                android:textColor="?android:attr/textColorPrimary"
                 android:textSize="14sp" />
 
             <FrameLayout
@@ -272,7 +272,7 @@
                         android:layout_height="wrap_content"
                         android:text="No se encontraron mascotas"
                         android:textSize="16sp"
-                        android:textColor="@color/black"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:alpha="0.6"
                         android:layout_marginTop="16dp"
                         android:textAlignment="center" />
@@ -281,7 +281,7 @@
                         android:layout_height="wrap_content"
                         android:text="Intenta ajustar los filtros de búsqueda"
                         android:textSize="14sp"
-                        android:textColor="@color/black"
+                        android:textColor="?android:attr/textColorPrimary"
                         android:alpha="0.5"
                         android:layout_marginTop="8dp"
                         android:textAlignment="center" />

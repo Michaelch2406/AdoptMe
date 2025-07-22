@@ -41,6 +41,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.slider.RangeSlider;
@@ -700,6 +701,13 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void applyFilters() {
+        // Si estamos mostrando fundaciones, aplicar filtros a fundaciones
+        if (mostrandoFundaciones) {
+            applyFundacionesFilters();
+            return;
+        }
+        
+        // Aplicar filtros a animales
         String searchQuery = etBuscar.getText().toString().toLowerCase(Locale.getDefault()).trim();
         animalesFiltrados = new ArrayList<>();
 
@@ -734,6 +742,42 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
 
         updateResultCount();
         showAnimales(animalesFiltrados);
+    }
+
+    private void applyFundacionesFilters() {
+        // Filtrar fundaciones por distancia
+        String searchQuery = etBuscar.getText().toString().toLowerCase(Locale.getDefault()).trim();
+        fundacionesFiltradas = new ArrayList<>();
+
+        for (Fundacion fundacion : fundacionesCompletas) {
+            boolean matchesSearch = searchQuery.isEmpty() ||
+                    (fundacion.getNombreFundacion() != null && 
+                     fundacion.getNombreFundacion().toLowerCase(Locale.getDefault()).contains(searchQuery)) ||
+                    (fundacion.getNombreSucursal() != null && 
+                     fundacion.getNombreSucursal().toLowerCase(Locale.getDefault()).contains(searchQuery));
+
+            boolean matchesDistancia = true;
+            if (ubicacionActual != null && fundacion.getLatitud() != 0 && fundacion.getLongitud() != 0) {
+                Location fundacionLocation = new Location("");
+                fundacionLocation.setLatitude(fundacion.getLatitud());
+                fundacionLocation.setLongitude(fundacion.getLongitud());
+                float distancia = ubicacionActual.distanceTo(fundacionLocation) / 1000;
+                matchesDistancia = distancia <= distanciaMaxima;
+                fundacion.setDistancia(distancia);
+            }
+
+            if (matchesSearch && matchesDistancia) {
+                fundacionesFiltradas.add(fundacion);
+            }
+        }
+
+        // Ordenar por distancia
+        if (ubicacionActual != null) {
+            fundacionesFiltradas.sort((f1, f2) -> Float.compare(f1.getDistancia(), f2.getDistancia()));
+        }
+
+        updateResultCount();
+        showFundaciones(fundacionesFiltradas);
     }
 
     private void updateResultCount() {
@@ -1127,7 +1171,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         TextView tvFundacion = dialogView.findViewById(R.id.tvFundacion);
         TextView tvUbicacion = dialogView.findViewById(R.id.tvUbicacion);
         TextView tvDistancia = dialogView.findViewById(R.id.tvDistancia);
-        LinearLayout layoutCaracteristicas = dialogView.findViewById(R.id.layoutCaracteristicas);
+        ChipGroup layoutCaracteristicas = dialogView.findViewById(R.id.layoutCaracteristicas);
         Chip chipVacunado = dialogView.findViewById(R.id.chipVacunado);
         Chip chipDesparasitado = dialogView.findViewById(R.id.chipDesparasitado);
         Chip chipEsterilizado = dialogView.findViewById(R.id.chipEsterilizado);
