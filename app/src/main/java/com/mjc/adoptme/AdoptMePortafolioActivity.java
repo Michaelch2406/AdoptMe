@@ -8,6 +8,8 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -65,6 +67,7 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.Priority;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -452,23 +455,8 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void onLocationReceived(Location location) {
-        String locationText = String.format(Locale.getDefault(), 
-            "📍 Lat: %.4f, Lng: %.4f", 
-            location.getLatitude(), 
-            location.getLongitude()
-        );
-        
-        tvLocationInfo.setText(locationText);
-        
-        // Animar entrada del texto de ubicación
-        tvLocationInfo.setAlpha(0f);
-        tvLocationInfo.animate()
-                .alpha(1f)
-                .setDuration(500)
-                .start();
-
-        // Cargar fundaciones cercanas
-        loadFundacionesCercanas();
+        // Usar el nuevo método para obtener dirección legible
+        getAddressFromLocation(location);
     }
 
     private void usarUbicacionPorDefecto() {
@@ -477,9 +465,95 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
         ubicacionActual.setLatitude(-0.1807);
         ubicacionActual.setLongitude(-78.4678);
 
-        tvLocationInfo.setText("📍 Quito, Ecuador (por defecto)");
-        tvLocationInfo.setVisibility(View.VISIBLE);
+        // Usar el método de geocoding también para la ubicación por defecto
+        getAddressFromLocation(ubicacionActual);
+    }
 
+    private void getAddressFromLocation(Location location) {
+        if (!Geocoder.isPresent()) {
+            // Geocoder no está disponible, usar coordenadas
+            updateLocationDisplay(location, null);
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                List<Address> addresses = geocoder.getFromLocation(
+                    location.getLatitude(), 
+                    location.getLongitude(), 
+                    1
+                );
+
+                runOnUiThread(() -> {
+                    if (addresses != null && !addresses.isEmpty()) {
+                        Address address = addresses.get(0);
+                        updateLocationDisplay(location, address);
+                    } else {
+                        updateLocationDisplay(location, null);
+                    }
+                });
+            } catch (IOException e) {
+                Log.e("AdoptMePortafolio", "Error getting address from location", e);
+                runOnUiThread(() -> updateLocationDisplay(location, null));
+            }
+        }).start();
+    }
+
+    private void updateLocationDisplay(Location location, Address address) {
+        StringBuilder locationText = new StringBuilder();
+        locationText.append("📍 ");
+        
+        if (address != null) {
+            // Construir dirección detallada
+            StringBuilder addressText = new StringBuilder();
+            
+            // Agregar dirección específica (calle)
+            if (address.getThoroughfare() != null) {
+                addressText.append(address.getThoroughfare());
+            }
+            
+            // Agregar ciudad/localidad
+            if (address.getLocality() != null) {
+                if (addressText.length() > 0) addressText.append(", ");
+                addressText.append(address.getLocality());
+            } else if (address.getSubAdminArea() != null) {
+                if (addressText.length() > 0) addressText.append(", ");
+                addressText.append(address.getSubAdminArea());
+            }
+            
+            // Agregar estado/provincia
+            if (address.getAdminArea() != null) {
+                if (addressText.length() > 0) addressText.append(", ");
+                addressText.append(address.getAdminArea());
+            }
+            
+            // Agregar país
+            if (address.getCountryName() != null) {
+                if (addressText.length() > 0) addressText.append(", ");
+                addressText.append(address.getCountryName());
+            }
+            
+            if (addressText.length() > 0) {
+                locationText.append(addressText.toString());
+            } else {
+                locationText.append("Ubicación desconocida");
+            }
+        } else {
+            locationText.append("Ubicación actual");
+        }
+        
+        // Siempre agregar coordenadas en una nueva línea
+        locationText.append("\n🌐 ");
+        locationText.append(String.format(Locale.getDefault(), 
+            "%.6f, %.6f", 
+            location.getLatitude(), 
+            location.getLongitude()
+        ));
+        
+        tvLocationInfo.setText(locationText.toString());
+        tvLocationInfo.setVisibility(View.VISIBLE);
+        
         // Animar entrada del texto de ubicación
         tvLocationInfo.setAlpha(0f);
         tvLocationInfo.animate()

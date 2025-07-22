@@ -1,7 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.AdoptMe" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    <!-- Tema oscuro usando la misma paleta -->
+    <style name="Theme.AdoptMe" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color (mejorado para modo oscuro) -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/colorAccent2</item>
+        <item name="colorSecondaryVariant">@color/colorAccent3</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Accent color -->
+        <item name="colorAccent">@color/colorAccent1</item>
+        <!-- Surface colors for better contrast -->
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="colorSurfaceVariant">@color/surface_variant_dark</item>
+        <item name="colorOutline">@color/outline_dark</item>
+        <!-- Status bar color para modo oscuro -->
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+        <!-- Navigation bar color para modo oscuro -->
+        <item name="android:navigationBarColor">@color/white</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o">false</item>
+        <!-- Window background para modo oscuro -->
+        <item name="android:windowBackground">@color/white</item>
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorSecondary">@color/text_secondary_dark</item>
+        <!-- Material Design Components -->
+        <item name="textInputStyle">@style/LoginTextInputStyle</item>
+        <item name="materialButtonStyle">@style/LoginButtonStyle</item>
     </style>
+
+    <!-- Tema para splash screen en modo oscuro -->
+    <style name="Theme.AdoptMe.Splash" parent="Theme.AdoptMe">
+        <item name="android:windowBackground">@color/white</item>
+        <item name="android:statusBarColor">@color/black</item>
+    </style>
+
 </resources>
