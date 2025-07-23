@@ -116,37 +116,46 @@ public class SecurityQuestionsActivity extends AppCompatActivity {
 
     private void loadSecurityQuestions() {
         showLoading();
-
-        Call<ApiResponse<List<SecurityQuestion>>> call = apiService.getRandomSecurityQuestions();
-        call.enqueue(new Callback<ApiResponse<List<SecurityQuestion>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<SecurityQuestion>>> call, Response<ApiResponse<List<SecurityQuestion>>> response) {
-                hideLoading();
-
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<List<SecurityQuestion>> apiResponse = response.body();
-                    if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
-                        securityQuestions = apiResponse.getData();
-                        if (securityQuestions.size() >= 4) {
-                            displayQuestions();
+        try {
+            Call<ApiResponse<List<SecurityQuestion>>> call = apiService.getRandomSecurityQuestions();
+            call.enqueue(new Callback<ApiResponse<List<SecurityQuestion>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<SecurityQuestion>>> call, Response<ApiResponse<List<SecurityQuestion>>> response) {
+                    hideLoading();
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+                            ApiResponse<List<SecurityQuestion>> apiResponse = response.body();
+                            if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
+                                securityQuestions = apiResponse.getData();
+                                if (securityQuestions.size() >= 4) {
+                                    displayQuestions();
+                                } else {
+                                    showError("No se recibieron suficientes preguntas de seguridad");
+                                }
+                            } else {
+                                showError("Error al obtener las preguntas de seguridad");
+                            }
                         } else {
-                            showError("No se recibieron suficientes preguntas de seguridad");
+                            showError("Error del servidor al cargar las preguntas");
                         }
-                    } else {
-                        showError("Error al obtener las preguntas de seguridad");
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing security questions response", e);
+                        showError("Error al procesar la respuesta del servidor.");
                     }
-                } else {
-                    showError("Error del servidor al cargar las preguntas");
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<SecurityQuestion>>> call, Throwable t) {
-                hideLoading();
-                Log.e(TAG, "Error loading security questions", t);
-                showError("Error de conexión. Verifica tu conexión a internet.");
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<SecurityQuestion>>> call, Throwable t) {
+                    hideLoading();
+                    Log.e(TAG, "Error loading security questions", t);
+                    showError("Error de conexión. Verifica tu conexión a internet.");
+                }
+            });
+        } catch (Exception e) {
+            hideLoading();
+            Log.e(TAG, "Error calling security questions endpoint", e);
+            showError("Error al iniciar la solicitud. Inténtalo de nuevo.");
+        }
     }
 
     private void displayQuestions() {

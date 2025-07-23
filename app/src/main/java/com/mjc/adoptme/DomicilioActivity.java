@@ -190,104 +190,138 @@ public class DomicilioActivity extends AppCompatActivity {
     }
 
     private void loadPaises() {
-        apiService.getPaises().enqueue(new Callback<ApiResponse<List<Pais>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Pais>>> call, Response<ApiResponse<List<Pais>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    paises = response.body().getData();
-                    Log.d(TAG, "Países cargados: " + paises.size());
-                    // Cargar ciudades del primer país (Ecuador por defecto)
-                    if (!paises.isEmpty()) {
-                        paisSeleccionado = paises.get(0); // Asumir Ecuador como primer país
-                        loadCiudades(paisSeleccionado.getId());
+        try {
+            apiService.getPaises().enqueue(new Callback<ApiResponse<List<Pais>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Pais>>> call, Response<ApiResponse<List<Pais>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            paises = response.body().getData();
+                            Log.d(TAG, "Países cargados: " + paises.size());
+                            // Cargar ciudades del primer país (Ecuador por defecto)
+                            if (!paises.isEmpty()) {
+                                paisSeleccionado = paises.get(0); // Asumir Ecuador como primer país
+                                loadCiudades(paisSeleccionado.getId());
+                            }
+                        } else {
+                            Log.e(TAG, "Error al cargar países: " + response.message());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing paises response", e);
                     }
-                } else {
-                    Log.e(TAG, "Error al cargar países: " + response.message());
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Pais>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar países", t);
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<Pais>>> call, Throwable t) {
+                    Log.e(TAG, "Error de conexión al cargar países", t);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling paises endpoint", e);
+        }
     }
 
     private void loadCiudades(int paisId) {
-        apiService.getCiudades(paisId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    ciudades = response.body().getData();
-                    Log.d(TAG, "Ciudades cargadas: " + ciudades.size());
-                    // Cargar parroquias de la primera ciudad
-                    if (!ciudades.isEmpty()) {
-                        ciudadSeleccionada = ciudades.get(0);
-                        loadParroquias(ciudadSeleccionada.getId());
+        try {
+            apiService.getCiudades(paisId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            ciudades = response.body().getData();
+                            Log.d(TAG, "Ciudades cargadas: " + ciudades.size());
+                            // Cargar parroquias de la primera ciudad
+                            if (!ciudades.isEmpty()) {
+                                ciudadSeleccionada = ciudades.get(0);
+                                loadParroquias(ciudadSeleccionada.getId());
+                            }
+                        } else {
+                            Log.e(TAG, "Error al cargar ciudades: " + response.message());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing ciudades response", e);
                     }
-                } else {
-                    Log.e(TAG, "Error al cargar ciudades: " + response.message());
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar ciudades", t);
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
+                    Log.e(TAG, "Error de conexión al cargar ciudades", t);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling ciudades endpoint", e);
+        }
     }
 
     private void loadParroquias(int ciudadId) {
-        apiService.getParroquias(ciudadId).enqueue(new Callback<ApiResponse<List<Parroquia>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Parroquia>>> call, Response<ApiResponse<List<Parroquia>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    parroquias = response.body().getData();
-                    Log.d(TAG, "Parroquias cargadas: " + parroquias.size());
-                    
-                    // Configurar adapter para AutoCompleteTextView de parroquias
-                    ArrayAdapter<Parroquia> adapterParroquias = new ArrayAdapter<>(DomicilioActivity.this, 
-                            android.R.layout.simple_dropdown_item_1line, parroquias);
-                    actvParroquia.setAdapter(adapterParroquias);
-                    
-                    // Configurar listener para selección de parroquia
-                    actvParroquia.setOnItemClickListener((parent, view, position, id) -> {
-                        parroquiaSeleccionada = parroquias.get(position);
-                        Log.d(TAG, "Parroquia seleccionada: " + parroquiaSeleccionada.getNombre());
-                    });
-                    
-                    // Seleccionar la primera parroquia por defecto
-                    if (!parroquias.isEmpty()) {
-                        parroquiaSeleccionada = parroquias.get(0);
-                        actvParroquia.setText(parroquiaSeleccionada.getNombre(), false);
-                        Log.d(TAG, "Parroquia seleccionada por defecto: " + parroquiaSeleccionada.getNombre());
-                    }
-                } else {
-                    Log.e(TAG, "Error al cargar parroquias: " + response.message());
-                }
-            }
+        try {
+            apiService.getParroquias(ciudadId).enqueue(new Callback<ApiResponse<List<Parroquia>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Parroquia>>> call, Response<ApiResponse<List<Parroquia>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            parroquias = response.body().getData();
+                            Log.d(TAG, "Parroquias cargadas: " + parroquias.size());
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Parroquia>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar parroquias", t);
-            }
-        });
+                            // Configurar adapter para AutoCompleteTextView de parroquias
+                            ArrayAdapter<Parroquia> adapterParroquias = new ArrayAdapter<>(DomicilioActivity.this,
+                                    android.R.layout.simple_dropdown_item_1line, parroquias);
+                            actvParroquia.setAdapter(adapterParroquias);
+
+                            // Configurar listener para selección de parroquia
+                            actvParroquia.setOnItemClickListener((parent, view, position, id) -> {
+                                parroquiaSeleccionada = parroquias.get(position);
+                                Log.d(TAG, "Parroquia seleccionada: " + parroquiaSeleccionada.getNombre());
+                            });
+
+                            // Seleccionar la primera parroquia por defecto
+                            if (!parroquias.isEmpty()) {
+                                parroquiaSeleccionada = parroquias.get(0);
+                                actvParroquia.setText(parroquiaSeleccionada.getNombre(), false);
+                                Log.d(TAG, "Parroquia seleccionada por defecto: " + parroquiaSeleccionada.getNombre());
+                            }
+                        } else {
+                            Log.e(TAG, "Error al cargar parroquias: " + response.message());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing parroquias response", e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<List<Parroquia>>> call, Throwable t) {
+                    Log.e(TAG, "Error de conexión al cargar parroquias", t);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling parroquias endpoint", e);
+        }
     }
 
     private void loadUserData() {
         String cedula = sessionManager.getCedula();
-        updateRepository.getUserDomicilioData(cedula, new UpdateRepository.DataCallback<Domicilio>() {
-            @Override
-            public void onSuccess(Domicilio data) {
-                populateForm(data);
-            }
+        try {
+            updateRepository.getUserDomicilioData(cedula, new UpdateRepository.DataCallback<Domicilio>() {
+                @Override
+                public void onSuccess(Domicilio data) {
+                    try {
+                        populateForm(data);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error populating form", e);
+                        showErrorDialog("Error al mostrar los datos. Intente nuevamente.");
+                    }
+                }
 
-            @Override
-            public void onError(String message) {
-                Log.e(TAG, "Error al cargar datos: " + message);
-                showErrorDialog("Error al cargar los datos. Intente nuevamente.");
-            }
-        });
+                @Override
+                public void onError(String message) {
+                    Log.e(TAG, "Error al cargar datos: " + message);
+                    showErrorDialog("Error al cargar los datos. Intente nuevamente.");
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling user domicilio data endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud. Inténtalo de nuevo.");
+        }
     }
 
     private void populateForm(Domicilio domicilio) {
@@ -386,92 +420,98 @@ public class DomicilioActivity extends AppCompatActivity {
 
         btnSiguiente.setEnabled(false);
 
-        Domicilio domicilio = new Domicilio();
-
-        // Valores necesarios para la API
-        domicilio.setParroquiaId(parroquiaSeleccionada != null ? parroquiaSeleccionada.getId() : 1);
-        domicilio.setDireccion("Dirección de ejemplo");
-        domicilio.setNumeroCasa("S/N");
-        domicilio.setEsUrbanizacion(false);
-        domicilio.setNombreUrbanizacion(null);
-        domicilio.setNumeroBloque(null);
-
-        // Tipo de vivienda
-        int tipoViviendaId = rgTipoVivienda.getCheckedRadioButtonId();
-        domicilio.setTipoVivienda(tipoViviendaId != -1 ? ((RadioButton) findViewById(tipoViviendaId)).getText().toString() : null);
-
-        // Tipo de tenencia
-        int tipoTenenciaId = rgPropiedadVivienda.getCheckedRadioButtonId();
-        domicilio.setTipoTenencia(tipoTenenciaId != -1 ? ((RadioButton) findViewById(tipoTenenciaId)).getText().toString() : null);
-
-        // Tipo de residencia
-        int tipoResidenciaId = rgFrecuenciaUso.getCheckedRadioButtonId();
-        domicilio.setTipoResidencia(tipoResidenciaId != -1 ? ((RadioButton) findViewById(tipoResidenciaId)).getText().toString() : null);
-
-        // Campos numéricos
         try {
-            domicilio.setMetrosCuadradosVivienda(Integer.parseInt(etMetrosVivienda.getText().toString().trim()));
-        } catch (NumberFormatException e) {
-            domicilio.setMetrosCuadradosVivienda(0);
-        }
+            Domicilio domicilio = new Domicilio();
 
-        try {
-            domicilio.setMetrosCuadradosAreaVerde(Integer.parseInt(etMetrosAreaVerde.getText().toString().trim()));
-        } catch (NumberFormatException e) {
-            domicilio.setMetrosCuadradosAreaVerde(0);
-        }
+            // Valores necesarios para la API
+            domicilio.setParroquiaId(parroquiaSeleccionada != null ? parroquiaSeleccionada.getId() : 1);
+            domicilio.setDireccion("Dirección de ejemplo");
+            domicilio.setNumeroCasa("S/N");
+            domicilio.setEsUrbanizacion(false);
+            domicilio.setNombreUrbanizacion(null);
+            domicilio.setNumeroBloque(null);
 
-        String areaComunalStr = etAreaComunal.getText().toString().trim();
-        domicilio.setDimensionAreaComunal(areaComunalStr.isEmpty() ? null : Integer.parseInt(areaComunalStr));
+            // Tipo de vivienda
+            int tipoViviendaId = rgTipoVivienda.getCheckedRadioButtonId();
+            domicilio.setTipoVivienda(tipoViviendaId != -1 ? ((RadioButton) findViewById(tipoViviendaId)).getText().toString() : null);
 
-        // Datos de propietario (si es arrendada o prestada)
-        if (tipoTenenciaId == R.id.rbArrendada || tipoTenenciaId == R.id.rbPrestada) {
-            domicilio.setPropietarioPermiteAnimales(rgPermiteAnimales.getCheckedRadioButtonId() == R.id.rbPermiteAnimalesSi);
-            String nombreProp = etNombresDueno.getText().toString().trim();
-            domicilio.setNombrePropietario(nombreProp.isEmpty() ? null : nombreProp);
-            String telProp = etTelefonoDueno.getText().toString().trim();
-            domicilio.setTelefonoPropietario(telProp.isEmpty() ? null : telProp);
-        } else {
-            domicilio.setPropietarioPermiteAnimales(true);
-            domicilio.setNombrePropietario(null);
-            domicilio.setTelefonoPropietario(null);
-        }
+            // Tipo de tenencia
+            int tipoTenenciaId = rgPropiedadVivienda.getCheckedRadioButtonId();
+            domicilio.setTipoTenencia(tipoTenenciaId != -1 ? ((RadioButton) findViewById(tipoTenenciaId)).getText().toString() : null);
 
-        // Cerramiento
-        boolean tieneCerramiento = rgCerramiento.getCheckedRadioButtonId() == R.id.rbCerramientoSi;
-        domicilio.setTieneCerramiento(tieneCerramiento);
-        if (tieneCerramiento) {
+            // Tipo de residencia
+            int tipoResidenciaId = rgFrecuenciaUso.getCheckedRadioButtonId();
+            domicilio.setTipoResidencia(tipoResidenciaId != -1 ? ((RadioButton) findViewById(tipoResidenciaId)).getText().toString() : null);
+
+            // Campos numéricos
             try {
-                domicilio.setAlturaCerramiento(Double.parseDouble(etAlturaCerramiento.getText().toString().trim()));
+                domicilio.setMetrosCuadradosVivienda(Integer.parseInt(etMetrosVivienda.getText().toString().trim()));
             } catch (NumberFormatException e) {
+                domicilio.setMetrosCuadradosVivienda(0);
+            }
+
+            try {
+                domicilio.setMetrosCuadradosAreaVerde(Integer.parseInt(etMetrosAreaVerde.getText().toString().trim()));
+            } catch (NumberFormatException e) {
+                domicilio.setMetrosCuadradosAreaVerde(0);
+            }
+
+            String areaComunalStr = etAreaComunal.getText().toString().trim();
+            domicilio.setDimensionAreaComunal(areaComunalStr.isEmpty() ? null : Integer.parseInt(areaComunalStr));
+
+            // Datos de propietario (si es arrendada o prestada)
+            if (tipoTenenciaId == R.id.rbArrendada || tipoTenenciaId == R.id.rbPrestada) {
+                domicilio.setPropietarioPermiteAnimales(rgPermiteAnimales.getCheckedRadioButtonId() == R.id.rbPermiteAnimalesSi);
+                String nombreProp = etNombresDueno.getText().toString().trim();
+                domicilio.setNombrePropietario(nombreProp.isEmpty() ? null : nombreProp);
+                String telProp = etTelefonoDueno.getText().toString().trim();
+                domicilio.setTelefonoPropietario(telProp.isEmpty() ? null : telProp);
+            } else {
+                domicilio.setPropietarioPermiteAnimales(true);
+                domicilio.setNombrePropietario(null);
+                domicilio.setTelefonoPropietario(null);
+            }
+
+            // Cerramiento
+            boolean tieneCerramiento = rgCerramiento.getCheckedRadioButtonId() == R.id.rbCerramientoSi;
+            domicilio.setTieneCerramiento(tieneCerramiento);
+            if (tieneCerramiento) {
+                try {
+                    domicilio.setAlturaCerramiento(Double.parseDouble(etAlturaCerramiento.getText().toString().trim()));
+                } catch (NumberFormatException e) {
+                    domicilio.setAlturaCerramiento(0.0);
+                }
+                int tipoCerramientoId = rgTipoCerramiento.getCheckedRadioButtonId();
+                domicilio.setTipoCerramiento(tipoCerramientoId != -1 ? ((RadioButton) findViewById(tipoCerramientoId)).getText().toString() : null);
+            } else {
                 domicilio.setAlturaCerramiento(0.0);
+                domicilio.setTipoCerramiento(null);
             }
-            int tipoCerramientoId = rgTipoCerramiento.getCheckedRadioButtonId();
-            domicilio.setTipoCerramiento(tipoCerramientoId != -1 ? ((RadioButton) findViewById(tipoCerramientoId)).getText().toString() : null);
-        } else {
-            domicilio.setAlturaCerramiento(0.0);
-            domicilio.setTipoCerramiento(null);
+
+            domicilio.setPuedeEscaparAnimal(rgPosibilidadEscape.getCheckedRadioButtonId() == R.id.rbEscapeSi);
+
+            String especificacionResidencia = etEspecifiqueFrecuencia.getText().toString().trim();
+            domicilio.setEspecificacionResidencia(especificacionResidencia.isEmpty() ? null : especificacionResidencia);
+
+            updateRepository.updateDomicilioData(sessionManager.getCedula(), domicilio, new UpdateRepository.UpdateCallback() {
+                @Override
+                public void onSuccess(ApiResponse<String> response) {
+                    btnSiguiente.setEnabled(true);
+                    showSuccessDialog();
+                }
+
+                @Override
+                public void onError(String message) {
+                    btnSiguiente.setEnabled(true);
+                    Log.e(TAG, "Error al actualizar: " + message);
+                    showErrorDialog("Error al actualizar los datos. Intente nuevamente.");
+                }
+            });
+        } catch (Exception e) {
+            btnSiguiente.setEnabled(true);
+            Log.e(TAG, "Error creating update request", e);
+            showErrorDialog("Error al preparar los datos para actualizar. Inténtalo de nuevo.");
         }
-
-        domicilio.setPuedeEscaparAnimal(rgPosibilidadEscape.getCheckedRadioButtonId() == R.id.rbEscapeSi);
-
-        String especificacionResidencia = etEspecifiqueFrecuencia.getText().toString().trim();
-        domicilio.setEspecificacionResidencia(especificacionResidencia.isEmpty() ? null : especificacionResidencia);
-
-        updateRepository.updateDomicilioData(sessionManager.getCedula(), domicilio, new UpdateRepository.UpdateCallback() {
-            @Override
-            public void onSuccess(ApiResponse<String> response) {
-                btnSiguiente.setEnabled(true);
-                showSuccessDialog();
-            }
-
-            @Override
-            public void onError(String message) {
-                btnSiguiente.setEnabled(true);
-                Log.e(TAG, "Error al actualizar: " + message);
-                showErrorDialog("Error al actualizar los datos. Intente nuevamente.");
-            }
-        });
     }
 
     private void showSuccessDialog() {

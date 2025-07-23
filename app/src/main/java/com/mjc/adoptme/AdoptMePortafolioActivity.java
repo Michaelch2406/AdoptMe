@@ -827,140 +827,159 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
 
         isLoadingFundaciones = true;
 
-        ApiService apiService = RetrofitClient.getApiService();
-        FundacionRequest request = new FundacionRequest(
-                ubicacionActual.getLatitude(),
-                ubicacionActual.getLongitude(),
-                cedula,
-                distanciaMaxima
-        );
-        
-        Log.d("FundacionesAPI", "Making request with:");
-        Log.d("FundacionesAPI", "Lat: " + request.getLat());
-        Log.d("FundacionesAPI", "Lng: " + request.getLng());
-        Log.d("FundacionesAPI", "Cedula: " + request.getCedula());
-        Log.d("FundacionesAPI", "Distancia: " + request.getDistancia());
-        
-        Call<ApiResponse<List<FundacionApp>>> call = apiService.getFundacionesApp(request);
+        try {
+            ApiService apiService = RetrofitClient.getApiService();
+            FundacionRequest request = new FundacionRequest(
+                    ubicacionActual.getLatitude(),
+                    ubicacionActual.getLongitude(),
+                    cedula,
+                    distanciaMaxima
+            );
 
-        call.enqueue(new Callback<ApiResponse<List<FundacionApp>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<FundacionApp>>> call, Response<ApiResponse<List<FundacionApp>>> response) {
-                Log.d("FundacionesAPI", "Response code: " + response.code());
-                Log.d("FundacionesAPI", "Response successful: " + response.isSuccessful());
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<List<FundacionApp>> apiResponse = response.body();
-                    Log.d("FundacionesAPI", "API Status: " + apiResponse.getStatus());
-                    Log.d("FundacionesAPI", "API Message: " + apiResponse.getMessage());
-                    
-                    if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
-                        List<FundacionApp> fundacionesApp = apiResponse.getData();
-                        Log.d("FundacionesAPI", "Fundaciones received: " + fundacionesApp.size());
-                        
-                        if (!fundacionesApp.isEmpty()) {
-                        // Convertir FundacionApp a Fundacion
-                        fundacionesCompletas = convertirFundacionesApp(fundacionesApp);
-                        fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
-                        updateResultCount();
-                        showFundaciones(fundacionesFiltradas);
-                        Toast.makeText(AdoptMePortafolioActivity.this, 
-                                "Se encontraron " + fundacionesCompletas.size() + " fundaciones cercanas", 
-                                Toast.LENGTH_SHORT).show();
-                        } else {
-                            // API respondió pero sin datos
-                            fundacionesCompletas = new ArrayList<>();
-                            fundacionesFiltradas = new ArrayList<>();
-                            showFundaciones(fundacionesFiltradas);
-                            showInfoDialog("No se encontraron fundaciones cercanas.");
-                        }
-                    } else {
-                        // API devolvió status diferente a 200 o datos nulos
-                        String errorMsg = "No se pudieron cargar las fundaciones";
-                        if (apiResponse.getMessage() != null && !apiResponse.getMessage().isEmpty()) {
-                            errorMsg = apiResponse.getMessage();
-                        }
-                        Log.e("FundacionesAPI", "API Error: " + errorMsg + " (Status: " + apiResponse.getStatus() + ")");
-                        showErrorDialog(errorMsg);
-                    }
-                } else {
-                    // Error HTTP o respuesta nula
-                    String errorMsg = "Error al obtener fundaciones (HTTP " + response.code() + ")";
-                    Log.e("FundacionesAPI", errorMsg);
-                    
-                    boolean isServerError = false;
+            Log.d("FundacionesAPI", "Making request with:");
+            Log.d("FundacionesAPI", "Lat: " + request.getLat());
+            Log.d("FundacionesAPI", "Lng: " + request.getLng());
+            Log.d("FundacionesAPI", "Cedula: " + request.getCedula());
+            Log.d("FundacionesAPI", "Distancia: " + request.getDistancia());
+
+            Call<ApiResponse<List<FundacionApp>>> call = apiService.getFundacionesApp(request);
+
+            call.enqueue(new Callback<ApiResponse<List<FundacionApp>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<FundacionApp>>> call, Response<ApiResponse<List<FundacionApp>>> response) {
                     try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            Log.e("FundacionesAPI", "Error body: " + errorBody);
-                            
-                            // Check if it's the specific SQL error
-                            if (errorBody.contains("invalid input syntax for type integer") || 
-                                errorBody.contains("NOT IN ('')")) {
-                                isServerError = true;
-                                errorMsg = "Error del servidor. Las fundaciones no están disponibles temporalmente.";
+                        Log.d("FundacionesAPI", "Response code: " + response.code());
+                        Log.d("FundacionesAPI", "Response successful: " + response.isSuccessful());
+
+                        if (response.isSuccessful() && response.body() != null) {
+                            ApiResponse<List<FundacionApp>> apiResponse = response.body();
+                            Log.d("FundacionesAPI", "API Status: " + apiResponse.getStatus());
+                            Log.d("FundacionesAPI", "API Message: " + apiResponse.getMessage());
+
+                            if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
+                                List<FundacionApp> fundacionesApp = apiResponse.getData();
+                                Log.d("FundacionesAPI", "Fundaciones received: " + fundacionesApp.size());
+
+                                if (!fundacionesApp.isEmpty()) {
+                                    // Convertir FundacionApp a Fundacion
+                                    fundacionesCompletas = convertirFundacionesApp(fundacionesApp);
+                                    fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
+                                    updateResultCount();
+                                    showFundaciones(fundacionesFiltradas);
+                                    Toast.makeText(AdoptMePortafolioActivity.this,
+                                            "Se encontraron " + fundacionesCompletas.size() + " fundaciones cercanas",
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    // API respondió pero sin datos
+                                    fundacionesCompletas = new ArrayList<>();
+                                    fundacionesFiltradas = new ArrayList<>();
+                                    showFundaciones(fundacionesFiltradas);
+                                    showInfoDialog("No se encontraron fundaciones cercanas.");
+                                }
+                            } else {
+                                // API devolvió status diferente a 200 o datos nulos
+                                String errorMsg = "No se pudieron cargar las fundaciones";
+                                if (apiResponse.getMessage() != null && !apiResponse.getMessage().isEmpty()) {
+                                    errorMsg = apiResponse.getMessage();
+                                }
+                                Log.e("FundacionesAPI", "API Error: " + errorMsg + " (Status: " + apiResponse.getStatus() + ")");
+                                showErrorDialog(errorMsg);
+                            }
+                        } else {
+                            // Error HTTP o respuesta nula
+                            String errorMsg = "Error al obtener fundaciones (HTTP " + response.code() + ")";
+                            Log.e("FundacionesAPI", errorMsg);
+
+                            boolean isServerError = false;
+                            try {
+                                if (response.errorBody() != null) {
+                                    String errorBody = response.errorBody().string();
+                                    Log.e("FundacionesAPI", "Error body: " + errorBody);
+
+                                    // Check if it's the specific SQL error
+                                    if (errorBody.contains("invalid input syntax for type integer") ||
+                                            errorBody.contains("NOT IN ('')")) {
+                                        isServerError = true;
+                                        errorMsg = "Error del servidor. Las fundaciones no están disponibles temporalmente.";
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.e("FundacionesAPI", "Could not read error body: " + e.getMessage());
+                            }
+
+                            if (isServerError) {
+                                // Try fallback to old API if available
+                                tryFallbackFundacionesAPI();
+                            } else {
+                                showErrorDialog("Error al obtener fundaciones. Por favor intenta nuevamente.");
                             }
                         }
-                    } catch (Exception e) {
-                        Log.e("FundacionesAPI", "Could not read error body: " + e.getMessage());
-                    }
-                    
-                    if (isServerError) {
-                        // Try fallback to old API if available
-                        tryFallbackFundacionesAPI();
-                    } else {
-                        showErrorDialog("Error al obtener fundaciones. Por favor intenta nuevamente.");
+                    } finally {
+                        // Siempre liberar el flag al final
+                        isLoadingFundaciones = false;
                     }
                 }
-                // Siempre liberar el flag al final
-                isLoadingFundaciones = false;
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<FundacionApp>>> call, Throwable t) {
-                // En caso de error de conexión
-                Log.e("FundacionesAPI", "Network error: " + t.getMessage(), t);
-                showErrorDialog("Error de conexión. Por favor verifica tu conexión a internet.");
-                // Liberar el flag también en caso de fallo
-                isLoadingFundaciones = false;
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<FundacionApp>>> call, Throwable t) {
+                    // En caso de error de conexión
+                    Log.e("FundacionesAPI", "Network error: " + t.getMessage(), t);
+                    showErrorDialog("Error de conexión. Por favor verifica tu conexión a internet.");
+                    // Liberar el flag también en caso de fallo
+                    isLoadingFundaciones = false;
+                }
+            });
+        } catch (Exception e) {
+            Log.e("FundacionesAPI", "Error calling fundaciones endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud. Inténtalo de nuevo.");
+            isLoadingFundaciones = false;
+        }
     }
 
     private void tryFallbackFundacionesAPI() {
         Log.d("FundacionesAPI", "Trying fallback API");
-        
+
         if (ubicacionActual != null) {
-            ApiService apiService = RetrofitClient.getApiService();
-            Call<ApiResponse<List<Fundacion>>> fallbackCall = 
-                apiService.getFundacionesCercanas(ubicacionActual.getLatitude(), ubicacionActual.getLongitude());
-            
-            fallbackCall.enqueue(new Callback<ApiResponse<List<Fundacion>>>() {
-                @Override
-                public void onResponse(Call<ApiResponse<List<Fundacion>>> call, Response<ApiResponse<List<Fundacion>>> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        ApiResponse<List<Fundacion>> apiResponse = response.body();
-                        if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
-                            fundacionesCompletas = apiResponse.getData();
-                            fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
-                            updateResultCount();
-                            showFundaciones(fundacionesFiltradas);
-                            Toast.makeText(AdoptMePortafolioActivity.this, 
-                                    "Fundaciones cargadas", 
-                                    Toast.LENGTH_SHORT).show();
-                        } else {
+            try {
+                ApiService apiService = RetrofitClient.getApiService();
+                Call<ApiResponse<List<Fundacion>>> fallbackCall =
+                        apiService.getFundacionesCercanas(ubicacionActual.getLatitude(), ubicacionActual.getLongitude());
+
+                fallbackCall.enqueue(new Callback<ApiResponse<List<Fundacion>>>() {
+                    @Override
+                    public void onResponse(Call<ApiResponse<List<Fundacion>>> call, Response<ApiResponse<List<Fundacion>>> response) {
+                        try {
+                            if (response.isSuccessful() && response.body() != null) {
+                                ApiResponse<List<Fundacion>> apiResponse = response.body();
+                                if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
+                                    fundacionesCompletas = apiResponse.getData();
+                                    fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
+                                    updateResultCount();
+                                    showFundaciones(fundacionesFiltradas);
+                                    Toast.makeText(AdoptMePortafolioActivity.this,
+                                            "Fundaciones cargadas",
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    showFallbackError();
+                                }
+                            } else {
+                                showFallbackError();
+                            }
+                        } catch (Exception e) {
+                            Log.e("FundacionesAPI", "Error processing fallback response", e);
                             showFallbackError();
                         }
-                    } else {
+                    }
+
+                    @Override
+                    public void onFailure(Call<ApiResponse<List<Fundacion>>> call, Throwable t) {
                         showFallbackError();
                     }
-                }
-
-                @Override
-                public void onFailure(Call<ApiResponse<List<Fundacion>>> call, Throwable t) {
-                    showFallbackError();
-                }
-            });
+                });
+            } catch (Exception e) {
+                Log.e("FundacionesAPI", "Error calling fallback fundaciones endpoint", e);
+                showFallbackError();
+            }
         } else {
             showFallbackError();
         }
@@ -992,46 +1011,56 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
 
     private void loadAnimalsPorFundacion(String ruc) {
         mostrandoFundaciones = false;
-        
-        ApiService apiService = RetrofitClient.getApiService();
-        String cedula = sessionManager.getCedula();
-        Call<ApiResponse<List<AnimalAPI>>> call = apiService.getAnimalesPorFundacion(ruc, cedula);
 
-        call.enqueue(new Callback<ApiResponse<List<AnimalAPI>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<AnimalAPI>>> call, Response<ApiResponse<List<AnimalAPI>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<AnimalAPI> animalesAPI = response.body().getData();
-                    if (animalesAPI != null && !animalesAPI.isEmpty()) {
-                        animalesCompletos = convertirAnimales(animalesAPI);
-                        animalesFiltrados = new ArrayList<>(animalesCompletos);
-                        cambiarAVistaAnimales();
-                        Toast.makeText(AdoptMePortafolioActivity.this, 
-                                "Se encontraron " + animalesAPI.size() + " animales disponibles", 
-                                Toast.LENGTH_SHORT).show();
-                    } else {
-                        // API respondió pero sin animales
-                        animalesCompletos = new ArrayList<>();
-                        animalesFiltrados = new ArrayList<>();
-                        cambiarAVistaAnimales();
-                        Toast.makeText(AdoptMePortafolioActivity.this, 
-                                "Esta fundación no tiene animales disponibles actualmente.", 
-                                Toast.LENGTH_LONG).show();
+        try {
+            ApiService apiService = RetrofitClient.getApiService();
+            String cedula = sessionManager.getCedula();
+            Call<ApiResponse<List<AnimalAPI>>> call = apiService.getAnimalesPorFundacion(ruc, cedula);
+
+            call.enqueue(new Callback<ApiResponse<List<AnimalAPI>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<AnimalAPI>>> call, Response<ApiResponse<List<AnimalAPI>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<AnimalAPI> animalesAPI = response.body().getData();
+                            if (animalesAPI != null && !animalesAPI.isEmpty()) {
+                                animalesCompletos = convertirAnimales(animalesAPI);
+                                animalesFiltrados = new ArrayList<>(animalesCompletos);
+                                cambiarAVistaAnimales();
+                                Toast.makeText(AdoptMePortafolioActivity.this,
+                                        "Se encontraron " + animalesAPI.size() + " animales disponibles",
+                                        Toast.LENGTH_SHORT).show();
+                            } else {
+                                // API respondió pero sin animales
+                                animalesCompletos = new ArrayList<>();
+                                animalesFiltrados = new ArrayList<>();
+                                cambiarAVistaAnimales();
+                                Toast.makeText(AdoptMePortafolioActivity.this,
+                                        "Esta fundación no tiene animales disponibles actualmente.",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        } else {
+                            // Error en la respuesta
+                            Toast.makeText(AdoptMePortafolioActivity.this,
+                                    "Error al obtener animales. Por favor intenta nuevamente.",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e("AdoptMePortafolio", "Error processing animals response", e);
+                        Toast.makeText(AdoptMePortafolioActivity.this, "Error al procesar la respuesta de animales.", Toast.LENGTH_LONG).show();
                     }
-                } else {
-                    // Error en la respuesta
-                    Toast.makeText(AdoptMePortafolioActivity.this, 
-                            "Error al obtener animales. Por favor intenta nuevamente.", 
-                            Toast.LENGTH_LONG).show();
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<AnimalAPI>>> call, Throwable t) {
-                // En caso de error de conexión
-                showErrorDialog("Error de conexión. Por favor verifica tu conexión a internet.");
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<AnimalAPI>>> call, Throwable t) {
+                    // En caso de error de conexión
+                    showErrorDialog("Error de conexión. Por favor verifica tu conexión a internet.");
+                }
+            });
+        } catch (Exception e) {
+            Log.e("AdoptMePortafolio", "Error calling animals endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud de animales. Inténtalo de nuevo.");
+        }
     }
 
 

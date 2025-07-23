@@ -140,20 +140,31 @@ public class ReferenciasPersonalesActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         String cedula = sessionManager.getCedula();
 
-        updateRepository.getUserReferenciasData(cedula, new UpdateRepository.DataCallback<List<ReferenciaPersonal>>() {
-            @Override
-            public void onSuccess(List<ReferenciaPersonal> data) {
-                progressBar.setVisibility(View.GONE);
-                populateForm(data);
-            }
+        try {
+            updateRepository.getUserReferenciasData(cedula, new UpdateRepository.DataCallback<List<ReferenciaPersonal>>() {
+                @Override
+                public void onSuccess(List<ReferenciaPersonal> data) {
+                    progressBar.setVisibility(View.GONE);
+                    try {
+                        populateForm(data);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error populating form", e);
+                        showErrorDialog("Error al mostrar los datos. Intente nuevamente.");
+                    }
+                }
 
-            @Override
-            public void onError(String message) {
-                progressBar.setVisibility(View.GONE);
-                Log.e(TAG, "Error al cargar datos: " + message);
-                showErrorDialog("Error al cargar los datos. Intente nuevamente.");
-            }
-        });
+                @Override
+                public void onError(String message) {
+                    progressBar.setVisibility(View.GONE);
+                    Log.e(TAG, "Error al cargar datos: " + message);
+                    showErrorDialog("Error al cargar los datos. Intente nuevamente.");
+                }
+            });
+        } catch (Exception e) {
+            progressBar.setVisibility(View.GONE);
+            Log.e(TAG, "Error calling user referencias data endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud. Inténtalo de nuevo.");
+        }
     }
 
     private void populateForm(List<ReferenciaPersonal> referencias) {

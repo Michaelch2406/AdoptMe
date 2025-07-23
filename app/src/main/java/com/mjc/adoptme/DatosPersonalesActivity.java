@@ -242,20 +242,31 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         String cedula = sessionManager.getCedula();
 
-        updateRepository.getUserPersonalData(cedula, new UpdateRepository.DataCallback<DatosPersonalesData>() {
-            @Override
-            public void onSuccess(DatosPersonalesData data) {
-                progressBar.setVisibility(View.GONE);
-                populateForm(data);
-            }
+        try {
+            updateRepository.getUserPersonalData(cedula, new UpdateRepository.DataCallback<DatosPersonalesData>() {
+                @Override
+                public void onSuccess(DatosPersonalesData data) {
+                    progressBar.setVisibility(View.GONE);
+                    try {
+                        populateForm(data);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error populating form", e);
+                        showErrorDialog("Error al mostrar los datos. Intente nuevamente.");
+                    }
+                }
 
-            @Override
-            public void onError(String message) {
-                progressBar.setVisibility(View.GONE);
-                Log.e(TAG, "Error al cargar datos: " + message);
-                showErrorDialog("Error al cargar los datos. Intente nuevamente.");
-            }
-        });
+                @Override
+                public void onError(String message) {
+                    progressBar.setVisibility(View.GONE);
+                    Log.e(TAG, "Error al cargar datos: " + message);
+                    showErrorDialog("Error al cargar los datos. Intente nuevamente.");
+                }
+            });
+        } catch (Exception e) {
+            progressBar.setVisibility(View.GONE);
+            Log.e(TAG, "Error calling user data endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud. Inténtalo de nuevo.");
+        }
     }
 
     private void populateForm(DatosPersonalesData data) {
@@ -331,128 +342,135 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         progressBar.setVisibility(View.VISIBLE);
         btnSiguiente.setEnabled(false);
 
-        DatosPersonalesData data = new DatosPersonalesData();
-        // NO establecer cedula aquí, ya se envía en el nivel superior del JSON
-        
-        // Inicializar todos los campos para evitar nulls
-        data.setNombres("");
-        data.setApellidos("");
-        data.setFecha_nacimiento("");
-        data.setLugar_nacimiento("");
-        data.setEmail("");
-        data.setTelefono_convencional("");
-        data.setTelefono_movil("");
-        data.setOcupacion("");
-        data.setNivel_instruccion("");
-        data.setLugar_trabajo("");
-        data.setDireccion_trabajo("");
-        data.setTelefono_trabajo("");
-        
-        // Log para debugging
-        Log.d(TAG, "=== DATOS PARA ACTUALIZAR ===");
-        Log.d(TAG, "Cédula (session): " + sessionManager.getCedula());
-        Log.d(TAG, "País seleccionado: " + (paisSeleccionado != null ? paisSeleccionado.getNombre() : "null"));
-        Log.d(TAG, "Ciudad seleccionada: " + (ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : "null"));
-        Log.d(TAG, "===============================");
-        
-        // Solo incluir campos si están visibles
-        if (tilNombres.getVisibility() == View.VISIBLE) {
-            data.setNombres(etNombres.getText().toString().trim());
-        }
-        if (tilApellidos.getVisibility() == View.VISIBLE) {
-            data.setApellidos(etApellidos.getText().toString().trim());
-        }
-        if (tilEmail.getVisibility() == View.VISIBLE) {
-            data.setEmail(etEmail.getText().toString().trim());
-        }
-
-        // Convertir fecha al formato de la API
         try {
-            Date date = displayDateFormat.parse(etFechaNacimiento.getText().toString());
-            data.setFecha_nacimiento(apiDateFormat.format(date));
-        } catch (ParseException e) {
-            Log.e(TAG, "Error al parsear fecha", e);
-            // Mantener string vacío ya inicializado
-        }
+            DatosPersonalesData data = new DatosPersonalesData();
+            // NO establecer cedula aquí, ya se envía en el nivel superior del JSON
 
-        // Concatenar lugar de nacimiento: "País, Provincia, Ciudad"
-        String lugarNacimiento = "";
-        if (paisSeleccionado != null && provinciaSeleccionada != null && ciudadSeleccionada != null) {
-            lugarNacimiento = paisSeleccionado.getNombre() + ", " + 
-                             provinciaSeleccionada.getNombre() + ", " + 
-                             ciudadSeleccionada.getNombre();
-        } else {
-            // Fallback en caso de que no se hayan seleccionado desde dropdowns
-            String pais = actvPais.getText().toString().trim();
-            String provincia = actvProvincia.getText().toString().trim();
-            String ciudad = actvCiudad.getText().toString().trim();
-            if (!pais.isEmpty() && !provincia.isEmpty() && !ciudad.isEmpty()) {
-                lugarNacimiento = pais + ", " + provincia + ", " + ciudad;
+            // Inicializar todos los campos para evitar nulls
+            data.setNombres("");
+            data.setApellidos("");
+            data.setFecha_nacimiento("");
+            data.setLugar_nacimiento("");
+            data.setEmail("");
+            data.setTelefono_convencional("");
+            data.setTelefono_movil("");
+            data.setOcupacion("");
+            data.setNivel_instruccion("");
+            data.setLugar_trabajo("");
+            data.setDireccion_trabajo("");
+            data.setTelefono_trabajo("");
+
+            // Log para debugging
+            Log.d(TAG, "=== DATOS PARA ACTUALIZAR ===");
+            Log.d(TAG, "Cédula (session): " + sessionManager.getCedula());
+            Log.d(TAG, "País seleccionado: " + (paisSeleccionado != null ? paisSeleccionado.getNombre() : "null"));
+            Log.d(TAG, "Ciudad seleccionada: " + (ciudadSeleccionada != null ? ciudadSeleccionada.getNombre() : "null"));
+            Log.d(TAG, "===============================");
+
+            // Solo incluir campos si están visibles
+            if (tilNombres.getVisibility() == View.VISIBLE) {
+                data.setNombres(etNombres.getText().toString().trim());
             }
-        }
-        data.setLugar_nacimiento(lugarNacimiento);
-
-        String telConv = etTelefonoConvencional.getText().toString().trim();
-        data.setTelefono_convencional(telConv);
-
-        data.setTelefono_movil(etTelefonoMovil.getText().toString().trim());
-        data.setOcupacion(etOcupacion.getText().toString().trim());
-
-        String nivelInstruccion = actvNivelInstruccion.getText().toString().trim();
-        if ("Otro".equals(nivelInstruccion)) {
-            data.setNivel_instruccion(etNivelInstruccionOtro.getText().toString().trim());
-        } else {
-            data.setNivel_instruccion(nivelInstruccion);
-        }
-
-        // Datos de trabajo - SIEMPRE enviar algo para evitar constraint violations
-        if (rbTrabajaSi.isChecked()) {
-            String lugarTrabajo = etLugarTrabajo.getText().toString().trim();
-            String direccionTrabajo = etDireccionTrabajo.getText().toString().trim();
-            String telTrabajo = etTelefonoTrabajo.getText().toString().trim();
-            
-            data.setLugar_trabajo(lugarTrabajo.isEmpty() ? "No especificado" : lugarTrabajo);
-            data.setDireccion_trabajo(direccionTrabajo.isEmpty() ? "No especificado" : direccionTrabajo);
-            data.setTelefono_trabajo(telTrabajo);
-        } else {
-            // Cuando no trabaja, mantener strings vacíos ya inicializados
-            data.setLugar_trabajo("No trabaja");
-            data.setDireccion_trabajo("No aplica");
-            // telefono_trabajo queda como string vacío
-        }
-
-        // Log datos finales antes de enviar
-        Log.d(TAG, "=== DATOS FINALES PARA ENVIAR ===");
-        Log.d(TAG, "nombres: " + data.getNombres());
-        Log.d(TAG, "apellidos: " + data.getApellidos());
-        Log.d(TAG, "fecha_nacimiento: " + data.getFecha_nacimiento());
-        Log.d(TAG, "lugar_nacimiento: " + data.getLugar_nacimiento());
-        Log.d(TAG, "email: " + data.getEmail());
-        Log.d(TAG, "telefono_convencional: " + data.getTelefono_convencional());
-        Log.d(TAG, "telefono_movil: " + data.getTelefono_movil());
-        Log.d(TAG, "ocupacion: " + data.getOcupacion());
-        Log.d(TAG, "nivel_instruccion: " + data.getNivel_instruccion());
-        Log.d(TAG, "lugar_trabajo: " + data.getLugar_trabajo());
-        Log.d(TAG, "direccion_trabajo: " + data.getDireccion_trabajo());
-        Log.d(TAG, "telefono_trabajo: " + data.getTelefono_trabajo());
-        Log.d(TAG, "==============================");
-
-        updateRepository.updatePersonalData(sessionManager.getCedula(), data, new UpdateRepository.UpdateCallback() {
-            @Override
-            public void onSuccess(ApiResponse<String> response) {
-                progressBar.setVisibility(View.GONE);
-                btnSiguiente.setEnabled(true);
-                showSuccessDialog();
+            if (tilApellidos.getVisibility() == View.VISIBLE) {
+                data.setApellidos(etApellidos.getText().toString().trim());
+            }
+            if (tilEmail.getVisibility() == View.VISIBLE) {
+                data.setEmail(etEmail.getText().toString().trim());
             }
 
-            @Override
-            public void onError(String message) {
-                progressBar.setVisibility(View.GONE);
-                btnSiguiente.setEnabled(true);
-                Log.e(TAG, "Error al actualizar: " + message);
-                showErrorDialog("Error al actualizar los datos. Intente nuevamente.");
+            // Convertir fecha al formato de la API
+            try {
+                Date date = displayDateFormat.parse(etFechaNacimiento.getText().toString());
+                data.setFecha_nacimiento(apiDateFormat.format(date));
+            } catch (ParseException e) {
+                Log.e(TAG, "Error al parsear fecha", e);
+                // Mantener string vacío ya inicializado
             }
-        });
+
+            // Concatenar lugar de nacimiento: "País, Provincia, Ciudad"
+            String lugarNacimiento = "";
+            if (paisSeleccionado != null && provinciaSeleccionada != null && ciudadSeleccionada != null) {
+                lugarNacimiento = paisSeleccionado.getNombre() + ", " +
+                        provinciaSeleccionada.getNombre() + ", " +
+                        ciudadSeleccionada.getNombre();
+            } else {
+                // Fallback en caso de que no se hayan seleccionado desde dropdowns
+                String pais = actvPais.getText().toString().trim();
+                String provincia = actvProvincia.getText().toString().trim();
+                String ciudad = actvCiudad.getText().toString().trim();
+                if (!pais.isEmpty() && !provincia.isEmpty() && !ciudad.isEmpty()) {
+                    lugarNacimiento = pais + ", " + provincia + ", " + ciudad;
+                }
+            }
+            data.setLugar_nacimiento(lugarNacimiento);
+
+            String telConv = etTelefonoConvencional.getText().toString().trim();
+            data.setTelefono_convencional(telConv);
+
+            data.setTelefono_movil(etTelefonoMovil.getText().toString().trim());
+            data.setOcupacion(etOcupacion.getText().toString().trim());
+
+            String nivelInstruccion = actvNivelInstruccion.getText().toString().trim();
+            if ("Otro".equals(nivelInstruccion)) {
+                data.setNivel_instruccion(etNivelInstruccionOtro.getText().toString().trim());
+            } else {
+                data.setNivel_instruccion(nivelInstruccion);
+            }
+
+            // Datos de trabajo - SIEMPRE enviar algo para evitar constraint violations
+            if (rbTrabajaSi.isChecked()) {
+                String lugarTrabajo = etLugarTrabajo.getText().toString().trim();
+                String direccionTrabajo = etDireccionTrabajo.getText().toString().trim();
+                String telTrabajo = etTelefonoTrabajo.getText().toString().trim();
+
+                data.setLugar_trabajo(lugarTrabajo.isEmpty() ? "No especificado" : lugarTrabajo);
+                data.setDireccion_trabajo(direccionTrabajo.isEmpty() ? "No especificado" : direccionTrabajo);
+                data.setTelefono_trabajo(telTrabajo);
+            } else {
+                // Cuando no trabaja, mantener strings vacíos ya inicializados
+                data.setLugar_trabajo("No trabaja");
+                data.setDireccion_trabajo("No aplica");
+                // telefono_trabajo queda como string vacío
+            }
+
+            // Log datos finales antes de enviar
+            Log.d(TAG, "=== DATOS FINALES PARA ENVIAR ===");
+            Log.d(TAG, "nombres: " + data.getNombres());
+            Log.d(TAG, "apellidos: " + data.getApellidos());
+            Log.d(TAG, "fecha_nacimiento: " + data.getFecha_nacimiento());
+            Log.d(TAG, "lugar_nacimiento: " + data.getLugar_nacimiento());
+            Log.d(TAG, "email: " + data.getEmail());
+            Log.d(TAG, "telefono_convencional: " + data.getTelefono_convencional());
+            Log.d(TAG, "telefono_movil: " + data.getTelefono_movil());
+            Log.d(TAG, "ocupacion: " + data.getOcupacion());
+            Log.d(TAG, "nivel_instruccion: " + data.getNivel_instruccion());
+            Log.d(TAG, "lugar_trabajo: " + data.getLugar_trabajo());
+            Log.d(TAG, "direccion_trabajo: " + data.getDireccion_trabajo());
+            Log.d(TAG, "telefono_trabajo: " + data.getTelefono_trabajo());
+            Log.d(TAG, "==============================");
+
+            updateRepository.updatePersonalData(sessionManager.getCedula(), data, new UpdateRepository.UpdateCallback() {
+                @Override
+                public void onSuccess(ApiResponse<String> response) {
+                    progressBar.setVisibility(View.GONE);
+                    btnSiguiente.setEnabled(true);
+                    showSuccessDialog();
+                }
+
+                @Override
+                public void onError(String message) {
+                    progressBar.setVisibility(View.GONE);
+                    btnSiguiente.setEnabled(true);
+                    Log.e(TAG, "Error al actualizar: " + message);
+                    showErrorDialog("Error al actualizar los datos. Intente nuevamente.");
+                }
+            });
+        } catch (Exception e) {
+            progressBar.setVisibility(View.GONE);
+            btnSiguiente.setEnabled(true);
+            Log.e(TAG, "Error creating update request", e);
+            showErrorDialog("Error al preparar los datos para actualizar. Inténtalo de nuevo.");
+        }
     }
 
     private void showSuccessDialog() {
@@ -667,253 +685,291 @@ public class DatosPersonalesActivity extends AppCompatActivity {
     }
 
     private void loadPaises() {
-        apiService.getPaises().enqueue(new Callback<ApiResponse<List<Pais>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Pais>>> call, Response<ApiResponse<List<Pais>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    paises = response.body().getData();
-                    Log.d(TAG, "Países cargados: " + paises.size());
-                    
-                    // Configurar adapter para AutoCompleteTextView de países
-                    ArrayAdapter<Pais> adapterPaises = new ArrayAdapter<>(DatosPersonalesActivity.this, 
-                            android.R.layout.simple_dropdown_item_1line, paises);
-                    actvPais.setAdapter(adapterPaises);
-                    
-                    // Configurar listener para selección de país
-                    actvPais.setOnItemClickListener((parent, view, position, id) -> {
-                        paisSeleccionado = paises.get(position);
-                        Log.d(TAG, "País seleccionado: " + paisSeleccionado.getNombre() + " (ID: " + paisSeleccionado.getId() + ")");
-                        
-                        // Limpiar provincia y ciudad seleccionadas
-                        actvProvincia.setText("");
-                        actvCiudad.setText("");
-                        provinciaSeleccionada = null;
-                        ciudadSeleccionada = null;
-                        provincias.clear();
-                        ciudades.clear();
-                        
-                        // Validar que el ID del país es válido antes de llamar a la API
-                        if (paisSeleccionado.getId() > 0) {
-                            loadProvincias(paisSeleccionado.getId());
-                        } else {
-                            Log.e(TAG, "ID de país inválido: " + paisSeleccionado.getId());
-                            Toast.makeText(DatosPersonalesActivity.this, "Error: ID de país inválido", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    
-                    // Set Ecuador as default if available
-                    for (Pais pais : paises) {
-                        if ("Ecuador".equalsIgnoreCase(pais.getNombre())) {
-                            paisSeleccionado = pais;
-                            actvPais.setText(pais.getNombre(), false);
-                            loadProvincias(pais.getId());
-                            break;
-                        }
-                    }
-                    
-                    // Populate data after countries are loaded
-                    if (isUpdateMode) {
-                        // En modo actualización, cargar datos del usuario desde la API
-                        loadUserData();
-                    } else {
-                        // En modo registro, cargar datos desde el repository local
-                        populateDataFromRepository();
-                    }
-                } else {
-                    Log.e(TAG, "Error al cargar países: " + response.message());
-                }
-            }
+        try {
+            apiService.getPaises().enqueue(new Callback<ApiResponse<List<Pais>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Pais>>> call, Response<ApiResponse<List<Pais>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            paises = response.body().getData();
+                            Log.d(TAG, "Países cargados: " + paises.size());
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Pais>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar países", t);
-            }
-        });
+                            // Configurar adapter para AutoCompleteTextView de países
+                            ArrayAdapter<Pais> adapterPaises = new ArrayAdapter<>(DatosPersonalesActivity.this,
+                                    android.R.layout.simple_dropdown_item_1line, paises);
+                            actvPais.setAdapter(adapterPaises);
+
+                            // Configurar listener para selección de país
+                            actvPais.setOnItemClickListener((parent, view, position, id) -> {
+                                paisSeleccionado = paises.get(position);
+                                Log.d(TAG, "País seleccionado: " + paisSeleccionado.getNombre() + " (ID: " + paisSeleccionado.getId() + ")");
+
+                                // Limpiar provincia y ciudad seleccionadas
+                                actvProvincia.setText("");
+                                actvCiudad.setText("");
+                                provinciaSeleccionada = null;
+                                ciudadSeleccionada = null;
+                                provincias.clear();
+                                ciudades.clear();
+
+                                // Validar que el ID del país es válido antes de llamar a la API
+                                if (paisSeleccionado.getId() > 0) {
+                                    loadProvincias(paisSeleccionado.getId());
+                                } else {
+                                    Log.e(TAG, "ID de país inválido: " + paisSeleccionado.getId());
+                                    Toast.makeText(DatosPersonalesActivity.this, "Error: ID de país inválido", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+
+                            // Set Ecuador as default if available
+                            for (Pais pais : paises) {
+                                if ("Ecuador".equalsIgnoreCase(pais.getNombre())) {
+                                    paisSeleccionado = pais;
+                                    actvPais.setText(pais.getNombre(), false);
+                                    loadProvincias(pais.getId());
+                                    break;
+                                }
+                            }
+
+                            // Populate data after countries are loaded
+                            if (isUpdateMode) {
+                                // En modo actualización, cargar datos del usuario desde la API
+                                loadUserData();
+                            } else {
+                                // En modo registro, cargar datos desde el repository local
+                                populateDataFromRepository();
+                            }
+                        } else {
+                            Log.e(TAG, "Error al cargar países: " + response.message());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing paises response", e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<List<Pais>>> call, Throwable t) {
+                    Log.e(TAG, "Error de conexión al cargar países", t);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling paises endpoint", e);
+        }
     }
 
     private void loadProvincias(int paisId) {
         Log.d(TAG, "Cargando provincias para país ID: " + paisId);
-        
-        apiService.getProvincias(paisId).enqueue(new Callback<ApiResponse<List<Provincia>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Provincia>>> call, Response<ApiResponse<List<Provincia>>> response) {
-                Log.d(TAG, "Respuesta recibida para provincias. Código: " + response.code());
-                
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    provincias = response.body().getData();
-                    Log.d(TAG, "Provincias cargadas exitosamente: " + provincias.size());
-                    
-                    if (provincias.isEmpty()) {
-                        Log.w(TAG, "No se encontraron provincias para el país ID: " + paisId);
-                        Toast.makeText(DatosPersonalesActivity.this, 
-                            "No se encontraron provincias para este país", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                    
-                    // Configurar adapter para AutoCompleteTextView de provincias
-                    ArrayAdapter<Provincia> adapterProvincias = new ArrayAdapter<>(DatosPersonalesActivity.this, 
-                            android.R.layout.simple_dropdown_item_1line, provincias);
-                    actvProvincia.setAdapter(adapterProvincias);
-                    
-                    // Configurar listener para selección de provincia
-                    actvProvincia.setOnItemClickListener((parent, view, position, id) -> {
-                        provinciaSeleccionada = provincias.get(position);
-                        Log.d(TAG, "Provincia seleccionada: " + provinciaSeleccionada.getNombre());
-                        
-                        // Limpiar ciudad seleccionada
-                        actvCiudad.setText("");
-                        ciudadSeleccionada = null;
-                        ciudades.clear();
-                        
-                        // Cargar ciudades de la provincia seleccionada
-                        loadCiudades(provinciaSeleccionada.getId());
-                    });
-                } else {
-                    Log.e(TAG, "Error al cargar provincias. Código: " + response.code() + 
-                           ", Mensaje: " + response.message());
-                    Toast.makeText(DatosPersonalesActivity.this, 
-                        "Error al cargar provincias", Toast.LENGTH_SHORT).show();
-                }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Provincia>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar provincias para país ID: " + paisId, t);
-                Toast.makeText(DatosPersonalesActivity.this, 
-                    "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        try {
+            apiService.getProvincias(paisId).enqueue(new Callback<ApiResponse<List<Provincia>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Provincia>>> call, Response<ApiResponse<List<Provincia>>> response) {
+                    Log.d(TAG, "Respuesta recibida para provincias. Código: " + response.code());
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            provincias = response.body().getData();
+                            Log.d(TAG, "Provincias cargadas exitosamente: " + provincias.size());
+
+                            if (provincias.isEmpty()) {
+                                Log.w(TAG, "No se encontraron provincias para el país ID: " + paisId);
+                                Toast.makeText(DatosPersonalesActivity.this,
+                                        "No se encontraron provincias para este país", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            // Configurar adapter para AutoCompleteTextView de provincias
+                            ArrayAdapter<Provincia> adapterProvincias = new ArrayAdapter<>(DatosPersonalesActivity.this,
+                                    android.R.layout.simple_dropdown_item_1line, provincias);
+                            actvProvincia.setAdapter(adapterProvincias);
+
+                            // Configurar listener para selección de provincia
+                            actvProvincia.setOnItemClickListener((parent, view, position, id) -> {
+                                provinciaSeleccionada = provincias.get(position);
+                                Log.d(TAG, "Provincia seleccionada: " + provinciaSeleccionada.getNombre());
+
+                                // Limpiar ciudad seleccionada
+                                actvCiudad.setText("");
+                                ciudadSeleccionada = null;
+                                ciudades.clear();
+
+                                // Cargar ciudades de la provincia seleccionada
+                                loadCiudades(provinciaSeleccionada.getId());
+                            });
+                        } else {
+                            Log.e(TAG, "Error al cargar provincias. Código: " + response.code() +
+                                    ", Mensaje: " + response.message());
+                            Toast.makeText(DatosPersonalesActivity.this,
+                                    "Error al cargar provincias", Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing provincias response", e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<List<Provincia>>> call, Throwable t) {
+                    Log.e(TAG, "Error de conexión al cargar provincias para país ID: " + paisId, t);
+                    Toast.makeText(DatosPersonalesActivity.this,
+                            "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling provincias endpoint", e);
+        }
     }
 
     private void loadProvinciasAndSelect(int paisId, String nombreProvincia, String nombreCiudad) {
-        apiService.getProvincias(paisId).enqueue(new Callback<ApiResponse<List<Provincia>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Provincia>>> call, Response<ApiResponse<List<Provincia>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    provincias = response.body().getData();
-                    
-                    // Configurar adapter
-                    ArrayAdapter<Provincia> adapterProvincias = new ArrayAdapter<>(DatosPersonalesActivity.this, 
-                            android.R.layout.simple_dropdown_item_1line, provincias);
-                    actvProvincia.setAdapter(adapterProvincias);
-                    
-                    // Buscar y seleccionar provincia
-                    for (Provincia provincia : provincias) {
-                        if (provincia.getNombre().equalsIgnoreCase(nombreProvincia)) {
-                            provinciaSeleccionada = provincia;
-                            actvProvincia.setText(provincia.getNombre(), false);
-                            
-                            // Cargar ciudades y luego seleccionar la ciudad
-                            loadCiudadesAndSelect(provincia.getId(), nombreCiudad);
-                            break;
+        try {
+            apiService.getProvincias(paisId).enqueue(new Callback<ApiResponse<List<Provincia>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Provincia>>> call, Response<ApiResponse<List<Provincia>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            provincias = response.body().getData();
+
+                            // Configurar adapter
+                            ArrayAdapter<Provincia> adapterProvincias = new ArrayAdapter<>(DatosPersonalesActivity.this,
+                                    android.R.layout.simple_dropdown_item_1line, provincias);
+                            actvProvincia.setAdapter(adapterProvincias);
+
+                            // Buscar y seleccionar provincia
+                            for (Provincia provincia : provincias) {
+                                if (provincia.getNombre().equalsIgnoreCase(nombreProvincia)) {
+                                    provinciaSeleccionada = provincia;
+                                    actvProvincia.setText(provincia.getNombre(), false);
+
+                                    // Cargar ciudades y luego seleccionar la ciudad
+                                    loadCiudadesAndSelect(provincia.getId(), nombreCiudad);
+                                    break;
+                                }
+                            }
                         }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing provincias for restore", e);
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Provincia>>> call, Throwable t) {
-                Log.e(TAG, "Error al cargar provincias para restaurar datos", t);
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<Provincia>>> call, Throwable t) {
+                    Log.e(TAG, "Error al cargar provincias para restaurar datos", t);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling provincias for restore endpoint", e);
+        }
     }
 
     private void loadCiudadesAndSelect(int provinciaId, String nombreCiudad) {
-        apiService.getCiudades(provinciaId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    ciudades = response.body().getData();
-                    
-                    // Configurar adapter
-                    ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
-                            android.R.layout.simple_dropdown_item_1line, ciudades);
-                    actvCiudad.setAdapter(adapterCiudades);
-                    
-                    // Buscar y seleccionar ciudad
-                    for (Ciudad ciudad : ciudades) {
-                        if (ciudad.getNombre().equalsIgnoreCase(nombreCiudad)) {
-                            ciudadSeleccionada = ciudad;
-                            actvCiudad.setText(ciudad.getNombre(), false);
-                            break;
+        try {
+            apiService.getCiudades(provinciaId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                            ciudades = response.body().getData();
+
+                            // Configurar adapter
+                            ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this,
+                                    android.R.layout.simple_dropdown_item_1line, ciudades);
+                            actvCiudad.setAdapter(adapterCiudades);
+
+                            // Buscar y seleccionar ciudad
+                            for (Ciudad ciudad : ciudades) {
+                                if (ciudad.getNombre().equalsIgnoreCase(nombreCiudad)) {
+                                    ciudadSeleccionada = ciudad;
+                                    actvCiudad.setText(ciudad.getNombre(), false);
+                                    break;
+                                }
+                            }
                         }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing ciudades for restore", e);
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
-                Log.e(TAG, "Error al cargar ciudades para restaurar datos", t);
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
+                    Log.e(TAG, "Error al cargar ciudades para restaurar datos", t);
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling ciudades for restore endpoint", e);
+        }
     }
 
     private void loadCiudades(int provinciaId) {
         Log.d(TAG, "Cargando ciudades para provincia ID: " + provinciaId);
-        
-        apiService.getCiudades(provinciaId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
-                Log.d(TAG, "Respuesta recibida para ciudades. Código: " + response.code());
-                
-                if (response.isSuccessful()) {
-                    if (response.body() != null) {
-                        Log.d(TAG, "Cuerpo de respuesta no nulo");
-                        ApiResponse<List<Ciudad>> apiResponse = response.body();
-                        
-                        if (apiResponse.getData() != null) {
-                            ciudades = apiResponse.getData();
-                            Log.d(TAG, "Ciudades cargadas exitosamente: " + ciudades.size());
-                            
-                            if (ciudades.isEmpty()) {
-                                Log.w(TAG, "No se encontraron ciudades para la provincia ID: " + provinciaId);
-                                Toast.makeText(DatosPersonalesActivity.this, 
-                                    "No se encontraron ciudades para esta provincia", Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            
-                            // Configurar adapter para AutoCompleteTextView de ciudades
-                            ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this, 
-                                    android.R.layout.simple_dropdown_item_1line, ciudades);
-                            actvCiudad.setAdapter(adapterCiudades);
-                            
-                            // Configurar listener para selección de ciudad
-                            actvCiudad.setOnItemClickListener((parent, view, position, id) -> {
-                                ciudadSeleccionada = ciudades.get(position);
-                                Log.d(TAG, "Ciudad seleccionada: " + ciudadSeleccionada.getNombre());
-                            });
-                        } else {
-                            Log.e(TAG, "Datos de ciudades son nulos en la respuesta");
-                            Toast.makeText(DatosPersonalesActivity.this, 
-                                "Error: No se recibieron datos de ciudades", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Log.e(TAG, "Cuerpo de respuesta es nulo");
-                        Toast.makeText(DatosPersonalesActivity.this, 
-                            "Error: Respuesta vacía del servidor", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Log.e(TAG, "Error al cargar ciudades. Código: " + response.code() + 
-                           ", Mensaje: " + response.message());
-                    
-                    String errorMessage = "Error al cargar ciudades";
-                    if (response.code() == 500) {
-                        errorMessage = "Error interno del servidor. Verifique el ID de la provincia.";
-                    } else if (response.code() == 404) {
-                        errorMessage = "No se encontraron ciudades para esta provincia.";
-                    }
-                    
-                    Toast.makeText(DatosPersonalesActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
-                }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
-                Log.e(TAG, "Error de conexión al cargar ciudades para provincia ID: " + provinciaId, t);
-                Toast.makeText(DatosPersonalesActivity.this, 
-                    "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        try {
+            apiService.getCiudades(provinciaId).enqueue(new Callback<ApiResponse<List<Ciudad>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<Ciudad>>> call, Response<ApiResponse<List<Ciudad>>> response) {
+                    Log.d(TAG, "Respuesta recibida para ciudades. Código: " + response.code());
+                    try {
+                        if (response.isSuccessful()) {
+                            if (response.body() != null) {
+                                Log.d(TAG, "Cuerpo de respuesta no nulo");
+                                ApiResponse<List<Ciudad>> apiResponse = response.body();
+
+                                if (apiResponse.getData() != null) {
+                                    ciudades = apiResponse.getData();
+                                    Log.d(TAG, "Ciudades cargadas exitosamente: " + ciudades.size());
+
+                                    if (ciudades.isEmpty()) {
+                                        Log.w(TAG, "No se encontraron ciudades para la provincia ID: " + provinciaId);
+                                        Toast.makeText(DatosPersonalesActivity.this,
+                                                "No se encontraron ciudades para esta provincia", Toast.LENGTH_SHORT).show();
+                                        return;
+                                    }
+
+                                    // Configurar adapter para AutoCompleteTextView de ciudades
+                                    ArrayAdapter<Ciudad> adapterCiudades = new ArrayAdapter<>(DatosPersonalesActivity.this,
+                                            android.R.layout.simple_dropdown_item_1line, ciudades);
+                                    actvCiudad.setAdapter(adapterCiudades);
+
+                                    // Configurar listener para selección de ciudad
+                                    actvCiudad.setOnItemClickListener((parent, view, position, id) -> {
+                                        ciudadSeleccionada = ciudades.get(position);
+                                        Log.d(TAG, "Ciudad seleccionada: " + ciudadSeleccionada.getNombre());
+                                    });
+                                } else {
+                                    Log.e(TAG, "Datos de ciudades son nulos en la respuesta");
+                                    Toast.makeText(DatosPersonalesActivity.this,
+                                            "Error: No se recibieron datos de ciudades", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Log.e(TAG, "Cuerpo de respuesta es nulo");
+                                Toast.makeText(DatosPersonalesActivity.this,
+                                        "Error: Respuesta vacía del servidor", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Log.e(TAG, "Error al cargar ciudades. Código: " + response.code() +
+                                    ", Mensaje: " + response.message());
+
+                            String errorMessage = "Error al cargar ciudades";
+                            if (response.code() == 500) {
+                                errorMessage = "Error interno del servidor. Verifique el ID de la provincia.";
+                            } else if (response.code() == 404) {
+                                errorMessage = "No se encontraron ciudades para esta provincia.";
+                            }
+
+                            Toast.makeText(DatosPersonalesActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing ciudades response", e);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<List<Ciudad>>> call, Throwable t) {
+                    Log.e(TAG, "Error de conexión al cargar ciudades para provincia ID: " + provinciaId, t);
+                    Toast.makeText(DatosPersonalesActivity.this,
+                            "Error de conexión. Verifique su internet.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling ciudades endpoint", e);
+        }
     }
 
 

@@ -9,12 +9,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.BounceInterpolator;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
@@ -22,6 +24,8 @@ import com.google.android.material.button.MaterialButton;
 import com.mjc.adoptme.data.SessionManager; // <-- ¡IMPORTANTE!
 
 public class PerfilActivity extends AppCompatActivity {
+
+    private static final String TAG = "PerfilActivity";
 
     // Vistas principales
     private LinearLayout logoContainer, cardsContainer, layoutPaws;
@@ -43,13 +47,30 @@ public class PerfilActivity extends AppCompatActivity {
         setContentView(R.layout.activity_perfil);
 
         // --- LÓGICA DE SESIÓN ---
-        sessionManager = new SessionManager(getApplicationContext());
+        sessionManager = null;
+        try {
+            sessionManager = new SessionManager(getApplicationContext());
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing SessionManager", e);
+            Toast.makeText(this, "Error crítico al iniciar el perfil.", Toast.LENGTH_LONG).show();
+            try {
+                startActivity(new Intent(PerfilActivity.this, MainActivity.class));
+            } catch (Exception ex) {
+                Log.e(TAG, "Error starting MainActivity after SessionManager failure", ex);
+            }
+            finish();
+            return;
+        }
 
         // Protección: Si no hay sesión, no debería estar aquí. Lo mandamos al login.
         if (!sessionManager.isLoggedIn()) {
-            Intent intent = new Intent(this, MainActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            try {
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Exception e) {
+                Log.e(TAG, "Error redirecting to MainActivity", e);
+            }
             finish();
             return; // Detenemos la ejecución
         }
@@ -109,27 +130,42 @@ public class PerfilActivity extends AppCompatActivity {
         // --- NAVEGACIÓN EN MODO ACTUALIZACIÓN ---
         cardDatosPersonales.setOnClickListener(v -> {
             animateCardClick(v);
-            Intent intent = new Intent(PerfilActivity.this, DatosPersonalesActivity.class);
-            // ¡La clave! Le decimos a la activity que se abra en modo de actualización.
-            intent.putExtra("IS_UPDATE_MODE", true);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            try {
+                Intent intent = new Intent(PerfilActivity.this, DatosPersonalesActivity.class);
+                // ¡La clave! Le decimos a la activity que se abra en modo de actualización.
+                intent.putExtra("IS_UPDATE_MODE", true);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            } catch (Exception e) {
+                Log.e(TAG, "Error starting DatosPersonalesActivity", e);
+                Toast.makeText(PerfilActivity.this, "Error al abrir Datos Personales.", Toast.LENGTH_SHORT).show();
+            }
         });
 
         cardDomicilio.setOnClickListener(v -> {
             animateCardClick(v);
-            Intent intent = new Intent(PerfilActivity.this, DomicilioActivity.class);
-            intent.putExtra("IS_UPDATE_MODE", true);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            try {
+                Intent intent = new Intent(PerfilActivity.this, DomicilioActivity.class);
+                intent.putExtra("IS_UPDATE_MODE", true);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            } catch (Exception e) {
+                Log.e(TAG, "Error starting DomicilioActivity", e);
+                Toast.makeText(PerfilActivity.this, "Error al abrir Domicilio.", Toast.LENGTH_SHORT).show();
+            }
         });
 
         cardReferencias.setOnClickListener(v -> {
             animateCardClick(v);
-            Intent intent = new Intent(PerfilActivity.this, ReferenciasPersonalesActivity.class);
-            intent.putExtra("IS_UPDATE_MODE", true);
-            startActivity(intent);
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            try {
+                Intent intent = new Intent(PerfilActivity.this, ReferenciasPersonalesActivity.class);
+                intent.putExtra("IS_UPDATE_MODE", true);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
+            } catch (Exception e) {
+                Log.e(TAG, "Error starting ReferenciasPersonalesActivity", e);
+                Toast.makeText(PerfilActivity.this, "Error al abrir Referencias Personales.", Toast.LENGTH_SHORT).show();
+            }
         });
     }
 

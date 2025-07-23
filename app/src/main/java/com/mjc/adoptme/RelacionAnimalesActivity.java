@@ -320,42 +320,46 @@ public class RelacionAnimalesActivity extends AppCompatActivity {
     // En RelacionAnimalesActivity.java
 
     private void populateDataFromRepository() {
-        InfoAnimales infoAnimales = RegistroRepository.getInstance().getRegistroData().getAnimales();
-        if (infoAnimales == null) return;
+        try {
+            InfoAnimales infoAnimales = RegistroRepository.getInstance().getRegistroData().getAnimales();
+            if (infoAnimales == null) return;
 
-        // Rellenar mala experiencia
-        if (infoAnimales.getMalaExperiencia() != null) {
-            for (int i = 0; i < rgMalaExperiencia.getChildCount(); i++) {
-                RadioButton rb = (RadioButton) rgMalaExperiencia.getChildAt(i);
-                if (rb.getText().toString().equalsIgnoreCase(infoAnimales.getMalaExperiencia())) {
-                    rb.setChecked(true);
-                    break;
+            // Rellenar mala experiencia
+            if (infoAnimales.getMalaExperiencia() != null) {
+                for (int i = 0; i < rgMalaExperiencia.getChildCount(); i++) {
+                    RadioButton rb = (RadioButton) rgMalaExperiencia.getChildAt(i);
+                    if (rb.getText().toString().equalsIgnoreCase(infoAnimales.getMalaExperiencia())) {
+                        rb.setChecked(true);
+                        break;
+                    }
                 }
             }
-        }
 
-        // Rellenar si tiene animales y la sección condicional
-        if (infoAnimales.isTieneAnimalesActuales()) {
-            rbTieneAnimalesSi.setChecked(true);
-            layoutDetallesAnimales.setVisibility(View.VISIBLE);
-            etEspecifiqueAnimales.setText(infoAnimales.getEspecificacion());
+            // Rellenar si tiene animales y la sección condicional
+            if (infoAnimales.isTieneAnimalesActuales()) {
+                rbTieneAnimalesSi.setChecked(true);
+                layoutDetallesAnimales.setVisibility(View.VISIBLE);
+                etEspecifiqueAnimales.setText(infoAnimales.getEspecificacion());
 
-            // Rellenar los detalles del primer animal (si existe)
-            if (infoAnimales.getActuales() != null && !infoAnimales.getActuales().isEmpty()) {
-                AnimalActual primerAnimal = infoAnimales.getActuales().get(0);
+                // Rellenar los detalles del primer animal (si existe)
+                if (infoAnimales.getActuales() != null && !infoAnimales.getActuales().isEmpty()) {
+                    AnimalActual primerAnimal = infoAnimales.getActuales().get(0);
 
-                // Tipo: 1=Canino, 2=Felino
-                if (primerAnimal.getTipoAnimalId() == 1) rbCanino.setChecked(true); else rbFelino.setChecked(true);
+                    // Tipo: 1=Canino, 2=Felino
+                    if (primerAnimal.getTipoAnimalId() == 1) rbCanino.setChecked(true); else rbFelino.setChecked(true);
 
-                // Género: 1=Macho, 2=Hembra
-                if (primerAnimal.getGeneroId() == 1) rbMacho.setChecked(true); else rbHembra.setChecked(true);
+                    // Género: 1=Macho, 2=Hembra
+                    if (primerAnimal.getGeneroId() == 1) rbMacho.setChecked(true); else rbHembra.setChecked(true);
 
-                etEdadAnimal.setText(String.valueOf(primerAnimal.getEdad()));
-                if (primerAnimal.isEsterilizado()) rbEsterilizadoSi.setChecked(true); else rbEsterilizadoNo.setChecked(true);
+                    etEdadAnimal.setText(String.valueOf(primerAnimal.getEdad()));
+                    if (primerAnimal.isEsterilizado()) rbEsterilizadoSi.setChecked(true); else rbEsterilizadoNo.setChecked(true);
+                }
+            } else {
+                rbTieneAnimalesNo.setChecked(true);
+                layoutDetallesAnimales.setVisibility(View.GONE);
             }
-        } else {
-            rbTieneAnimalesNo.setChecked(true);
-            layoutDetallesAnimales.setVisibility(View.GONE);
+        } catch (Exception e) {
+            Log.e(TAG, "Error populating data from repository", e);
         }
     }
 

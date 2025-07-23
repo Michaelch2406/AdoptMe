@@ -7,6 +7,7 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageView;
@@ -149,28 +150,39 @@ public class PanelActivity extends AppCompatActivity {
             return;
         }
 
-        Call<ApiResponse<AdoptionStats>> call = apiService.getAdoptionStats(cedula);
-        call.enqueue(new Callback<ApiResponse<AdoptionStats>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<AdoptionStats>> call, Response<ApiResponse<AdoptionStats>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<AdoptionStats> apiResponse = response.body();
-                    if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
-                        AdoptionStats stats = apiResponse.getData();
-                        updateStatsUI(stats);
-                    } else {
+        try {
+            Call<ApiResponse<AdoptionStats>> call = apiService.getAdoptionStats(cedula);
+            call.enqueue(new Callback<ApiResponse<AdoptionStats>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<AdoptionStats>> call, Response<ApiResponse<AdoptionStats>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+                            ApiResponse<AdoptionStats> apiResponse = response.body();
+                            if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
+                                AdoptionStats stats = apiResponse.getData();
+                                updateStatsUI(stats);
+                            } else {
+                                setDefaultStats();
+                            }
+                        } else {
+                            setDefaultStats();
+                        }
+                    } catch (Exception e) {
+                        Log.e("PanelActivity", "Error processing stats response", e);
                         setDefaultStats();
                     }
-                } else {
+                }
+
+                @Override
+                public void onFailure(Call<ApiResponse<AdoptionStats>> call, Throwable t) {
+                    Log.e("PanelActivity", "Error loading stats", t);
                     setDefaultStats();
                 }
-            }
-
-            @Override
-            public void onFailure(Call<ApiResponse<AdoptionStats>> call, Throwable t) {
-                setDefaultStats();
-            }
-        });
+            });
+        } catch (Exception e) {
+            Log.e("PanelActivity", "Error calling stats endpoint", e);
+            setDefaultStats();
+        }
     }
 
     private void setDefaultStats() {

@@ -158,59 +158,70 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
             return;
         }
 
-        // Create adoption request
-        SolicitudAdopcion solicitud = new SolicitudAdopcion();
-        solicitud.setAnimalId(animalId);
-        solicitud.setCedulaAdoptante(cedulaAdoptante);
-        solicitud.setMotivaciones(buildMotivaciones());
-        solicitud.setCuidados(buildCuidados());
+        try {
+            // Create adoption request
+            SolicitudAdopcion solicitud = new SolicitudAdopcion();
+            solicitud.setAnimalId(animalId);
+            solicitud.setCedulaAdoptante(cedulaAdoptante);
+            solicitud.setMotivaciones(buildMotivaciones());
+            solicitud.setCuidados(buildCuidados());
 
-        // Log JSON request for debugging
-        Gson gson = new Gson();
-        String jsonRequest = gson.toJson(solicitud);
-        Log.d("AdopcionRequest", "JSON siendo enviado: " + jsonRequest);
+            // Log JSON request for debugging
+            Gson gson = new Gson();
+            String jsonRequest = gson.toJson(solicitud);
+            Log.d("AdopcionRequest", "JSON siendo enviado: " + jsonRequest);
 
-        // Submit to API
-        ApiService apiService = RetrofitClient.getApiService();
-        Call<ApiResponse<AdopcionResponse>> call = apiService.solicitarAdopcion(solicitud);
+            // Submit to API
+            ApiService apiService = RetrofitClient.getApiService();
+            Call<ApiResponse<AdopcionResponse>> call = apiService.solicitarAdopcion(solicitud);
 
-        btnSubmit.setEnabled(false);
-        btnSubmit.setText("Enviando...");
+            btnSubmit.setEnabled(false);
+            btnSubmit.setText("Enviando...");
 
-        call.enqueue(new Callback<ApiResponse<AdopcionResponse>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<AdopcionResponse>> call, Response<ApiResponse<AdopcionResponse>> response) {
-                btnSubmit.setEnabled(true);
-                btnSubmit.setText("Enviar Solicitud");
-
-                if (response.isSuccessful() && response.body() != null) {
-                    showSuccessDialog("¡Solicitud enviada exitosamente! Nos pondremos en contacto contigo pronto.");
-                    finish();
-                } else {
-                    String errorMessage = "Error al enviar la solicitud. Por favor intenta nuevamente.";
+            call.enqueue(new Callback<ApiResponse<AdopcionResponse>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<AdopcionResponse>> call, Response<ApiResponse<AdopcionResponse>> response) {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Enviar Solicitud");
                     try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            Log.e("AdopcionError", "Error response: " + errorBody);
-                            Log.e("AdopcionError", "Response code: " + response.code());
+                        if (response.isSuccessful() && response.body() != null) {
+                            showSuccessDialog("¡Solicitud enviada exitosamente! Nos pondremos en contacto contigo pronto.");
+                            finish();
+                        } else {
+                            String errorMessage = "Error al enviar la solicitud. Por favor intenta nuevamente.";
+                            try {
+                                if (response.errorBody() != null) {
+                                    String errorBody = response.errorBody().string();
+                                    Log.e("AdopcionError", "Error response: " + errorBody);
+                                    Log.e("AdopcionError", "Response code: " + response.code());
+                                }
+                            } catch (Exception e) {
+                                Log.e("AdopcionError", "Error reading error body", e);
+                            }
+                            showErrorDialog(errorMessage);
                         }
                     } catch (Exception e) {
-                        Log.e("AdopcionError", "Error reading error body", e);
+                        Log.e("AdopcionError", "Error processing adoption response", e);
+                        showErrorDialog("Error al procesar la respuesta de adopción.");
                     }
-                    showErrorDialog(errorMessage);
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<AdopcionResponse>> call, Throwable t) {
-                btnSubmit.setEnabled(true);
-                btnSubmit.setText("Enviar Solicitud");
-                
-                Toast.makeText(ProcesarAdopcionActivity.this, 
-                        "Error de conexión. Por favor intenta nuevamente.", 
-                        Toast.LENGTH_LONG).show();
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<AdopcionResponse>> call, Throwable t) {
+                    btnSubmit.setEnabled(true);
+                    btnSubmit.setText("Enviar Solicitud");
+
+                    Toast.makeText(ProcesarAdopcionActivity.this,
+                            "Error de conexión. Por favor intenta nuevamente.",
+                            Toast.LENGTH_LONG).show();
+                }
+            });
+        } catch (Exception e) {
+            Log.e("AdopcionError", "Error creating adoption request", e);
+            showErrorDialog("Error al crear la solicitud. Inténtalo de nuevo.");
+            btnSubmit.setEnabled(true);
+            btnSubmit.setText("Enviar Solicitud");
+        }
     }
 
     private boolean validateForm() {

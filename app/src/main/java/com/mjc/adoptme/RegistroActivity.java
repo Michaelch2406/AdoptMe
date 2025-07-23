@@ -251,20 +251,25 @@ public class RegistroActivity extends AppCompatActivity {
 
     // En RegistroActivity.java
     private void saveDataToRepository() {
-        RegistroRepository repository = RegistroRepository.getInstance();
-        // Obtenemos el objeto principal
-        RegistroCompleto data = repository.getRegistroData();
+        try {
+            RegistroRepository repository = RegistroRepository.getInstance();
+            // Obtenemos el objeto principal
+            RegistroCompleto data = repository.getRegistroData();
 
-        data.setNombres(etNombres.getText().toString().trim());
-        data.setApellidos(etApellidos.getText().toString().trim());
-        data.setEmail(etEmail.getText().toString().trim());
+            data.setNombres(etNombres.getText().toString().trim());
+            data.setApellidos(etApellidos.getText().toString().trim());
+            data.setEmail(etEmail.getText().toString().trim());
 
-        String password = etPassword.getText().toString();
-        // Tu JSON de ejemplo usa Base64. ¡Esta es la forma correcta!
-        String hashedPassword = Library.Hash.hashBase64(password);
-        data.setPasswordHash(hashedPassword);
+            String password = etPassword.getText().toString();
+            // Tu JSON de ejemplo usa Base64. ¡Esta es la forma correcta!
+            String hashedPassword = Library.Hash.hashBase64(password);
+            data.setPasswordHash(hashedPassword);
 
-        Log.i(TAG, "Datos iniciales guardados en el repositorio con contraseña hasheada.");
+            Log.i(TAG, "Datos iniciales guardados en el repositorio con contraseña hasheada.");
+        } catch (Exception e) {
+            Log.e(TAG, "Error saving data to repository", e);
+            showErrorDialog("Error al guardar los datos. Inténtalo de nuevo.");
+        }
     }
 
     private void restoreDataFromRepository() {

@@ -24,6 +24,8 @@ import com.mjc.adoptme.models.SecurityQuestion;
 import com.mjc.adoptme.models.SolicitudAdopcion;
 import com.mjc.adoptme.models.TipoAnimal;
 import com.mjc.adoptme.models.UpdateDataRequest;
+import com.mjc.adoptme.models.UpdatePasswordRequest;
+import com.mjc.adoptme.models.UpdatePasswordResponse;
 import com.mjc.adoptme.models.UserData;
 
 import java.util.List;
@@ -126,4 +128,8 @@ public interface ApiService {
     // Obtener preguntas de seguridad del usuario
     @GET("v1/security-questions/user")
     Call<ApiResponse<List<SecurityQuestion>>> getUserSecurityQuestions(@Query("cedula") String cedula);
+    
+    // Actualizar contraseña
+    @POST("v1/update-password")
+    Call<ApiResponse<UpdatePasswordResponse>> updatePassword(@Body UpdatePasswordRequest request);
 }

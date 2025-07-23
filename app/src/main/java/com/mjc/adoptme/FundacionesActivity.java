@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -227,89 +228,95 @@ public class FundacionesActivity extends AppCompatActivity {
     }
 
     private void loadData() {
-        // Simulación de datos - En producción vendría de una base de datos o API
-        fundacionesCompletas = new ArrayList<>();
+        try {
+            // Simulación de datos - En producción vendría de una base de datos o API
+            fundacionesCompletas = new ArrayList<>();
 
-        fundacionesCompletas.add(new Fundacion(
-                1,
-                "Fundación Patitas Felices",
-                "Av. Simón Bolívar y Galo Plaza Lasso, Quito",
-                "+593 2 234 5678",
-                "info@patitasfelices.org",
-                "Rescatamos y cuidamos animales abandonados, brindándoles amor y buscándoles un hogar.",
-                120,
-                45,
-                20,
-                true, true, false,
-                "Lunes a Viernes: 9:00 - 18:00\nSábados: 9:00 - 14:00",
-                -0.1807, -78.4678
-        ));
+            fundacionesCompletas.add(new Fundacion(
+                    1,
+                    "Fundación Patitas Felices",
+                    "Av. Simón Bolívar y Galo Plaza Lasso, Quito",
+                    "+593 2 234 5678",
+                    "info@patitasfelices.org",
+                    "Rescatamos y cuidamos animales abandonados, brindándoles amor y buscándoles un hogar.",
+                    120,
+                    45,
+                    20,
+                    true, true, false,
+                    "Lunes a Viernes: 9:00 - 18:00\nSábados: 9:00 - 14:00",
+                    -0.1807, -78.4678
+            ));
 
-        fundacionesCompletas.add(new Fundacion(
-                2,
-                "Refugio Animal Esperanza",
-                "Calle Rafael Ramos y 10 de Agosto, Guayaquil",
-                "+593 4 245 6789",
-                "contacto@esperanzaanimal.org",
-                "Dedicados al rescate y rehabilitación de animales en situación de calle.",
-                85,
-                30,
-                10,
-                true, true, true,
-                "Lunes a Sábado: 8:00 - 17:00\nDomingos: 9:00 - 13:00",
-                -2.1894, -79.8891
-        ));
+            fundacionesCompletas.add(new Fundacion(
+                    2,
+                    "Refugio Animal Esperanza",
+                    "Calle Rafael Ramos y 10 de Agosto, Guayaquil",
+                    "+593 4 245 6789",
+                    "contacto@esperanzaanimal.org",
+                    "Dedicados al rescate y rehabilitación de animales en situación de calle.",
+                    85,
+                    30,
+                    10,
+                    true, true, true,
+                    "Lunes a Sábado: 8:00 - 17:00\nDomingos: 9:00 - 13:00",
+                    -2.1894, -79.8891
+            ));
 
-        fundacionesCompletas.add(new Fundacion(
-                3,
-                "Protectora de Animales Cayambe",
-                "Av. Natalia Jarrín y Restauración, Cayambe",
-                "+593 2 236 0123",
-                "protectora@cayambe.org",
-                "Protegemos a los animales vulnerables de nuestra comunidad.",
-                40,
-                25,
-                15,
-                true, true, true,
-                "Martes a Domingo: 9:00 - 16:00",
-                0.0411, -78.1437
-        ));
+            fundacionesCompletas.add(new Fundacion(
+                    3,
+                    "Protectora de Animales Cayambe",
+                    "Av. Natalia Jarrín y Restauración, Cayambe",
+                    "+593 2 236 0123",
+                    "protectora@cayambe.org",
+                    "Protegemos a los animales vulnerables de nuestra comunidad.",
+                    40,
+                    25,
+                    15,
+                    true, true, true,
+                    "Martes a Domingo: 9:00 - 16:00",
+                    0.0411, -78.1437
+            ));
 
-        fundacionesCompletas.add(new Fundacion(
-                4,
-                "Fundación Huellitas con Amor",
-                "Calle Larga y Hermano Miguel, Cuenca",
-                "+593 7 282 3456",
-                "huellitas@cuenca.org",
-                "Brindamos segunda oportunidad a mascotas abandonadas con mucho amor.",
-                65,
-                35,
-                5,
-                true, true, false,
-                "Lunes a Viernes: 8:30 - 17:30\nSábados: 9:00 - 13:00",
-                -2.9001, -79.0059
-        ));
+            fundacionesCompletas.add(new Fundacion(
+                    4,
+                    "Fundación Huellitas con Amor",
+                    "Calle Larga y Hermano Miguel, Cuenca",
+                    "+593 7 282 3456",
+                    "huellitas@cuenca.org",
+                    "Brindamos segunda oportunidad a mascotas abandonadas con mucho amor.",
+                    65,
+                    35,
+                    5,
+                    true, true, false,
+                    "Lunes a Viernes: 8:30 - 17:30\nSábados: 9:00 - 13:00",
+                    -2.9001, -79.0059
+            ));
 
-        fundacionesCompletas.add(new Fundacion(
-                5,
-                "Centro de Rescate Felino",
-                "Av. González Suárez y Coruña, Quito",
-                "+593 2 254 7890",
-                "gatitos@rescatefelino.org",
-                "Especialistas en rescate y adopción de gatos.",
-                0,
-                80,
-                0,
-                false, true, false,
-                "Lunes a Sábado: 10:00 - 18:00",
-                -0.2025, -78.4918
-        ));
+            fundacionesCompletas.add(new Fundacion(
+                    5,
+                    "Centro de Rescate Felino",
+                    "Av. González Suárez y Coruña, Quito",
+                    "+593 2 254 7890",
+                    "gatitos@rescatefelino.org",
+                    "Especialistas en rescate y adopción de gatos.",
+                    0,
+                    80,
+                    0,
+                    false, true, false,
+                    "Lunes a Sábado: 10:00 - 18:00",
+                    -0.2025, -78.4918
+            ));
 
-        // Aplicar filtros iniciales
-        fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
-        chipTodas.setChecked(true);
-        updateResultCount();
-        showFundaciones(fundacionesFiltradas);
+            // Aplicar filtros iniciales
+            fundacionesFiltradas = new ArrayList<>(fundacionesCompletas);
+            chipTodas.setChecked(true);
+            updateResultCount();
+            showFundaciones(fundacionesFiltradas);
+        } catch (Exception e) {
+            Log.e("FundacionesActivity", "Error loading data: " + e.getMessage(), e);
+            // Optionally show an error message to the user
+            // Toast.makeText(this, "Error al cargar datos de fundaciones.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void showFundaciones(List<Fundacion> fundaciones) {

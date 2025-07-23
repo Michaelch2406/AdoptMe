@@ -258,39 +258,48 @@ public class RecuperarContraseniaActivity extends AppCompatActivity {
 
     private void loadUserSecurityQuestions() {
         showLoading();
-
-        Call<ApiResponse<List<SecurityQuestion>>> call = apiService.getUserSecurityQuestions(userCedula);
-        call.enqueue(new Callback<ApiResponse<List<SecurityQuestion>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<SecurityQuestion>>> call, Response<ApiResponse<List<SecurityQuestion>>> response) {
-                hideLoading();
-
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<List<SecurityQuestion>> apiResponse = response.body();
-                    if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
-                        securityQuestions = apiResponse.getData();
-                        if (securityQuestions.size() >= 4) {
-                            showSecurityQuestions();
+        try {
+            Call<ApiResponse<List<SecurityQuestion>>> call = apiService.getUserSecurityQuestions(userCedula);
+            call.enqueue(new Callback<ApiResponse<List<SecurityQuestion>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<SecurityQuestion>>> call, Response<ApiResponse<List<SecurityQuestion>>> response) {
+                    hideLoading();
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+                            ApiResponse<List<SecurityQuestion>> apiResponse = response.body();
+                            if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
+                                securityQuestions = apiResponse.getData();
+                                if (securityQuestions.size() >= 4) {
+                                    showSecurityQuestions();
+                                } else {
+                                    showErrorDialog("El usuario no tiene suficientes preguntas de seguridad configuradas.");
+                                }
+                            } else {
+                                showErrorDialog("Error al obtener las preguntas de seguridad.");
+                            }
+                        } else if (response.code() == 404) {
+                            showErrorDialog("El usuario no tiene preguntas de seguridad configuradas.");
                         } else {
-                            showErrorDialog("El usuario no tiene suficientes preguntas de seguridad configuradas.");
+                            showErrorDialog("Error del servidor al cargar las preguntas.");
                         }
-                    } else {
-                        showErrorDialog("Error al obtener las preguntas de seguridad.");
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error processing security questions response", e);
+                        showErrorDialog("Error al procesar la respuesta del servidor.");
                     }
-                } else if (response.code() == 404) {
-                    showErrorDialog("El usuario no tiene preguntas de seguridad configuradas.");
-                } else {
-                    showErrorDialog("Error del servidor al cargar las preguntas.");
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<SecurityQuestion>>> call, Throwable t) {
-                hideLoading();
-                Log.e(TAG, "Error loading security questions", t);
-                showErrorDialog("Error de conexión. Verifica tu conexión a internet.");
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<SecurityQuestion>>> call, Throwable t) {
+                    hideLoading();
+                    Log.e(TAG, "Error loading security questions", t);
+                    showErrorDialog("Error de conexión. Verifica tu conexión a internet.");
+                }
+            });
+        } catch (Exception e) {
+            hideLoading();
+            Log.e(TAG, "Error calling security questions endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud. Inténtalo de nuevo.");
+        }
     }
 
     private void verifySecurityAnswers() {
@@ -300,8 +309,16 @@ public class RecuperarContraseniaActivity extends AppCompatActivity {
         
         handler.postDelayed(() -> {
             hideLoading();
-            showSuccessAnimation();
+            redirectToUpdatePassword();
         }, 2000);
+    }
+    
+    private void redirectToUpdatePassword() {
+        Intent intent = new Intent(RecuperarContraseniaActivity.this, UpdatePasswordActivity.class);
+        intent.putExtra("cedula", userCedula);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void showLoading() {

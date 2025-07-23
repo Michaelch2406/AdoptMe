@@ -198,62 +198,72 @@ public class MainActivity extends AppCompatActivity {
 
         startLoadingAnimation();
 
-        String email = etEmailLogin.getText().toString().trim();
-        String password = etPasswordLogin.getText().toString().trim();
-        String hashedPassword = Library.Hash.hashBase64(password);
+        try {
+            String email = etEmailLogin.getText().toString().trim();
+            String password = etPasswordLogin.getText().toString().trim();
+            String hashedPassword = Library.Hash.hashBase64(password);
 
-        LoginRequest loginRequest = new LoginRequest(email, hashedPassword);
-        ApiService apiService = RetrofitClient.getApiService();
+            LoginRequest loginRequest = new LoginRequest(email, hashedPassword);
+            ApiService apiService = RetrofitClient.getApiService();
 
-        // La llamada ahora espera un objeto ApiResponse que contiene UserData
-        Call<ApiResponse<UserData>> call = apiService.iniciarSesion(loginRequest);
-        call.enqueue(new Callback<ApiResponse<UserData>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<UserData>> call, Response<ApiResponse<UserData>> response) {
-                stopLoadingAnimation();
-
-                if (response.isSuccessful() && response.body() != null) {
-                    ApiResponse<UserData> apiResponse = response.body();
-
-                    if (apiResponse.getData() != null) {
-                        UserData userData = apiResponse.getData();
-                        String userName = userData.getNameUser();
-                        String cedula = userData.getCedula(); // <-- Obtenemos la cédula
-
-                        SessionManager sessionManager = new SessionManager(getApplicationContext());
-                        // Guardamos el nombre Y la cédula en la sesión
-                        sessionManager.createLoginSession(userName, cedula, "");
-
-                        showSuccessDialog("¡Bienvenido, " + userName + "!");
-
-                        Intent intent = new Intent(MainActivity.this, PanelActivity.class);
-                        startActivity(intent);
-                        finish();
-
-                    } else {
-                        showErrorDialog("Respuesta inesperada del servidor.");
-                    }
-                } else {
-                    showErrorDialog("Email o contraseña incorrectos.");
-                    String errorMessage = "Error en el inicio de sesión";
+            // La llamada ahora espera un objeto ApiResponse que contiene UserData
+            Call<ApiResponse<UserData>> call = apiService.iniciarSesion(loginRequest);
+            call.enqueue(new Callback<ApiResponse<UserData>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<UserData>> call, Response<ApiResponse<UserData>> response) {
+                    stopLoadingAnimation();
                     try {
-                        if (response.errorBody() != null) {
-                            Log.e(TAG, "Error en login. Código: " + response.code() + " | Cuerpo: " + response.errorBody().string());
+                        if (response.isSuccessful() && response.body() != null) {
+                            ApiResponse<UserData> apiResponse = response.body();
+
+                            if (apiResponse.getData() != null) {
+                                UserData userData = apiResponse.getData();
+                                String userName = userData.getNameUser();
+                                String cedula = userData.getCedula(); // <-- Obtenemos la cédula
+
+                                SessionManager sessionManager = new SessionManager(getApplicationContext());
+                                // Guardamos el nombre Y la cédula en la sesión
+                                sessionManager.createLoginSession(userName, cedula, "");
+
+                                showSuccessDialog("¡Bienvenido, " + userName + "!");
+
+                                Intent intent = new Intent(MainActivity.this, PanelActivity.class);
+                                startActivity(intent);
+                                finish();
+
+                            } else {
+                                showErrorDialog("Respuesta inesperada del servidor.");
+                            }
+                        } else {
+                            showErrorDialog("Email o contraseña incorrectos.");
+                            String errorMessage = "Error en el inicio de sesión";
+                            try {
+                                if (response.errorBody() != null) {
+                                    Log.e(TAG, "Error en login. Código: " + response.code() + " | Cuerpo: " + response.errorBody().string());
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error al parsear el cuerpo del error de login.", e);
+                            }
+                            showErrorDialog(errorMessage);
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Error al parsear el cuerpo del error de login.", e);
+                        Log.e(TAG, "Error processing login response", e);
+                        showErrorDialog("Error al procesar la respuesta del servidor.");
                     }
-                    showErrorDialog(errorMessage);
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<UserData>> call, Throwable t) {
-                stopLoadingAnimation();
-                Log.e(TAG, "Fallo en la conexión de login", t);
-                showErrorDialog("Error de conexión: " + t.getMessage());
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<UserData>> call, Throwable t) {
+                    stopLoadingAnimation();
+                    Log.e(TAG, "Fallo en la conexión de login", t);
+                    showErrorDialog("Error de conexión: " + t.getMessage());
+                }
+            });
+        } catch (Exception e) {
+            stopLoadingAnimation();
+            Log.e(TAG, "Error calling login endpoint", e);
+            showErrorDialog("Error al iniciar la solicitud. Inténtalo de nuevo.");
+        }
     }
 
     private boolean validateForm() {

@@ -169,34 +169,47 @@ public class MisAdopcionesActivity extends AppCompatActivity {
             return;
         }
 
-        ApiService apiService = RetrofitClient.getApiService();
-        Call<ApiResponse<List<AdopcionUsuario>>> call = apiService.getAdopcionesPorUsuario(cedula);
+        try {
+            ApiService apiService = RetrofitClient.getApiService();
+            Call<ApiResponse<List<AdopcionUsuario>>> call = apiService.getAdopcionesPorUsuario(cedula);
 
-        call.enqueue(new Callback<ApiResponse<List<AdopcionUsuario>>>() {
-            @Override
-            public void onResponse(Call<ApiResponse<List<AdopcionUsuario>>> call, Response<ApiResponse<List<AdopcionUsuario>>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<AdopcionUsuario> adopciones = response.body().getData();
-                    if (adopciones != null) {
-                        processAdopciones(adopciones);
-                    } else {
+            call.enqueue(new Callback<ApiResponse<List<AdopcionUsuario>>>() {
+                @Override
+                public void onResponse(Call<ApiResponse<List<AdopcionUsuario>>> call, Response<ApiResponse<List<AdopcionUsuario>>> response) {
+                    try {
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<AdopcionUsuario> adopciones = response.body().getData();
+                            if (adopciones != null) {
+                                processAdopciones(adopciones);
+                            } else {
+                                initializeEmptyLists();
+                                showEmptyState();
+                            }
+                        } else {
+                            initializeEmptyLists();
+                            Snackbar.make(findViewById(android.R.id.content),
+                                    "Error al cargar adopciones", Snackbar.LENGTH_LONG).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e("MisAdopcionesActivity", "Error processing adoptions response", e);
                         initializeEmptyLists();
                         showEmptyState();
                     }
-                } else {
-                    initializeEmptyLists();
-                    Snackbar.make(findViewById(android.R.id.content), 
-                            "Error al cargar adopciones", Snackbar.LENGTH_LONG).show();
                 }
-            }
 
-            @Override
-            public void onFailure(Call<ApiResponse<List<AdopcionUsuario>>> call, Throwable t) {
-                initializeEmptyLists();
-                Snackbar.make(findViewById(android.R.id.content), 
-                        "Error de conexión", Snackbar.LENGTH_LONG).show();
-            }
-        });
+                @Override
+                public void onFailure(Call<ApiResponse<List<AdopcionUsuario>>> call, Throwable t) {
+                    Log.e("MisAdopcionesActivity", "Error loading adoptions", t);
+                    initializeEmptyLists();
+                    Snackbar.make(findViewById(android.R.id.content),
+                            "Error de conexión", Snackbar.LENGTH_LONG).show();
+                }
+            });
+        } catch (Exception e) {
+            Log.e("MisAdopcionesActivity", "Error calling adoptions endpoint", e);
+            initializeEmptyLists();
+            showEmptyState();
+        }
     }
 
     private void processAdopciones(List<AdopcionUsuario> adopciones) {
