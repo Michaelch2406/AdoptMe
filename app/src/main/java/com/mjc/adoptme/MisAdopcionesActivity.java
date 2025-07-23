@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -33,6 +34,8 @@ import com.google.android.material.snackbar.Snackbar;
 import com.mjc.adoptme.data.SessionManager;
 import com.mjc.adoptme.models.AdopcionUsuario;
 import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.CancelAdoptionRequest;
+import com.mjc.adoptme.models.UpdateAdoptionStatusRequest;
 import com.mjc.adoptme.network.ApiService;
 import com.mjc.adoptme.network.RetrofitClient;
 
@@ -376,12 +379,89 @@ public class MisAdopcionesActivity extends AppCompatActivity {
     }
 
     private void cancelarAdopcion(AdopcionUsuario adopcion) {
-        // En una implementación completa, aquí se haría una llamada a la API para cancelar
-        // Por ahora, solo mostramos un mensaje informativo
+        // Solicitar motivo de cancelación al usuario
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_cancel_adoption, null);
+        com.google.android.material.textfield.TextInputEditText etMotivo = dialogView.findViewById(R.id.etMotivoCancelacion);
         
-        Snackbar.make(contentContainer, 
-                "Para cancelar esta adopción, por favor contacta a la fundación.", 
-                Snackbar.LENGTH_LONG).show();
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Cancelar Adopción")
+                .setMessage("Por favor, proporciona el motivo de cancelación:")
+                .setView(dialogView)
+                .setPositiveButton("Cancelar Adopción", (dialog, which) -> {
+                    String motivo = etMotivo.getText().toString().trim();
+                    if (motivo.isEmpty()) {
+                        motivo = "No especificado";
+                    }
+                    
+                    // Realizar llamada a la API para cancelar la adopción
+                    UpdateAdoptionStatusRequest request = new UpdateAdoptionStatusRequest(
+                            "CANCELADA",
+                            motivo
+                    );
+                    
+                    ApiService apiService = RetrofitClient.getApiService();
+                    Call<ApiResponse<String>> call = apiService.updateAdoptionStatus(adopcion.getAdopcionId(), request);
+                    
+                    call.enqueue(new Callback<ApiResponse<String>>() {
+                        @Override
+                        public void onResponse(Call<ApiResponse<String>> call, Response<ApiResponse<String>> response) {
+                            Log.d("CancelAdoption", "Response code: " + response.code());
+                            if (response.body() != null) {
+                                Log.d("CancelAdoption", "Response status: " + response.body().getStatus());
+                                Log.d("CancelAdoption", "Response message: " + response.body().getMessage());
+                            } else {
+                                Log.d("CancelAdoption", "Response body is null");
+                                try {
+                                    if (response.errorBody() != null) {
+                                        String errorBody = response.errorBody().string();
+                                        Log.d("CancelAdoption", "Error body: " + errorBody);
+                                    }
+                                } catch (Exception e) {
+                                    Log.d("CancelAdoption", "Could not read error body: " + e.getMessage());
+                                }
+                            }
+                            
+                            if (response.isSuccessful() && response.body() != null && response.body().getStatus() == 200) {
+                                Snackbar.make(contentContainer, 
+                                        "Adopción cancelada exitosamente", 
+                                        Snackbar.LENGTH_LONG).show();
+                                // Recargar datos para reflejar el cambio
+                                loadData();
+                            } else if (response.isSuccessful() && response.body() != null) {
+                                // Show API error message if available
+                                String errorMessage = response.body().getMessage();
+                                if (errorMessage != null && !errorMessage.isEmpty()) {
+                                    Snackbar.make(contentContainer, 
+                                            "Error: " + errorMessage, 
+                                            Snackbar.LENGTH_LONG).show();
+                                } else {
+                                    Snackbar.make(contentContainer, 
+                                            "Error al cancelar la adopción (Status: " + response.body().getStatus() + ")", 
+                                            Snackbar.LENGTH_LONG).show();
+                                }
+                            } else {
+                                String errorMsg = "Error del servidor (HTTP " + response.code() + ")";
+                                if (response.code() == 500) {
+                                    errorMsg = "Error interno del servidor. La adopción podría ya estar cancelada o completada.";
+                                } else if (response.code() == 400) {
+                                    errorMsg = "Datos inválidos para cancelar la adopción.";
+                                } else if (response.code() == 404) {
+                                    errorMsg = "Adopción no encontrada.";
+                                }
+                                Snackbar.make(contentContainer, errorMsg, Snackbar.LENGTH_LONG).show();
+                            }
+                        }
+                        
+                        @Override
+                        public void onFailure(Call<ApiResponse<String>> call, Throwable t) {
+                            Snackbar.make(contentContainer, 
+                                    "Error de conexión. Revisa tu internet.", 
+                                    Snackbar.LENGTH_LONG).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Mantener", null)
+                .show();
     }
 
     private void startAnimations() {

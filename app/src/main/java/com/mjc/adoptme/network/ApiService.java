@@ -2,12 +2,17 @@ package com.mjc.adoptme.network;
 
 import com.mjc.adoptme.models.AdopcionResponse;
 import com.mjc.adoptme.models.AdopcionUsuario;
+import com.mjc.adoptme.models.AdoptionStats;
 import com.mjc.adoptme.models.AnimalAPI;
 import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.models.CancelAdoptionRequest;
 import com.mjc.adoptme.models.Ciudad;
+import com.mjc.adoptme.models.UpdateAdoptionStatusRequest;
 import com.mjc.adoptme.models.DatosPersonalesData;
 import com.mjc.adoptme.models.Domicilio;
 import com.mjc.adoptme.models.Fundacion;
+import com.mjc.adoptme.models.FundacionApp;
+import com.mjc.adoptme.models.FundacionRequest;
 import com.mjc.adoptme.models.LoginRequest;
 import com.mjc.adoptme.models.Pais;
 import com.mjc.adoptme.models.Parroquia;
@@ -91,4 +96,18 @@ public interface ApiService {
     
     @GET("v1/adoptions/by-user-app/{cedula}")
     Call<ApiResponse<List<AdopcionUsuario>>> getAdopcionesPorUsuario(@Path("cedula") String cedula);
+    
+    // --- NUEVOS ENDPOINTS ---
+    
+    // Obtener fundaciones cercanas con nueva API
+    @POST("v1/app/fundacionesApp")
+    Call<ApiResponse<List<FundacionApp>>> getFundacionesApp(@Body FundacionRequest request);
+    
+    // Obtener estadísticas de adopciones del usuario
+    @GET("v1/adoptions/stats-by-user/{cedula}")
+    Call<ApiResponse<AdoptionStats>> getAdoptionStats(@Path("cedula") String cedula);
+    
+    // Cancelar adopción
+    @POST("v1/adoptions/update-status/{id}")
+    Call<ApiResponse<String>> updateAdoptionStatus(@Path("id") int adoptionId, @Body UpdateAdoptionStatusRequest request);
 }

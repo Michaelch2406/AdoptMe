@@ -19,8 +19,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.card.MaterialCardView;
 import com.mjc.adoptme.data.SessionManager;
+import com.mjc.adoptme.models.AdoptionStats;
+import com.mjc.adoptme.models.ApiResponse;
+import com.mjc.adoptme.network.ApiService;
+import com.mjc.adoptme.network.RetrofitClient;
 
 import java.util.Calendar;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PanelActivity extends AppCompatActivity {
 
@@ -37,8 +45,10 @@ public class PanelActivity extends AppCompatActivity {
 
     // Dependencias
     private SessionManager sessionManager;
+    private ApiService apiService;
 
     private boolean isAnimating = false;
+    private AnimatorSet heartbeatAnimator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +57,7 @@ public class PanelActivity extends AppCompatActivity {
 
         // --- INICIO DE LÓGICA DE SESIÓN ---
         sessionManager = new SessionManager(getApplicationContext());
+        apiService = RetrofitClient.getApiService();
 
         // 1. Proteger la Activity: si no hay sesión, no se debe continuar.
         if (!sessionManager.isLoggedIn()) {
@@ -68,6 +79,7 @@ public class PanelActivity extends AppCompatActivity {
 
         // 4. Configurar el UI con los datos obtenidos.
         setupHeader(userName);
+        loadAdoptionStats();
         setupAnimations();
         setupCardClickListeners();
         setupBackButtonHandler();
@@ -128,6 +140,52 @@ public class PanelActivity extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         String fecha = day + " de " + meses[month];
         tvDate.setText(fecha);
+    }
+
+    private void loadAdoptionStats() {
+        String cedula = sessionManager.getCedula();
+        if (cedula == null) {
+            setDefaultStats();
+            return;
+        }
+
+        Call<ApiResponse<AdoptionStats>> call = apiService.getAdoptionStats(cedula);
+        call.enqueue(new Callback<ApiResponse<AdoptionStats>>() {
+            @Override
+            public void onResponse(Call<ApiResponse<AdoptionStats>> call, Response<ApiResponse<AdoptionStats>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ApiResponse<AdoptionStats> apiResponse = response.body();
+                    if (apiResponse.getStatus() == 200 && apiResponse.getData() != null) {
+                        AdoptionStats stats = apiResponse.getData();
+                        updateStatsUI(stats);
+                    } else {
+                        setDefaultStats();
+                    }
+                } else {
+                    setDefaultStats();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse<AdoptionStats>> call, Throwable t) {
+                setDefaultStats();
+            }
+        });
+    }
+
+    private void setDefaultStats() {
+        tvTotalAdopciones.setText("0");
+        tvEnProceso.setText("0");
+        tvCompletadas.setText("0");
+    }
+
+    private void updateStatsUI(AdoptionStats stats) {
+        tvTotalAdopciones.setText(String.valueOf(stats.getTotalAdopciones()));
+        tvEnProceso.setText(String.valueOf(stats.getAdopcionesEnProceso()));
+        tvCompletadas.setText(String.valueOf(stats.getAdopcionesCompletadas()));
+        
+        // Re-trigger animations with the new values
+        animateStatsNumbers();
     }
 
     private void setupCardClickListeners() {
@@ -233,17 +291,23 @@ public class PanelActivity extends AppCompatActivity {
     }
 
     private void startHeartbeatAnimation() {
+        // Cancelar animación anterior si existe
+        if (heartbeatAnimator != null && heartbeatAnimator.isRunning()) {
+            heartbeatAnimator.cancel();
+        }
+        
         ObjectAnimator beatX = ObjectAnimator.ofFloat(ivLogoPet, "scaleX", 1f, 1.1f, 0.9f, 1f);
         beatX.setRepeatCount(ValueAnimator.INFINITE);
         beatX.setRepeatMode(ValueAnimator.RESTART);
         ObjectAnimator beatY = ObjectAnimator.ofFloat(ivLogoPet, "scaleY", 1f, 1.1f, 0.9f, 1f);
         beatY.setRepeatCount(ValueAnimator.INFINITE);
         beatY.setRepeatMode(ValueAnimator.RESTART);
-        AnimatorSet heartbeat = new AnimatorSet();
-        heartbeat.playTogether(beatX, beatY);
-        heartbeat.setDuration(1500);
-        heartbeat.setStartDelay(2000);
-        heartbeat.start();
+        
+        heartbeatAnimator = new AnimatorSet();
+        heartbeatAnimator.playTogether(beatX, beatY);
+        heartbeatAnimator.setDuration(1500);
+        heartbeatAnimator.setStartDelay(2000);
+        heartbeatAnimator.start();
     }
 
     private void animateCards() {
@@ -291,17 +355,31 @@ public class PanelActivity extends AppCompatActivity {
     }
 
     private void animateStatsNumbers() {
-        ValueAnimator totalAnimator = ValueAnimator.ofInt(0, 12);
+        int totalValue = 0;
+        int procesoValue = 0;
+        int completadasValue = 0;
+        
+        try {
+            totalValue = Integer.parseInt(tvTotalAdopciones.getText().toString());
+            procesoValue = Integer.parseInt(tvEnProceso.getText().toString());
+            completadasValue = Integer.parseInt(tvCompletadas.getText().toString());
+        } catch (NumberFormatException e) {
+            // Keep default values of 0
+        }
+        
+        ValueAnimator totalAnimator = ValueAnimator.ofInt(0, totalValue);
         totalAnimator.setDuration(1500);
         totalAnimator.setStartDelay(1400);
         totalAnimator.addUpdateListener(animation -> tvTotalAdopciones.setText(String.valueOf(animation.getAnimatedValue())));
         totalAnimator.start();
-        ValueAnimator procesoAnimator = ValueAnimator.ofInt(0, 3);
+        
+        ValueAnimator procesoAnimator = ValueAnimator.ofInt(0, procesoValue);
         procesoAnimator.setDuration(1500);
         procesoAnimator.setStartDelay(1500);
         procesoAnimator.addUpdateListener(animation -> tvEnProceso.setText(String.valueOf(animation.getAnimatedValue())));
         procesoAnimator.start();
-        ValueAnimator completadasAnimator = ValueAnimator.ofInt(0, 9);
+        
+        ValueAnimator completadasAnimator = ValueAnimator.ofInt(0, completadasValue);
         completadasAnimator.setDuration(1500);
         completadasAnimator.setStartDelay(1600);
         completadasAnimator.addUpdateListener(animation -> tvCompletadas.setText(String.valueOf(animation.getAnimatedValue())));
@@ -333,7 +411,8 @@ public class PanelActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (ivLogoPet != null && ivLogoPet.getScaleX() == 1f) {
+        // Solo iniciar si no hay una animación corriendo
+        if (ivLogoPet != null && (heartbeatAnimator == null || !heartbeatAnimator.isRunning())) {
             startHeartbeatAnimation();
         }
     }
@@ -341,6 +420,10 @@ public class PanelActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        // Cancelar todas las animaciones al pausar
+        if (heartbeatAnimator != null && heartbeatAnimator.isRunning()) {
+            heartbeatAnimator.cancel();
+        }
         if (ivLogoPet != null) {
             ivLogoPet.clearAnimation();
         }
