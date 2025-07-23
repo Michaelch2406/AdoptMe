@@ -41,6 +41,9 @@
             android:name=".RecuperarContraseniaActivity"
             android:exported="false" />
         <activity
+            android:name=".SecurityQuestionsActivity"
+            android:exported="false" />
+        <activity
             android:name=".AnimalesActivity"
             android:exported="false" />
         <activity

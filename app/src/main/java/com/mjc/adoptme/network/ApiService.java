@@ -19,6 +19,8 @@ import com.mjc.adoptme.models.Parroquia;
 import com.mjc.adoptme.models.Provincia;
 import com.mjc.adoptme.models.ReferenciaPersonal;
 import com.mjc.adoptme.models.RegistroCompleto;
+import com.mjc.adoptme.models.SaveSecurityAnswersRequest;
+import com.mjc.adoptme.models.SecurityQuestion;
 import com.mjc.adoptme.models.SolicitudAdopcion;
 import com.mjc.adoptme.models.TipoAnimal;
 import com.mjc.adoptme.models.UpdateDataRequest;
@@ -110,4 +112,18 @@ public interface ApiService {
     // Cancelar adopción
     @POST("v1/adoptions/update-status/{id}")
     Call<ApiResponse<String>> updateAdoptionStatus(@Path("id") int adoptionId, @Body UpdateAdoptionStatusRequest request);
+    
+    // --- PREGUNTAS DE SEGURIDAD ---
+    
+    // Obtener preguntas de seguridad aleatorias
+    @GET("v1/security-questions/random")
+    Call<ApiResponse<List<SecurityQuestion>>> getRandomSecurityQuestions();
+    
+    // Guardar respuestas de seguridad
+    @POST("v1/security-questions/save-answers")
+    Call<ApiResponse<String>> saveSecurityAnswers(@Body SaveSecurityAnswersRequest request);
+    
+    // Obtener preguntas de seguridad del usuario
+    @GET("v1/security-questions/user")
+    Call<ApiResponse<List<SecurityQuestion>>> getUserSecurityQuestions(@Query("cedula") String cedula);
 }

@@ -26,6 +26,7 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mjc.adoptme.data.RegistroRepository;
+import com.mjc.adoptme.data.SessionManager;
 import com.mjc.adoptme.models.AnimalHistorial;
 import com.mjc.adoptme.models.ApiResponse;
 import com.mjc.adoptme.models.InfoAnimales;
@@ -56,6 +57,7 @@ public class AnimalesActivity extends AppCompatActivity {
     private CheckBox cbOtro;
     private TextInputLayout tilOtroEspecifique;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private SessionManager sessionManager;
     
     // Datos para dropdowns
     private List<TipoAnimal> tiposAnimales = new ArrayList<>();
@@ -67,6 +69,7 @@ public class AnimalesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_animales);
 
         apiService = ApiClient.getApiService();
+        sessionManager = new SessionManager(this);
         initViews();
         loadTiposAnimales();
         populateDataFromRepository();
@@ -334,13 +337,17 @@ public class AnimalesActivity extends AppCompatActivity {
                         userName = apiResponse.getData().getNameUser();
                     }
 
-                    showSuccessDialog("¡Bienvenido " + userName + "! Registro completado.");
+                    // Save user credentials in session for security questions
+                    String userCedula = RegistroRepository.getInstance().getRegistroData().getCedula();
+                    sessionManager.createLoginSession(userName, userCedula, "");
+                    
+                    showSuccessDialog("¡Bienvenido " + userName + "! Ahora configura tus preguntas de seguridad.");
 
-                    // Limpia los datos del formulario de registro para la próxima vez
+                    // Clear registration data
                     RegistroRepository.getInstance().limpiarDatos();
 
-                    // Redirige a la pantalla de Login para que el usuario inicie sesión
-                    Intent intent = new Intent(AnimalesActivity.this, MainActivity.class);
+                    // Redirect to security questions
+                    Intent intent = new Intent(AnimalesActivity.this, SecurityQuestionsActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     startActivity(intent);
                     finish();
