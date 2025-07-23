@@ -154,7 +154,7 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
 
         String cedulaAdoptante = sessionManager.getCedula();
         if (cedulaAdoptante == null || cedulaAdoptante.isEmpty()) {
-            Toast.makeText(this, "Error: No se pudo obtener la cédula del usuario", Toast.LENGTH_LONG).show();
+            showErrorDialog("Error: No se pudo obtener la cédula del usuario");
             return;
         }
 
@@ -184,9 +184,7 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
                 btnSubmit.setText("Enviar Solicitud");
 
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(ProcesarAdopcionActivity.this, 
-                            "¡Solicitud enviada exitosamente! Nos pondremos en contacto contigo pronto.", 
-                            Toast.LENGTH_LONG).show();
+                    showSuccessDialog("¡Solicitud enviada exitosamente! Nos pondremos en contacto contigo pronto.");
                     finish();
                 } else {
                     String errorMessage = "Error al enviar la solicitud. Por favor intenta nuevamente.";
@@ -199,7 +197,7 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         Log.e("AdopcionError", "Error reading error body", e);
                     }
-                    Toast.makeText(ProcesarAdopcionActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    showErrorDialog(errorMessage);
                 }
             }
 
@@ -320,7 +318,7 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
             !cbComida.isChecked() && !cbContacto.isChecked() && !cbClima.isChecked() && 
             !cbLugar.isChecked() && !cbCepillar.isChecked() && !cbDientes.isChecked() && 
             !cbVeterinario.isChecked()) {
-            Toast.makeText(this, "Por favor selecciona al menos un cuidado que estés dispuesto a brindar", Toast.LENGTH_LONG).show();
+            showErrorDialog("Por favor selecciona al menos un cuidado que estés dispuesto a brindar");
             return false;
         }
         
@@ -443,5 +441,23 @@ public class ProcesarAdopcionActivity extends AppCompatActivity {
             return radioButton.getText().toString();
         }
         return "";
+    }
+
+    private void showSuccessDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("¡Éxito!")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showErrorDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
     }
 }

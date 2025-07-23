@@ -321,7 +321,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
             // Timeout para ubicación
             handler.postDelayed(() -> {
                 if (ubicacionActual == null) {
-                    Toast.makeText(this, "No se pudo obtener la ubicación, usando ubicación por defecto", Toast.LENGTH_LONG).show();
+                    showInfoDialog("No se pudo obtener la ubicación, usando ubicación por defecto");
                     usarUbicacionPorDefecto();
                 }
             }, LOCATION_TIMEOUT);
@@ -821,7 +821,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
 
         String cedula = sessionManager.getCedula();
         if (cedula == null) {
-            Toast.makeText(this, "Error: Usuario no autenticado", Toast.LENGTH_LONG).show();
+            showErrorDialog("Error: Usuario no autenticado");
             return;
         }
 
@@ -872,9 +872,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                             fundacionesCompletas = new ArrayList<>();
                             fundacionesFiltradas = new ArrayList<>();
                             showFundaciones(fundacionesFiltradas);
-                            Toast.makeText(AdoptMePortafolioActivity.this, 
-                                    "No se encontraron fundaciones cercanas.", 
-                                    Toast.LENGTH_LONG).show();
+                            showInfoDialog("No se encontraron fundaciones cercanas.");
                         }
                     } else {
                         // API devolvió status diferente a 200 o datos nulos
@@ -883,7 +881,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                             errorMsg = apiResponse.getMessage();
                         }
                         Log.e("FundacionesAPI", "API Error: " + errorMsg + " (Status: " + apiResponse.getStatus() + ")");
-                        Toast.makeText(AdoptMePortafolioActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                        showErrorDialog(errorMsg);
                     }
                 } else {
                     // Error HTTP o respuesta nula
@@ -911,9 +909,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                         // Try fallback to old API if available
                         tryFallbackFundacionesAPI();
                     } else {
-                        Toast.makeText(AdoptMePortafolioActivity.this, 
-                                "Error al obtener fundaciones. Por favor intenta nuevamente.", 
-                                Toast.LENGTH_LONG).show();
+                        showErrorDialog("Error al obtener fundaciones. Por favor intenta nuevamente.");
                     }
                 }
                 // Siempre liberar el flag al final
@@ -924,9 +920,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
             public void onFailure(Call<ApiResponse<List<FundacionApp>>> call, Throwable t) {
                 // En caso de error de conexión
                 Log.e("FundacionesAPI", "Network error: " + t.getMessage(), t);
-                Toast.makeText(AdoptMePortafolioActivity.this, 
-                        "Error de conexión. Por favor verifica tu conexión a internet.", 
-                        Toast.LENGTH_LONG).show();
+                showErrorDialog("Error de conexión. Por favor verifica tu conexión a internet.");
                 // Liberar el flag también en caso de fallo
                 isLoadingFundaciones = false;
             }
@@ -952,7 +946,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
                             updateResultCount();
                             showFundaciones(fundacionesFiltradas);
                             Toast.makeText(AdoptMePortafolioActivity.this, 
-                                    "Fundaciones cargadas con API de respaldo", 
+                                    "Fundaciones cargadas", 
                                     Toast.LENGTH_SHORT).show();
                         } else {
                             showFallbackError();
@@ -973,9 +967,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
     }
 
     private void showFallbackError() {
-        Toast.makeText(AdoptMePortafolioActivity.this, 
-                "Las fundaciones no están disponibles temporalmente. Por favor intenta más tarde.", 
-                Toast.LENGTH_LONG).show();
+        showErrorDialog("Las fundaciones no están disponibles temporalmente. Por favor intenta más tarde.");
     }
 
     private List<Fundacion> convertirFundacionesApp(List<FundacionApp> fundacionesApp) {
@@ -1037,9 +1029,7 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<ApiResponse<List<AnimalAPI>>> call, Throwable t) {
                 // En caso de error de conexión
-                Toast.makeText(AdoptMePortafolioActivity.this, 
-                        "Error de conexión. Por favor verifica tu conexión a internet.", 
-                        Toast.LENGTH_LONG).show();
+                showErrorDialog("Error de conexión. Por favor verifica tu conexión a internet.");
             }
         });
     }
@@ -1407,5 +1397,23 @@ public class AdoptMePortafolioActivity extends AppCompatActivity {
             }
         });
         exitSet.start();
+    }
+
+    private void showErrorDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
+    }
+
+    private void showInfoDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Información")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
     }
 }

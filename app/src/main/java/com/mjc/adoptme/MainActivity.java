@@ -224,17 +224,17 @@ public class MainActivity extends AppCompatActivity {
                         // Guardamos el nombre Y la cédula en la sesión
                         sessionManager.createLoginSession(userName, cedula, "");
 
-                        Toast.makeText(MainActivity.this, "¡Bienvenido, " + userName + "!", Toast.LENGTH_LONG).show();
+                        showSuccessDialog("¡Bienvenido, " + userName + "!");
 
                         Intent intent = new Intent(MainActivity.this, PanelActivity.class);
                         startActivity(intent);
                         finish();
 
                     } else {
-                        Toast.makeText(MainActivity.this, "Respuesta inesperada del servidor.", Toast.LENGTH_LONG).show();
+                        showErrorDialog("Respuesta inesperada del servidor.");
                     }
                 } else {
-                    Toast.makeText(MainActivity.this, "Email o contraseña incorrectos.", Toast.LENGTH_LONG).show();
+                    showErrorDialog("Email o contraseña incorrectos.");
                     String errorMessage = "Error en el inicio de sesión";
                     try {
                         if (response.errorBody() != null) {
@@ -243,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         Log.e(TAG, "Error al parsear el cuerpo del error de login.", e);
                     }
-                    Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    showErrorDialog(errorMessage);
                 }
             }
 
@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
             public void onFailure(Call<ApiResponse<UserData>> call, Throwable t) {
                 stopLoadingAnimation();
                 Log.e(TAG, "Fallo en la conexión de login", t);
-                Toast.makeText(MainActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showErrorDialog("Error de conexión: " + t.getMessage());
             }
         });
     }
@@ -393,5 +393,23 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         ivLogo.clearAnimation();
         btnLogin.clearAnimation();
+    }
+
+    private void showSuccessDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("¡Éxito!")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showErrorDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
     }
 }

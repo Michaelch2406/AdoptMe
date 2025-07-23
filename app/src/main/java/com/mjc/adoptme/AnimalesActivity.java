@@ -334,7 +334,7 @@ public class AnimalesActivity extends AppCompatActivity {
                         userName = apiResponse.getData().getNameUser();
                     }
 
-                    Toast.makeText(AnimalesActivity.this, "¡Bienvenido " + userName + "! Registro completado.", Toast.LENGTH_LONG).show();
+                    showSuccessDialog("¡Bienvenido " + userName + "! Registro completado.");
 
                     // Limpia los datos del formulario de registro para la próxima vez
                     RegistroRepository.getInstance().limpiarDatos();
@@ -358,7 +358,7 @@ public class AnimalesActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         // Log del error
                     }
-                    Toast.makeText(AnimalesActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+                    showErrorDialog(errorMsg);
                 }
             }
 
@@ -367,7 +367,7 @@ public class AnimalesActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 btnFinalizar.setEnabled(true);
                 Log.e(TAG, "Fallo en la conexión de registro", t);
-                Toast.makeText(AnimalesActivity.this, "Error de conexión: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                showErrorDialog("Error de conexión: " + t.getMessage());
             }
         });
     }
@@ -459,5 +459,23 @@ public class AnimalesActivity extends AppCompatActivity {
             tvInfo.setText("Seleccione los animales que tiene o ha tenido");
             tvInfo.setTextColor(ContextCompat.getColor(this, R.color.colorAccent3));
         }, 3000); // El mensaje de error dura 3 segundos
+    }
+
+    private void showSuccessDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("¡Éxito!")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showErrorDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
     }
 }

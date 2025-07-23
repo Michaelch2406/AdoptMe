@@ -92,7 +92,7 @@ public class RegistroActivity extends AppCompatActivity {
             startAnimations();
         } catch (Exception e) {
             Log.e(TAG, "Error en onCreate", e);
-            Toast.makeText(this, "Error al iniciar: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            showErrorDialog("Error al iniciar: " + e.getMessage());
         }
     }
 
@@ -244,7 +244,7 @@ public class RegistroActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 btnRegistrar.setEnabled(true);
                 btnRegistrar.setText("Registrar");
-                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                showErrorDialog("Error: " + e.getMessage());
             }
         }, 2000);
     }
@@ -389,7 +389,7 @@ public class RegistroActivity extends AppCompatActivity {
                     if (e.getCause() != null) {
                         errorMessage += "\nCausa: " + e.getCause().getMessage();
                     }
-                    Toast.makeText(RegistroActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    showErrorDialog(errorMessage);
 
                     // Rehabilitar el botón
                     progressBar.setVisibility(View.GONE);
@@ -426,5 +426,14 @@ public class RegistroActivity extends AppCompatActivity {
             }
         });
         exitSet.start();
+    }
+
+    private void showErrorDialog(String message) {
+        new android.app.AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", (dialog, which) -> dialog.dismiss())
+                .setCancelable(true)
+                .show();
     }
 }
