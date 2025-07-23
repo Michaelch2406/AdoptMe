@@ -365,7 +365,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void startLoadingAnimation() {
         isAnimating = true;
-        btnLogin.setText("");
+        btnLogin.setText("Iniciando sesión...");
         progressBar.setVisibility(View.VISIBLE);
         ObjectAnimator colorAnimator = ObjectAnimator.ofFloat(btnLogin, "alpha", 1f, 0.7f, 1f);
         colorAnimator.setDuration(1000);

@@ -230,7 +230,7 @@ public class RegistroActivity extends AppCompatActivity {
         Log.d(TAG, "Iniciando proceso de registro");
         progressBar.setVisibility(View.VISIBLE);
         btnRegistrar.setEnabled(false);
-        btnRegistrar.setText("");
+        btnRegistrar.setText("Registrando...");
 
         saveDataToRepository();
 

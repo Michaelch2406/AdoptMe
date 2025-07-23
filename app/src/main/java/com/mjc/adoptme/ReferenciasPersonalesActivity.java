@@ -482,7 +482,7 @@ public class ReferenciasPersonalesActivity extends AppCompatActivity {
     private void saveDataAndContinue() {
         progressBar.setVisibility(View.VISIBLE);
         btnSiguiente.setEnabled(false);
-        btnSiguiente.setText("");
+        btnSiguiente.setText("Guardando...");
         saveDataToRepository();
         handler.postDelayed(this::animateSuccessTransition, 1500);
     }

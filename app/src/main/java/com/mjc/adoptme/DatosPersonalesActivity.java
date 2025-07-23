@@ -286,18 +286,56 @@ public class DatosPersonalesActivity extends AppCompatActivity {
         if (data.getApellidos() != null) etApellidos.setText(data.getApellidos());
         if (data.getEmail() != null) etEmail.setText(data.getEmail());
 
-        // Fecha de nacimiento
-        if (data.getFecha_nacimiento() != null) {
+        // Fecha de nacimiento - mejorar el parsing
+        if (data.getFecha_nacimiento() != null && !data.getFecha_nacimiento().isEmpty()) {
             try {
                 Date date = apiDateFormat.parse(data.getFecha_nacimiento());
-                etFechaNacimiento.setText(displayDateFormat.format(date));
-                calendar.setTime(date);
+                if (date != null) {
+                    etFechaNacimiento.setText(displayDateFormat.format(date));
+                    calendar.setTime(date);
+                    Log.d(TAG, "Fecha de nacimiento poblada correctamente: " + displayDateFormat.format(date));
+                } else {
+                    Log.w(TAG, "Fecha parseada es null");
+                }
             } catch (ParseException e) {
-                Log.e(TAG, "Error al parsear fecha: " + e.getMessage());
+                Log.e(TAG, "Error al parsear fecha: " + data.getFecha_nacimiento() + " - " + e.getMessage());
+                // Intentar con formato alternativo
+                try {
+                    SimpleDateFormat alternativeFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                    Date date = alternativeFormat.parse(data.getFecha_nacimiento());
+                    if (date != null) {
+                        etFechaNacimiento.setText(data.getFecha_nacimiento());
+                        calendar.setTime(date);
+                        Log.d(TAG, "Fecha poblada con formato alternativo");
+                    }
+                } catch (ParseException e2) {
+                    Log.e(TAG, "Error con formato alternativo: " + e2.getMessage());
+                }
             }
+        } else {
+            Log.w(TAG, "Fecha de nacimiento es null o vacía");
         }
 
-        // Parsear lugar de nacimiento: "País, Provincia, Ciudad"
+        // Campos básicos adicionales
+        if (data.getTelefono_convencional() != null) etTelefonoConvencional.setText(data.getTelefono_convencional());
+        if (data.getTelefono_movil() != null) etTelefonoMovil.setText(data.getTelefono_movil());
+        if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
+        
+        // Nivel de instrucción - asegurar que el adapter esté listo
+        if (data.getNivel_instruccion() != null && !data.getNivel_instruccion().isEmpty()) {
+            handler.post(() -> {
+                try {
+                    actvNivelInstruccion.setText(data.getNivel_instruccion(), false);
+                    Log.d(TAG, "Nivel de instrucción poblado: " + data.getNivel_instruccion());
+                } catch (Exception e) {
+                    Log.e(TAG, "Error al poblar nivel de instrucción", e);
+                }
+            });
+        } else {
+            Log.w(TAG, "Nivel de instrucción es null o vacío");
+        }
+
+        // Parsear lugar de nacimiento: "País, Provincia, Ciudad" - con mejor timing
         if (data.getLugar_nacimiento() != null && !data.getLugar_nacimiento().isEmpty()) {
             String[] partes = data.getLugar_nacimiento().split(",\\s*");
             if (partes.length >= 3) {
@@ -305,35 +343,49 @@ public class DatosPersonalesActivity extends AppCompatActivity {
                 String nombreProvincia = partes[1].trim();
                 String nombreCiudad = partes[2].trim();
                 
-                // Buscar y seleccionar país
-                for (Pais pais : paises) {
-                    if (pais.getNombre().equalsIgnoreCase(nombrePais)) {
-                        paisSeleccionado = pais;
-                        actvPais.setText(pais.getNombre(), false);
-                        
-                        // Cargar provincias y luego seleccionar la provincia
-                        loadProvinciasAndSelect(pais.getId(), nombreProvincia, nombreCiudad);
-                        break;
+                Log.d(TAG, "Intentando poblar ubicación: " + nombrePais + ", " + nombreProvincia + ", " + nombreCiudad);
+                
+                // Buscar y seleccionar país con delay para asegurar que los datos estén listos
+                handler.postDelayed(() -> {
+                    boolean paisEncontrado = false;
+                    for (Pais pais : paises) {
+                        if (pais.getNombre().equalsIgnoreCase(nombrePais)) {
+                            paisSeleccionado = pais;
+                            actvPais.setText(pais.getNombre(), false);
+                            paisEncontrado = true;
+                            Log.d(TAG, "País seleccionado: " + pais.getNombre());
+                            
+                            // Cargar provincias y luego seleccionar la provincia
+                            loadProvinciasAndSelect(pais.getId(), nombreProvincia, nombreCiudad);
+                            break;
+                        }
                     }
-                }
+                    if (!paisEncontrado) {
+                        Log.w(TAG, "País no encontrado: " + nombrePais);
+                    }
+                }, 100); // Pequeño delay para asegurar que los adapters estén listos
+            } else {
+                Log.w(TAG, "Formato de lugar de nacimiento incorrecto: " + data.getLugar_nacimiento());
             }
+        } else {
+            Log.w(TAG, "Lugar de nacimiento es null o vacío");
         }
-        if (data.getTelefono_convencional() != null) etTelefonoConvencional.setText(data.getTelefono_convencional());
-        if (data.getTelefono_movil() != null) etTelefonoMovil.setText(data.getTelefono_movil());
-        if (data.getOcupacion() != null) etOcupacion.setText(data.getOcupacion());
-        if (data.getNivel_instruccion() != null) actvNivelInstruccion.setText(data.getNivel_instruccion(), false);
 
         // Datos de trabajo
         if (data.getLugar_trabajo() != null && !data.getLugar_trabajo().isEmpty()) {
             rbTrabajaSi.setChecked(true);
-            layoutCamposTrabajo.setVisibility(View.VISIBLE);
+            animateViewVisibility(layoutCamposTrabajo, true);
             etLugarTrabajo.setText(data.getLugar_trabajo());
             if (data.getDireccion_trabajo() != null) etDireccionTrabajo.setText(data.getDireccion_trabajo());
             if (data.getTelefono_trabajo() != null) etTelefonoTrabajo.setText(data.getTelefono_trabajo());
+            Log.d(TAG, "Datos de trabajo poblados");
         } else {
             rbTrabajaNo.setChecked(true);
-            layoutCamposTrabajo.setVisibility(View.GONE);
+            animateViewVisibility(layoutCamposTrabajo, false);
+            Log.d(TAG, "Usuario no trabaja, ocultando campos de trabajo");
         }
+        
+        Log.d(TAG, "=== FIN POBLADO FORMULARIO ===");
     }
 
     private void updateData() {

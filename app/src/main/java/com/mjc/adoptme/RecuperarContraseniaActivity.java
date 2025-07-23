@@ -323,7 +323,7 @@ public class RecuperarContraseniaActivity extends AppCompatActivity {
 
     private void showLoading() {
         btnEnviar.setEnabled(false);
-        btnEnviar.setText("");
+        btnEnviar.setText("Verificando...");
         progressBar.setVisibility(View.VISIBLE);
     }
 

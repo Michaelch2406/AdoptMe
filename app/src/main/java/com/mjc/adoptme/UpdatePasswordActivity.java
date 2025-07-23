@@ -246,7 +246,7 @@ public class UpdatePasswordActivity extends AppCompatActivity {
 
     private void showLoading() {
         btnUpdatePassword.setEnabled(false);
-        btnUpdatePassword.setText("");
+        btnUpdatePassword.setText("Actualizando...");
         progressBar.setVisibility(View.VISIBLE);
     }
 
